@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/
+.venv/
+.env
+dist/
+build/
+.cache/
+.atdd/cache/

@@ -1,0 +1,22 @@
+schema_version: "1.0.0"
+
+workspace_id: python-pytest
+kind: workspace
+
+runtime:
+  language: python
+  runner: pytest
+  package_manager: pip
+  command: pytest
+
+shared_runtime:
+  files: []
+
+discovers:
+  implementations:
+    - "**/atdd.implementation.yaml"
+
+governed_by_conventions:
+  - coder.python.validator-code-convention
+  - tester.pytest-test-convention
+  - coach.violation-output-contract

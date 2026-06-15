@@ -1,0 +1,22 @@
+schema_version: "1.0.0"
+
+extension_id: atdd.extension.python-pytest
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.python-pytest
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+categories:
+  - python
+  - pytest
+  - validator-workspace
+  - official
+
+description: Official ATDD Python pytest validator workspace extension.

@@ -1,0 +1,24 @@
+schema_version: "1.0.0"
+
+extension_id: publisher-name.extension.minimal-example
+version: "0.1.0"
+kind: extension
+
+role: coder
+flow_wagon: validate-source-surface
+feature: minimal-example
+
+owns:
+  conventions: []
+  relationships: []
+  validators: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.extension-schema
+
+removal_policy:
+  allowed_if_no_external_dependents: true
