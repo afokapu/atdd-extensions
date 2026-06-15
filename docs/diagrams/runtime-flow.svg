@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 280" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="1120" height="280" fill="#ffffff"/>
+
+  <!-- step template: box 150x130 at y=24 -->
+  <!-- 1 -->
+  <rect x="14" y="24" width="156" height="130" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <circle cx="40" cy="50" r="13" fill="#2563eb"/><text x="40" y="55" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+  <text x="92" y="100" font-size="13.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">Extension</text>
+  <text x="92" y="118" font-size="13.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">installed</text>
+
+  <!-- 2 -->
+  <rect x="196" y="24" width="156" height="130" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="222" cy="50" r="13" fill="#16a34a"/><text x="222" y="55" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+  <text x="274" y="100" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">Workspace</text>
+  <text x="274" y="118" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">activated</text>
+
+  <!-- 3 -->
+  <rect x="378" y="24" width="156" height="130" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="404" cy="50" r="13" fill="#16a34a"/><text x="404" y="55" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+  <text x="456" y="92" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">Workspace</text>
+  <text x="456" y="110" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">discovers</text>
+  <text x="456" y="128" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">implementations</text>
+
+  <!-- 4 -->
+  <rect x="560" y="24" width="156" height="130" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="586" cy="50" r="13" fill="#16a34a"/><text x="586" y="55" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+  <text x="638" y="100" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">Runs them</text>
+  <text x="638" y="118" font-size="13.5" font-weight="600" fill="#14532d" text-anchor="middle">with pytest</text>
+
+  <!-- 5 -->
+  <rect x="742" y="24" width="156" height="130" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+  <circle cx="768" cy="50" r="13" fill="#7c3aed"/><text x="768" y="55" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+  <text x="820" y="92" font-size="13" font-weight="600" fill="#4c1d95" text-anchor="middle">Implementation</text>
+  <text x="820" y="110" font-size="13" font-weight="600" fill="#4c1d95" text-anchor="middle">emits Violation</text>
+  <text x="820" y="128" font-size="12.5" font-weight="700" fill="#6d28d9" text-anchor="middle">(rule_id=…)</text>
+
+  <!-- 6 -->
+  <rect x="924" y="24" width="182" height="130" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <circle cx="950" cy="50" r="13" fill="#2563eb"/><text x="950" y="55" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">6</text>
+  <text x="1015" y="92" font-size="12.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">Violation points</text>
+  <text x="1015" y="110" font-size="12.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">back to the extension's</text>
+  <text x="1015" y="128" font-size="12.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">convention / rule</text>
+
+  <!-- arrows -->
+  <g fill="#94a3b8">
+    <path d="M174 89 l16 0 l0 -5 l10 5 l-10 5 l0 -5 z"/>
+    <path d="M356 89 l16 0 l0 -5 l10 5 l-10 5 l0 -5 z"/>
+    <path d="M538 89 l16 0 l0 -5 l10 5 l-10 5 l0 -5 z"/>
+    <path d="M720 89 l16 0 l0 -5 l10 5 l-10 5 l0 -5 z"/>
+    <path d="M902 89 l16 0 l0 -5 l10 5 l-10 5 l0 -5 z"/>
+  </g>
+
+  <!-- closed-loop banner -->
+  <rect x="14" y="186" width="1092" height="40" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="560" y="211" font-size="15" font-weight="700" text-anchor="middle"><tspan fill="#1e40af">Declarative (Extension)</tspan><tspan fill="#334155"> + </tspan><tspan fill="#15803d">Runtime (Workspace)</tspan><tspan fill="#334155"> + </tspan><tspan fill="#6d28d9">Executable (Implementation)</tspan><tspan fill="#334155"> = Closed loop</tspan></text>
+  <text x="560" y="252" font-size="13" fill="#64748b" text-anchor="middle">Conventions declare the rules. Implementations enforce them. The workspace executes them.</text>
+</svg>

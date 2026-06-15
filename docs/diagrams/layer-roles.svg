@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 360" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="1120" height="360" fill="#ffffff"/>
+
+  <!-- EXTENSION card -->
+  <rect x="14" y="14" width="356" height="332" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <circle cx="46" cy="48" r="16" fill="#2563eb"/><text x="46" y="54" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">E</text>
+  <text x="74" y="54" font-size="19" font-weight="700" fill="#1e40af">Extension</text>
+  <g font-size="13.5" fill="#1e3a5f">
+    <text x="34" y="92">✓ the package / ownership boundary</text>
+    <text x="46" y="110">for a use case</text>
+    <text x="34" y="138">✓ the unit you install, version, and</text>
+    <text x="46" y="156">remove as a whole</text>
+    <text x="34" y="184">✓ owns the declarative substrate:</text>
+    <text x="46" y="202">conventions, scopes, gates, relationships</text>
+  </g>
+  <text x="34" y="248" font-size="12.5" fill="#475569">Manifest:</text>
+  <rect x="104" y="234" width="158" height="22" rx="6" fill="#dbeafe"/>
+  <text x="183" y="249" font-size="12" font-family="monospace" fill="#1e40af" text-anchor="middle">atdd.extension.yaml</text>
+  <text x="34" y="294" font-size="12.5" fill="#475569">Analogy: like an npm package, a VS</text>
+  <text x="34" y="312" font-size="12.5" fill="#475569">Code extension, or a Terraform module.</text>
+
+  <!-- WORKSPACE card -->
+  <rect x="386" y="14" width="356" height="332" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="418" cy="48" r="16" fill="#16a34a"/><text x="418" y="54" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">W</text>
+  <text x="446" y="54" font-size="19" font-weight="700" fill="#15803d">Workspace</text>
+  <g font-size="13.5" fill="#14532d">
+    <text x="406" y="92">✓ the runtime / build / test environment</text>
+    <text x="406" y="120">✓ a physical mini-project where</text>
+    <text x="418" y="138">validator code runs</text>
+    <text x="406" y="166">✓ declares language, runner, package</text>
+    <text x="418" y="184">manager, command, shared runtime files</text>
+    <text x="406" y="212">✓ discovers implementations and runs them</text>
+  </g>
+  <text x="406" y="252" font-size="12.5" fill="#475569">Manifest:</text>
+  <rect x="476" y="238" width="166" height="22" rx="6" fill="#dcfce7"/>
+  <text x="559" y="253" font-size="12" font-family="monospace" fill="#15803d" text-anchor="middle">atdd.workspace.yaml</text>
+  <text x="406" y="298" font-size="12.5" fill="#475569">Analogy: like the pyproject.toml-rooted</text>
+  <text x="406" y="316" font-size="12.5" fill="#475569">package in a monorepo.</text>
+
+  <!-- IMPLEMENTATION card -->
+  <rect x="758" y="14" width="348" height="332" rx="14" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+  <circle cx="790" cy="48" r="16" fill="#7c3aed"/><text x="790" y="54" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">I</text>
+  <text x="818" y="54" font-size="19" font-weight="700" fill="#6d28d9">Implementation</text>
+  <g font-size="13.5" fill="#4c1d95">
+    <text x="778" y="92">✓ the validator itself</text>
+    <text x="778" y="120">✓ code that enforces a convention</text>
+    <text x="778" y="148">✓ emits rule_ids / violations</text>
+    <text x="778" y="176">✓ contains src, tests, fixtures</text>
+  </g>
+  <text x="778" y="232" font-size="12.5" fill="#475569">Manifest:</text>
+  <rect x="848" y="218" width="180" height="22" rx="6" fill="#f3e8ff"/>
+  <text x="938" y="233" font-size="11.5" font-family="monospace" fill="#6d28d9" text-anchor="middle">atdd.implementation.yaml</text>
+  <text x="778" y="278" font-size="12.5" fill="#475569">Analogy: like a single rule's</text>
+  <text x="778" y="296" font-size="12.5" fill="#475569">checker library or plugin.</text>
+</svg>
