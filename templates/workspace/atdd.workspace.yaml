@@ -1,0 +1,32 @@
+schema_version: "1.0.0"
+
+# Template for a first-class workspace PROVIDER — a reusable, domain-agnostic
+# runtime. Id scope segment is `workspace`: <publisher>.workspace.<name>.
+workspace_id: publisher-name.workspace.example-runtime
+kind: workspace
+version: "0.1.0"
+
+# The discovery + run contract this provider implements. Implementations declare
+# the contract they satisfy; the resolver checks SemVer compatibility. Bump the
+# MAJOR only on an incompatible contract change.
+contract_version: "1.0.0"
+
+# Runtime machinery only — no backend/frontend/domain semantics.
+runtime:
+  language: example          # python | typescript | go | …
+  runner: example-runner     # pytest | vitest | go test | …
+  package_manager: example   # pip | pnpm | go | …
+  command: example-runner
+
+shared_runtime:
+  files: []
+
+discovers:
+  implementations:
+    - "**/atdd.implementation.yaml"
+  requires_contract: "^1.0.0"
+
+conformance:
+  suite: conformance/
+
+governed_by_conventions: []

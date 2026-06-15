@@ -11,7 +11,7 @@ feature: minimal-example
 owns:
   conventions: []
   relationships: []
-  validators: []
+  implementations: []
   schemas: []
   gates: []
   scopes: []
@@ -19,6 +19,12 @@ owns:
 depends_on:
   core:
     - atdd.core.extension-schema
+  # A minimal extension targets no runtime. As soon as it ships an
+  # implementation, declare the workspace provider it runs inside, e.g.:
+  #   workspaces:
+  #     - id: atdd.workspace.python-pytest
+  #       contract: "^1.0.0"
+  workspaces: []
 
 removal_policy:
   allowed_if_no_external_dependents: true

@@ -1,0 +1,38 @@
+schema_version: "1.0.0"
+
+# Use-case EXTENSION. Owns the rule and the validator implementation; targets a
+# shared workspace provider rather than embedding its own runtime.
+extension_id: acme.extension.component-header-validator
+version: "0.1.0"
+kind: extension
+
+role: coder
+flow_wagon: validate-source-surface
+feature: component-header
+
+# Domain is extension metadata — it belongs to the use case, not the runtime.
+domain: backend
+
+owns:
+  conventions:
+    - conventions/coder.source.component-header-required.convention.yaml
+  relationships: []
+  implementations:
+    - validators/component-header/atdd.implementation.yaml
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  # Reusable runtime this extension's implementations target. The contract range
+  # is checked against the provider's contract_version at resolve time.
+  workspaces:
+    - id: atdd.workspace.python-pytest
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

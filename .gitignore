@@ -8,3 +8,8 @@ dist/
 build/
 .cache/
 .atdd/cache/
+
+# Workspace INSTANCES are materialized at resolve time — generated, cacheable,
+# never committed. (Authored providers live in official/ and are tracked.)
+.atdd/resolved-workspaces/
+.atdd/runtime/

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="960" height="400" fill="#ffffff"/>
+
+  <text x="480" y="34" font-size="16" font-weight="700" fill="#334155" text-anchor="middle">One provider, many extensions — the runtime is referenced, not copied</text>
+
+  <!-- three extensions on the left -->
+  <g>
+    <rect x="24" y="70" width="244" height="70" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <text x="40" y="98" font-size="13" font-weight="700" fill="#1e40af">EXTENSION</text>
+    <text x="40" y="122" font-size="13" font-family="monospace" fill="#1e3a5f">component-header-validator</text>
+
+    <rect x="24" y="165" width="244" height="70" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <text x="40" y="193" font-size="13" font-weight="700" fill="#1e40af">EXTENSION</text>
+    <text x="40" y="217" font-size="13" font-family="monospace" fill="#1e3a5f">docstring-coverage</text>
+
+    <rect x="24" y="260" width="244" height="70" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <text x="40" y="288" font-size="13" font-weight="700" fill="#1e40af">EXTENSION</text>
+    <text x="40" y="312" font-size="13" font-family="monospace" fill="#1e3a5f">import-boundary-policy</text>
+  </g>
+
+  <!-- arrows to provider -->
+  <g stroke="#16a34a" stroke-width="2.5" fill="none">
+    <path d="M268 105 C 330 105, 360 190, 420 196"/>
+    <path d="M268 200 L 420 200"/>
+    <path d="M268 295 C 330 295, 360 210, 420 204"/>
+  </g>
+  <g fill="#16a34a">
+    <path d="M414 196 l12 4 l-12 4 l3 -4 z"/>
+    <path d="M414 196 l12 4 l-12 4 l3 -4 z" transform="translate(0,4)"/>
+  </g>
+  <text x="345" y="150" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">targets</text>
+  <text x="345" y="166" font-size="11" font-family="monospace" fill="#15803d" text-anchor="middle">^1.0.0</text>
+
+  <!-- central provider -->
+  <rect x="424" y="150" width="240" height="100" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5"/>
+  <text x="544" y="182" font-size="14" font-weight="700" fill="#15803d" text-anchor="middle">WORKSPACE PROVIDER</text>
+  <text x="544" y="206" font-size="14" font-family="monospace" fill="#14532d" text-anchor="middle">atdd.workspace.python-pytest</text>
+  <text x="544" y="230" font-size="12" fill="#14532d" text-anchor="middle">contract_version: 1.0.0 · one copy</text>
+
+  <!-- materialized to instances -->
+  <g fill="#f59e0b">
+    <path d="M664 200 l16 0 l0 -5 l10 5 l-10 5 l0 -5 z"/>
+  </g>
+  <text x="700" y="150" font-size="12" font-weight="700" fill="#b45309" text-anchor="middle">resolved into</text>
+
+  <rect x="712" y="120" width="224" height="56" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+  <text x="724" y="142" font-size="11.5" font-weight="700" fill="#92400e">INSTANCE</text>
+  <text x="724" y="162" font-size="11.5" font-family="monospace" fill="#7c4a03">…/python-pytest/1.0.0/</text>
+
+  <rect x="712" y="186" width="224" height="56" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+  <text x="724" y="208" font-size="11.5" font-weight="700" fill="#92400e">INSTANCE</text>
+  <text x="724" y="228" font-size="11.5" font-family="monospace" fill="#7c4a03">…/python-pytest/2.0.0/</text>
+
+  <text x="824" y="266" font-size="11.5" fill="#64748b" text-anchor="middle">versions coexist — each in its own dir</text>
+
+  <!-- footer note -->
+  <rect x="24" y="354" width="912" height="34" rx="9" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="480" y="376" font-size="13" fill="#475569" text-anchor="middle">No copied runtime folders · no hidden global dependency · provider versioned independently of every extension</text>
+</svg>

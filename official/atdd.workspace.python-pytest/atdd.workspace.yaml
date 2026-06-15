@@ -1,0 +1,45 @@
+schema_version: "1.0.0"
+
+# First-class workspace PROVIDER: a reusable, domain-agnostic runtime that many
+# extensions target. Namespaced id (scope segment is `workspace`):
+#   <publisher>.workspace.<name>
+workspace_id: atdd.workspace.python-pytest
+kind: workspace
+version: "0.1.0"
+
+# Discovery + run CONTRACT this provider implements. Implementations declare the
+# contract they satisfy (`contract_version`), and the resolver checks SemVer
+# compatibility against this value, refusing on mismatch. Bump the MAJOR only
+# when the discovery/run contract changes incompatibly.
+contract_version: "1.0.0"
+
+# The runtime machinery. No backend/frontend/domain semantics live here.
+runtime:
+  language: python
+  runner: pytest
+  package_manager: pip
+  command: pytest
+
+# Shared runtime files materialized into each workspace INSTANCE at resolve time.
+shared_runtime:
+  files:
+    - runtime/pyproject.toml
+    - runtime/pytest.ini
+    - runtime/requirements-dev.txt
+
+# How this provider finds the executable units an extension ships, and the
+# provider-contract range those implementations must satisfy.
+discovers:
+  implementations:
+    - "**/atdd.implementation.yaml"
+  requires_contract: "^1.0.0"
+
+# A new runtime (node-vitest, go-test) proves it satisfies the SAME contract by
+# passing this suite. Provider-conformance tests stay with the provider.
+conformance:
+  suite: conformance/
+
+governed_by_conventions:
+  - coder.python.validator-code-convention
+  - tester.pytest-test-convention
+  - coach.violation-output-contract

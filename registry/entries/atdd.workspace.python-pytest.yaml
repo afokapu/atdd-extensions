@@ -1,0 +1,25 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.workspace.python-pytest
+kind: workspace
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.workspace.python-pytest
+  type: local
+
+version: "0.1.0"
+contract_version: "1.0.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+categories:
+  - python
+  - pytest
+  - runtime
+  - workspace-provider
+  - official
+
+description: Official ATDD Python/pytest workspace provider (reusable runtime).

@@ -11,7 +11,7 @@ feature: example-feature
 owns:
   conventions: []
   relationships: []
-  validators: []
+  implementations: []
   schemas: []
   gates: []
   scopes: []
@@ -23,6 +23,12 @@ depends_on:
     - atdd.core.workspace-schema
     - atdd.core.implementation-schema
     - atdd.core.violation-output-schema
+  # The reusable runtime(s) this extension's implementations target. Referenced
+  # by id + contract range; never copied into the extension. The resolver checks
+  # the range against the provider's contract_version.
+  workspaces:
+    - id: atdd.workspace.python-pytest
+      contract: "^1.0.0"
 
 removal_policy:
   allowed_if_no_external_dependents: true

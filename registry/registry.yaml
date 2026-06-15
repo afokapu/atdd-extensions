@@ -1,5 +1,8 @@
 schema_version: "1.0.0"
 
-registry_id: atdd.extension-registry
+# Curated list of official and known ATDD artifacts: extensions (use-case
+# packages) and workspace providers (reusable runtimes).
+registry_id: atdd.artifact-registry
 entries:
-  - entries/atdd.extension.python-pytest.yaml
+  - entries/atdd.workspace.python-pytest.yaml
+  - entries/acme.extension.component-header-validator.yaml

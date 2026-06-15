@@ -1,0 +1,27 @@
+schema_version: "1.0.0"
+
+artifact_id: acme.extension.component-header-validator
+kind: extension
+status: example
+publisher: acme
+
+source:
+  repository: ./examples/component-header-validator
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# The runtime this extension's implementations target (declared in its manifest).
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+
+categories:
+  - backend
+  - source-validator
+  - example
+
+description: Example use-case extension — requires source files to declare a component header.
