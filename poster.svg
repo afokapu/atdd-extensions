@@ -16,71 +16,62 @@
   <text x="88" y="146" font-size="13.5" fill="#1e3a5f"><tspan font-weight="700">Extension</tspan> = the use-case package · <tspan font-weight="700" fill="#15803d">Workspace Provider</tspan> = the shared runtime · <tspan font-weight="700" fill="#b45309">Instance</tspan> = the runtime materialized for a run</text>
   <text x="88" y="163" font-size="13.5" fill="#1e3a5f">· <tspan font-weight="700" fill="#6d28d9">Implementation</tspan> = the code that enforces the rule. The runtime is referenced by id + contract version, never copied.</text>
 
-  <!-- ============ SECTION 1 — big picture ============ -->
+  <!-- ============ SECTION 1 — big picture (encapsulation) ============ -->
   <g transform="translate(0,200)">
-    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">1. The big picture — four layers</text>
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">1. The big picture — the extension owns its rule; the runtime is shared</text>
 
-    <!-- stacked bands -->
-    <g transform="translate(40,40)">
-      <!-- EXTENSION -->
-      <rect x="0" y="0" width="600" height="104" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
-      <text x="22" y="32" font-size="20" font-weight="800" fill="#1e40af">EXTENSION</text>
-      <rect x="190" y="16" width="120" height="22" rx="11" fill="#2563eb"/><text x="250" y="32" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">WHAT you ship</text>
-      <text x="24" y="62" font-size="13.5" fill="#1e3a5f">• use-case package — install / version / remove as a unit</text>
-      <text x="24" y="86" font-size="13.5" fill="#1e3a5f">• owns conventions, scopes, gates, relationships, implementations</text>
-
-      <text x="300" y="128" font-size="12.5" font-weight="700" fill="#2563eb" text-anchor="middle">targets — by id + contract range &#8595;</text>
-
-      <!-- PROVIDER -->
-      <rect x="0" y="140" width="600" height="104" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5"/>
-      <text x="22" y="172" font-size="20" font-weight="800" fill="#15803d">WORKSPACE PROVIDER</text>
-      <rect x="330" y="156" width="150" height="22" rx="11" fill="#16a34a"/><text x="405" y="172" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">HOW it runs (shared)</text>
-      <text x="24" y="202" font-size="13.5" fill="#14532d">• reusable, domain-agnostic runtime — one serves many extensions</text>
-      <text x="24" y="226" font-size="13.5" fill="#14532d">• language + runner + command + discovery/run contract_version</text>
-
-      <text x="300" y="268" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">materialized as — at resolve time &#8595;</text>
-
-      <!-- INSTANCE -->
-      <rect x="0" y="280" width="600" height="104" rx="14" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.5"/>
-      <text x="22" y="312" font-size="20" font-weight="800" fill="#92400e">WORKSPACE INSTANCE</text>
-      <rect x="320" y="296" width="150" height="22" rx="11" fill="#f59e0b"/><text x="395" y="312" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">WHERE it runs now</text>
-      <text x="24" y="342" font-size="13.5" fill="#7c4a03">• provider resolved locally under .atdd/resolved-workspaces/</text>
-      <text x="24" y="366" font-size="13.5" fill="#7c4a03">• generated · cacheable · reproducible from lock · never committed</text>
-
-      <text x="300" y="408" font-size="12.5" font-weight="700" fill="#6d28d9" text-anchor="middle">runs &#8595;</text>
-
-      <!-- IMPLEMENTATION -->
-      <rect x="0" y="420" width="600" height="98" rx="14" fill="#faf5ff" stroke="#7c3aed" stroke-width="2.5"/>
-      <text x="22" y="452" font-size="20" font-weight="800" fill="#6d28d9">IMPLEMENTATION</text>
-      <rect x="270" y="436" width="160" height="22" rx="11" fill="#7c3aed"/><text x="350" y="452" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">the executable unit</text>
-      <text x="24" y="482" font-size="13.5" fill="#4c1d95">• validator code — src / tests / fixtures</text>
-      <text x="24" y="504" font-size="13.5" fill="#4c1d95">• enforces a rule and emits rule_id → points back to the convention</text>
-
-      <!-- side rail: authored vs generated -->
-      <rect x="636" y="0" width="284" height="518" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-      <text x="778" y="34" font-size="15" font-weight="800" fill="#334155" text-anchor="middle">Authored vs generated</text>
-
-      <rect x="660" y="56" width="236" height="150" rx="10" fill="#fff" stroke="#cbd5e1"/>
-      <text x="676" y="80" font-size="12" font-weight="700" fill="#475569">AUTHORED &amp; versioned · committed</text>
-      <text x="676" y="108" font-size="15" font-weight="700" fill="#1e40af">extension</text>
-      <text x="676" y="134" font-size="15" font-weight="700" fill="#15803d">workspace provider</text>
-      <text x="676" y="160" font-size="15" font-weight="700" fill="#6d28d9">implementation</text>
-      <text x="676" y="188" font-size="11.5" fill="#64748b">tracked in git</text>
-
-      <rect x="660" y="222" width="236" height="96" rx="10" fill="#fff" stroke="#cbd5e1"/>
-      <text x="676" y="246" font-size="12" font-weight="700" fill="#475569">GENERATED</text>
-      <text x="676" y="272" font-size="15" font-weight="700" fill="#92400e">workspace instance</text>
-      <text x="676" y="298" font-size="11.5" fill="#64748b">resolved at run time · never committed</text>
-
-      <rect x="660" y="334" width="236" height="166" rx="10" fill="#fff" stroke="#cbd5e1"/>
-      <text x="676" y="358" font-size="12" font-weight="700" fill="#475569">THE CONTRACT</text>
-      <text x="676" y="384" font-size="13" fill="#334155">provider declares</text>
-      <text x="676" y="404" font-size="13.5" font-weight="800" fill="#15803d">contract_version</text>
-      <text x="676" y="430" font-size="13" fill="#334155">extension + impl declare</text>
-      <text x="676" y="450" font-size="13" fill="#334155">the range they target</text>
-      <text x="676" y="476" font-size="13" fill="#334155">resolver checks SemVer,</text>
-      <text x="676" y="494" font-size="13" fill="#334155">refuses on mismatch</text>
+    <!-- EXTENSION outer box — encapsulates the implementation -->
+    <rect x="40" y="44" width="448" height="346" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+    <text x="64" y="80" font-size="20" font-weight="800" fill="#1e40af">EXTENSION</text>
+    <rect x="232" y="64" width="120" height="22" rx="11" fill="#2563eb"/><text x="292" y="80" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">WHAT you ship</text>
+    <text x="64" y="108" font-size="13" fill="#1e3a5f">• use-case package — install / version / remove as a unit</text>
+    <text x="64" y="130" font-size="13" fill="#1e3a5f">• owns the declarative substrate:</text>
+    <g font-size="11" font-weight="700" text-anchor="middle">
+      <rect x="64"  y="140" width="94" height="22" rx="7" fill="#dbeafe"/><text x="111" y="155" fill="#1e40af">conventions</text>
+      <rect x="166" y="140" width="62" height="22" rx="7" fill="#dbeafe"/><text x="197" y="155" fill="#1e40af">scopes</text>
+      <rect x="236" y="140" width="54" height="22" rx="7" fill="#dbeafe"/><text x="263" y="155" fill="#1e40af">gates</text>
+      <rect x="298" y="140" width="110" height="22" rx="7" fill="#dbeafe"/><text x="353" y="155" fill="#1e40af">relationships</text>
     </g>
+    <text x="64" y="192" font-size="12.5" fill="#475569">…and it CONTAINS the implementation that enforces the rule:</text>
+
+    <!-- nested IMPLEMENTATION box (truly inside the extension) -->
+    <rect x="64" y="204" width="400" height="170" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+    <text x="84" y="234" font-size="16" font-weight="800" fill="#6d28d9">IMPLEMENTATION</text>
+    <rect x="276" y="218" width="170" height="22" rx="11" fill="#7c3aed"/><text x="361" y="233" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle">the validator code</text>
+    <text x="84" y="262" font-size="12.5" fill="#4c1d95">• enforces the rule · emits rule_id</text>
+    <text x="84" y="284" font-size="12.5" fill="#4c1d95">• contains src / tests / fixtures</text>
+    <rect x="84" y="298" width="232" height="20" rx="6" fill="#f3e8ff"/><text x="92" y="313" font-size="10.5" font-family="monospace" fill="#6d28d9">atdd.implementation.yaml</text>
+    <text x="84" y="346" font-size="11" fill="#2563eb">owned &amp; authored by the extension —</text>
+    <text x="84" y="362" font-size="11" fill="#b45309">but it RUNS in a workspace instance &#8594;</text>
+
+    <!-- RIGHT: shared provider → instance (referenced, not nested) -->
+    <rect x="540" y="44" width="420" height="148" rx="16" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5"/>
+    <text x="564" y="80" font-size="18" font-weight="800" fill="#15803d">WORKSPACE PROVIDER</text>
+    <rect x="822" y="62" width="116" height="22" rx="11" fill="#16a34a"/><text x="880" y="78" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle">shared runtime</text>
+    <text x="564" y="106" font-size="12.5" fill="#14532d">• reusable, domain-agnostic — NOT inside the extension</text>
+    <text x="564" y="128" font-size="12.5" fill="#14532d">• language + runner + command + contract_version</text>
+    <text x="564" y="150" font-size="12.5" fill="#14532d">• one provider serves many extensions</text>
+    <text x="564" y="176" font-size="11" font-family="monospace" fill="#15803d">atdd.workspace.python-pytest · contract 1.0.0</text>
+
+    <text x="750" y="214" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">materialized as &#8595;</text>
+
+    <rect x="540" y="224" width="420" height="150" rx="16" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="7 4"/>
+    <text x="564" y="260" font-size="18" font-weight="800" fill="#92400e">WORKSPACE INSTANCE</text>
+    <rect x="854" y="242" width="86" height="22" rx="11" fill="#f59e0b"/><text x="897" y="258" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle">generated</text>
+    <text x="564" y="288" font-size="12.5" fill="#7c4a03">• the provider resolved locally for a run</text>
+    <text x="564" y="310" font-size="12.5" fill="#7c4a03">• the implementation runs HERE</text>
+    <text x="564" y="332" font-size="12.5" fill="#7c4a03">• cacheable · reproducible · never committed</text>
+    <text x="564" y="358" font-size="11" font-family="monospace" fill="#92400e">.atdd/resolved-workspaces/…/1.0.0/</text>
+
+    <!-- "runs in" connector: implementation → instance -->
+    <path d="M464 290 L532 290" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 4"/>
+    <path d="M540 290 l-10 -5 l0 10 z" fill="#f59e0b"/>
+    <rect x="468" y="268" width="62" height="18" rx="9" fill="#fffbeb" stroke="#f59e0b"/><text x="499" y="281" font-size="10" font-weight="700" fill="#b45309" text-anchor="middle">runs in</text>
+
+    <!-- caption -->
+    <rect x="40" y="406" width="920" height="58" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="60" y="432" font-size="13" fill="#334155"><tspan font-weight="800">Encapsulation, with one twist:</tspan> the extension <tspan font-weight="700" fill="#1e40af">contains</tspan> its implementation — but the runtime is a <tspan font-weight="700" fill="#15803d">shared provider</tspan>, referenced by id + contract, <tspan font-weight="700">not</tspan> nested inside it.</text>
+    <text x="60" y="452" font-size="13" fill="#334155">The provider <tspan font-weight="700" fill="#b45309">materializes into an instance</tspan> where the implementation runs. That separation is the whole point — one runtime, many extensions.</text>
   </g>
 
   <!-- ============ SECTION 2 — worked example ============ -->
