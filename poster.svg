@@ -1,0 +1,345 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 2520" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="1000" height="2520" fill="#ffffff"/>
+
+  <!-- ============ HEADER ============ -->
+  <g>
+    <rect x="40" y="30" width="78" height="78" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="3"/>
+    <rect x="54" y="44" width="50" height="50" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="3"/>
+    <rect x="66" y="56" width="26" height="26" rx="7" fill="#faf5ff" stroke="#7c3aed" stroke-width="3"/>
+    <text x="138" y="60" font-size="34" font-weight="800" fill="#172033" letter-spacing="-1">The Four Layers of an ATDD Extension</text>
+    <text x="140" y="92" font-size="16" fill="#5b6475">How ATDD packages rules, runtimes, and validator code — and shares runtimes across extensions.</text>
+  </g>
+
+  <!-- info callout -->
+  <rect x="40" y="124" width="920" height="50" rx="12" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <circle cx="66" cy="149" r="11" fill="#2563eb"/><text x="66" y="154" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">i</text>
+  <text x="88" y="146" font-size="13.5" fill="#1e3a5f"><tspan font-weight="700">Extension</tspan> = the use-case package · <tspan font-weight="700" fill="#15803d">Workspace Provider</tspan> = the shared runtime · <tspan font-weight="700" fill="#b45309">Instance</tspan> = the runtime materialized for a run</text>
+  <text x="88" y="163" font-size="13.5" fill="#1e3a5f">· <tspan font-weight="700" fill="#6d28d9">Implementation</tspan> = the code that enforces the rule. The runtime is referenced by id + contract version, never copied.</text>
+
+  <!-- ============ SECTION 1 — big picture ============ -->
+  <g transform="translate(0,200)">
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">1. The big picture — four layers</text>
+
+    <!-- stacked bands -->
+    <g transform="translate(40,40)">
+      <!-- EXTENSION -->
+      <rect x="0" y="0" width="600" height="104" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+      <text x="22" y="32" font-size="20" font-weight="800" fill="#1e40af">EXTENSION</text>
+      <rect x="190" y="16" width="120" height="22" rx="11" fill="#2563eb"/><text x="250" y="32" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">WHAT you ship</text>
+      <text x="24" y="62" font-size="13.5" fill="#1e3a5f">• use-case package — install / version / remove as a unit</text>
+      <text x="24" y="86" font-size="13.5" fill="#1e3a5f">• owns conventions, scopes, gates, relationships, implementations</text>
+
+      <text x="300" y="128" font-size="12.5" font-weight="700" fill="#2563eb" text-anchor="middle">targets — by id + contract range &#8595;</text>
+
+      <!-- PROVIDER -->
+      <rect x="0" y="140" width="600" height="104" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5"/>
+      <text x="22" y="172" font-size="20" font-weight="800" fill="#15803d">WORKSPACE PROVIDER</text>
+      <rect x="330" y="156" width="150" height="22" rx="11" fill="#16a34a"/><text x="405" y="172" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">HOW it runs (shared)</text>
+      <text x="24" y="202" font-size="13.5" fill="#14532d">• reusable, domain-agnostic runtime — one serves many extensions</text>
+      <text x="24" y="226" font-size="13.5" fill="#14532d">• language + runner + command + discovery/run contract_version</text>
+
+      <text x="300" y="268" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">materialized as — at resolve time &#8595;</text>
+
+      <!-- INSTANCE -->
+      <rect x="0" y="280" width="600" height="104" rx="14" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.5"/>
+      <text x="22" y="312" font-size="20" font-weight="800" fill="#92400e">WORKSPACE INSTANCE</text>
+      <rect x="320" y="296" width="150" height="22" rx="11" fill="#f59e0b"/><text x="395" y="312" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">WHERE it runs now</text>
+      <text x="24" y="342" font-size="13.5" fill="#7c4a03">• provider resolved locally under .atdd/resolved-workspaces/</text>
+      <text x="24" y="366" font-size="13.5" fill="#7c4a03">• generated · cacheable · reproducible from lock · never committed</text>
+
+      <text x="300" y="408" font-size="12.5" font-weight="700" fill="#6d28d9" text-anchor="middle">runs &#8595;</text>
+
+      <!-- IMPLEMENTATION -->
+      <rect x="0" y="420" width="600" height="98" rx="14" fill="#faf5ff" stroke="#7c3aed" stroke-width="2.5"/>
+      <text x="22" y="452" font-size="20" font-weight="800" fill="#6d28d9">IMPLEMENTATION</text>
+      <rect x="270" y="436" width="160" height="22" rx="11" fill="#7c3aed"/><text x="350" y="452" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">the executable unit</text>
+      <text x="24" y="482" font-size="13.5" fill="#4c1d95">• validator code — src / tests / fixtures</text>
+      <text x="24" y="504" font-size="13.5" fill="#4c1d95">• enforces a rule and emits rule_id → points back to the convention</text>
+
+      <!-- side rail: authored vs generated -->
+      <rect x="636" y="0" width="284" height="518" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="778" y="34" font-size="15" font-weight="800" fill="#334155" text-anchor="middle">Authored vs generated</text>
+
+      <rect x="660" y="56" width="236" height="150" rx="10" fill="#fff" stroke="#cbd5e1"/>
+      <text x="676" y="80" font-size="12" font-weight="700" fill="#475569">AUTHORED &amp; versioned · committed</text>
+      <text x="676" y="108" font-size="15" font-weight="700" fill="#1e40af">extension</text>
+      <text x="676" y="134" font-size="15" font-weight="700" fill="#15803d">workspace provider</text>
+      <text x="676" y="160" font-size="15" font-weight="700" fill="#6d28d9">implementation</text>
+      <text x="676" y="188" font-size="11.5" fill="#64748b">tracked in git</text>
+
+      <rect x="660" y="222" width="236" height="96" rx="10" fill="#fff" stroke="#cbd5e1"/>
+      <text x="676" y="246" font-size="12" font-weight="700" fill="#475569">GENERATED</text>
+      <text x="676" y="272" font-size="15" font-weight="700" fill="#92400e">workspace instance</text>
+      <text x="676" y="298" font-size="11.5" fill="#64748b">resolved at run time · never committed</text>
+
+      <rect x="660" y="334" width="236" height="166" rx="10" fill="#fff" stroke="#cbd5e1"/>
+      <text x="676" y="358" font-size="12" font-weight="700" fill="#475569">THE CONTRACT</text>
+      <text x="676" y="384" font-size="13" fill="#334155">provider declares</text>
+      <text x="676" y="404" font-size="13.5" font-weight="800" fill="#15803d">contract_version</text>
+      <text x="676" y="430" font-size="13" fill="#334155">extension + impl declare</text>
+      <text x="676" y="450" font-size="13" fill="#334155">the range they target</text>
+      <text x="676" y="476" font-size="13" fill="#334155">resolver checks SemVer,</text>
+      <text x="676" y="494" font-size="13" fill="#334155">refuses on mismatch</text>
+    </g>
+  </g>
+
+  <!-- ============ SECTION 2 — worked example ============ -->
+  <g transform="translate(0,800)">
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">2. Worked example — component-header-validator</text>
+
+    <rect x="40" y="40" width="920" height="384" rx="14" fill="#0e1726"/>
+    <rect x="40" y="40" width="920" height="34" rx="14" fill="#1e293b"/>
+    <rect x="40" y="60" width="920" height="14" fill="#1e293b"/>
+    <circle cx="64" cy="57" r="6" fill="#ef4444"/><circle cx="84" cy="57" r="6" fill="#f59e0b"/><circle cx="104" cy="57" r="6" fill="#22c55e"/>
+    <text x="500" y="61" font-size="12" font-family="monospace" fill="#94a3b8" text-anchor="middle">the use case is ONE extension · the runtime is a SHARED provider · the instance is generated</text>
+
+    <g font-family="monospace" font-size="12.5">
+      <text x="60"  y="102" fill="#93c5fd">acme.extension.component-header-validator/</text>
+      <text x="80"  y="124" fill="#dbeafe">atdd.extension.yaml</text><text x="300" y="124" fill="#64748b"># owns the rule · depends_on.workspaces</text>
+      <text x="80"  y="146" fill="#dbeafe">conventions/</text>
+      <text x="100" y="168" fill="#dbeafe">coder.source.component-header-required.convention.yaml</text><text x="560" y="168" fill="#64748b"># the RULE</text>
+      <text x="80"  y="190" fill="#dbeafe">scopes/   gates/</text><text x="300" y="190" fill="#64748b"># which files · when it runs</text>
+      <text x="80"  y="212" fill="#dbeafe">validators/component-header/</text>
+      <text x="100" y="234" fill="#c4b5fd">atdd.implementation.yaml</text><text x="360" y="234" fill="#64748b"># targets_workspace + contract_version</text>
+      <text x="100" y="256" fill="#c4b5fd">src/   tests/   fixtures/</text><text x="360" y="256" fill="#64748b"># the Python checker code</text>
+
+      <text x="60"  y="296" fill="#86efac">atdd.workspace.python-pytest/</text><text x="360" y="296" fill="#64748b"># SHARED provider — lives in official/</text>
+      <text x="80"  y="318" fill="#86efac">atdd.workspace.yaml</text><text x="300" y="318" fill="#64748b"># contract_version: 1.0.0 · python/pytest</text>
+      <text x="80"  y="340" fill="#86efac">runtime/   adapter/   conformance/</text>
+
+      <text x="60"  y="380" fill="#fde68a">.atdd/resolved-workspaces/atdd.workspace.python-pytest/1.0.0/</text><text x="610" y="380" fill="#64748b"># generated</text>
+    </g>
+
+    <!-- right-edge tag chips -->
+    <g font-size="10" font-weight="700" text-anchor="middle">
+      <rect x="836" y="92"  width="104" height="18" rx="9" fill="#dbeafe"/><text x="888" y="105" fill="#1e40af">EXTENSION</text>
+      <rect x="836" y="224" width="104" height="18" rx="9" fill="#f3e8ff"/><text x="888" y="237" fill="#6d28d9">IMPLEMENTATION</text>
+      <rect x="836" y="286" width="104" height="18" rx="9" fill="#dcfce7"/><text x="888" y="299" fill="#15803d">PROVIDER</text>
+      <rect x="836" y="370" width="104" height="18" rx="9" fill="#fef3c7"/><text x="888" y="383" fill="#92400e">INSTANCE</text>
+    </g>
+  </g>
+
+  <!-- ============ SECTION 3 — what each layer does ============ -->
+  <g transform="translate(0,1250)">
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">3. What each layer does</text>
+
+    <!-- card 1 EXTENSION -->
+    <g transform="translate(40,40)">
+      <rect x="0" y="0" width="218" height="316" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <circle cx="28" cy="32" r="14" fill="#2563eb"/><text x="28" y="37" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">E</text>
+      <text x="52" y="37" font-size="16" font-weight="800" fill="#1e40af">Extension</text>
+      <g font-size="12" fill="#1e3a5f">
+        <text x="16" y="68">✓ the use-case package /</text>
+        <text x="28" y="84">ownership boundary</text>
+        <text x="16" y="106">✓ install · version · remove</text>
+        <text x="28" y="122">as one unit</text>
+        <text x="16" y="144">✓ owns conventions, scopes,</text>
+        <text x="28" y="160">gates, relationships</text>
+        <text x="16" y="182">✓ targets a workspace provider</text>
+      </g>
+      <text x="16" y="222" font-size="11.5" fill="#475569">Manifest:</text>
+      <rect x="78" y="210" width="132" height="18" rx="6" fill="#dbeafe"/><text x="144" y="223" font-size="10" font-family="monospace" fill="#1e40af" text-anchor="middle">atdd.extension.yaml</text>
+      <text x="16" y="262" font-size="11.5" fill="#475569">Like an npm package or a</text>
+      <text x="16" y="278" font-size="11.5" fill="#475569">VS Code extension.</text>
+    </g>
+
+    <!-- card 2 PROVIDER -->
+    <g transform="translate(266,40)">
+      <rect x="0" y="0" width="218" height="316" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+      <circle cx="28" cy="32" r="14" fill="#16a34a"/><text x="28" y="37" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">P</text>
+      <text x="52" y="37" font-size="16" font-weight="800" fill="#15803d">Workspace Provider</text>
+      <g font-size="12" fill="#14532d">
+        <text x="16" y="68">✓ reusable, domain-agnostic</text>
+        <text x="28" y="84">runtime</text>
+        <text x="16" y="106">✓ language + runner + command</text>
+        <text x="16" y="128">✓ shared by many extensions</text>
+        <text x="16" y="150">✓ declares contract_version;</text>
+        <text x="28" y="166">versioned independently</text>
+      </g>
+      <text x="16" y="222" font-size="11.5" fill="#475569">Manifest:</text>
+      <rect x="78" y="210" width="134" height="18" rx="6" fill="#dcfce7"/><text x="145" y="223" font-size="10" font-family="monospace" fill="#15803d" text-anchor="middle">atdd.workspace.yaml</text>
+      <text x="16" y="262" font-size="11.5" fill="#475569">Like a Docker image or a</text>
+      <text x="16" y="278" font-size="11.5" fill="#475569">devcontainer definition.</text>
+    </g>
+
+    <!-- card 3 INSTANCE -->
+    <g transform="translate(492,40)">
+      <rect x="0" y="0" width="218" height="316" rx="14" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+      <circle cx="28" cy="32" r="14" fill="#f59e0b"/><text x="28" y="37" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">I</text>
+      <text x="52" y="37" font-size="16" font-weight="800" fill="#92400e">Workspace Instance</text>
+      <g font-size="12" fill="#7c4a03">
+        <text x="16" y="68">✓ the provider resolved &amp;</text>
+        <text x="28" y="84">materialized locally</text>
+        <text x="16" y="106">✓ where implementations run</text>
+        <text x="16" y="128">✓ cacheable · reproducible</text>
+        <text x="16" y="150">✓ generated — never committed</text>
+      </g>
+      <text x="16" y="222" font-size="11.5" fill="#475569">Path:</text>
+      <rect x="56" y="210" width="156" height="18" rx="6" fill="#fef3c7"/><text x="134" y="223" font-size="9" font-family="monospace" fill="#92400e" text-anchor="middle">.atdd/resolved-workspaces/</text>
+      <text x="16" y="262" font-size="11.5" fill="#475569">Like a running container or</text>
+      <text x="16" y="278" font-size="11.5" fill="#475569">an installed node_modules.</text>
+    </g>
+
+    <!-- card 4 IMPLEMENTATION -->
+    <g transform="translate(718,40)">
+      <rect x="0" y="0" width="222" height="316" rx="14" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+      <circle cx="28" cy="32" r="14" fill="#7c3aed"/><text x="28" y="37" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V</text>
+      <text x="52" y="37" font-size="16" font-weight="800" fill="#6d28d9">Implementation</text>
+      <g font-size="12" fill="#4c1d95">
+        <text x="16" y="68">✓ the executable unit</text>
+        <text x="16" y="90">✓ subtype today: validator</text>
+        <text x="16" y="112">✓ enforces a convention,</text>
+        <text x="28" y="128">emits rule_ids / violations</text>
+        <text x="16" y="150">✓ contains src · tests · fixtures</text>
+      </g>
+      <text x="16" y="222" font-size="11.5" fill="#475569">Manifest:</text>
+      <rect x="78" y="210" width="138" height="18" rx="6" fill="#f3e8ff"/><text x="147" y="223" font-size="9" font-family="monospace" fill="#6d28d9" text-anchor="middle">atdd.implementation.yaml</text>
+      <text x="16" y="262" font-size="11.5" fill="#475569">Like a single rule's checker</text>
+      <text x="16" y="278" font-size="11.5" fill="#475569">library or plugin.</text>
+    </g>
+  </g>
+
+  <!-- ============ SECTION 4 — runtime flow ============ -->
+  <g transform="translate(0,1650)">
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">4. Runtime flow — from install to violation</text>
+
+    <g transform="translate(40,44)">
+      <!-- 6 steps -->
+      <g>
+        <rect x="0"   y="0" width="130" height="118" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+        <circle cx="24" cy="24" r="12" fill="#2563eb"/><text x="24" y="29" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <text x="65" y="74" font-size="12.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">Extension</text>
+        <text x="65" y="91" font-size="12.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">installed</text>
+
+        <rect x="152" y="0" width="130" height="118" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+        <circle cx="176" cy="24" r="12" fill="#16a34a"/><text x="176" y="29" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+        <text x="217" y="66" font-size="12.5" font-weight="600" fill="#14532d" text-anchor="middle">Provider</text>
+        <text x="217" y="83" font-size="12.5" font-weight="600" fill="#14532d" text-anchor="middle">resolved</text>
+        <text x="217" y="102" font-size="9" font-family="monospace" fill="#15803d" text-anchor="middle">python-pytest@1.0.0</text>
+
+        <rect x="304" y="0" width="130" height="118" rx="12" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="328" cy="24" r="12" fill="#f59e0b"/><text x="328" y="29" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+        <text x="369" y="66" font-size="12.5" font-weight="600" fill="#7c4a03" text-anchor="middle">Instance</text>
+        <text x="369" y="83" font-size="12.5" font-weight="600" fill="#7c4a03" text-anchor="middle">materialized</text>
+        <text x="369" y="102" font-size="9" font-family="monospace" fill="#92400e" text-anchor="middle">.atdd/resolved-…</text>
+
+        <rect x="456" y="0" width="130" height="118" rx="12" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="480" cy="24" r="12" fill="#f59e0b"/><text x="480" y="29" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+        <text x="521" y="66" font-size="12.5" font-weight="600" fill="#7c4a03" text-anchor="middle">Implementations</text>
+        <text x="521" y="83" font-size="12.5" font-weight="600" fill="#7c4a03" text-anchor="middle">discovered &amp;</text>
+        <text x="521" y="100" font-size="12.5" font-weight="600" fill="#7c4a03" text-anchor="middle">run (pytest)</text>
+
+        <rect x="608" y="0" width="130" height="118" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+        <circle cx="632" cy="24" r="12" fill="#7c3aed"/><text x="632" y="29" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+        <text x="673" y="66" font-size="11.5" font-weight="600" fill="#4c1d95" text-anchor="middle">Implementation</text>
+        <text x="673" y="83" font-size="11.5" font-weight="600" fill="#4c1d95" text-anchor="middle">emits Violation</text>
+        <text x="673" y="101" font-size="11" font-weight="700" fill="#6d28d9" text-anchor="middle">(rule_id=…)</text>
+
+        <rect x="760" y="0" width="150" height="118" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+        <circle cx="784" cy="24" r="12" fill="#2563eb"/><text x="784" y="29" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">6</text>
+        <text x="835" y="66" font-size="11.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">Violation points</text>
+        <text x="835" y="83" font-size="11.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">back to the</text>
+        <text x="835" y="100" font-size="11.5" font-weight="600" fill="#1e3a5f" text-anchor="middle">convention / rule</text>
+      </g>
+      <g fill="#94a3b8">
+        <path d="M134 59 l12 0 l0 -5 l9 5 l-9 5 l0 -5 z"/>
+        <path d="M286 59 l12 0 l0 -5 l9 5 l-9 5 l0 -5 z"/>
+        <path d="M438 59 l12 0 l0 -5 l9 5 l-9 5 l0 -5 z"/>
+        <path d="M590 59 l12 0 l0 -5 l9 5 l-9 5 l0 -5 z"/>
+        <path d="M742 59 l12 0 l0 -5 l9 5 l-9 5 l0 -5 z"/>
+      </g>
+
+      <rect x="0" y="138" width="910" height="40" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="455" y="163" font-size="14" font-weight="700" text-anchor="middle"><tspan fill="#1e40af">Declarative (Extension)</tspan><tspan fill="#334155"> + </tspan><tspan fill="#15803d">Runtime (Provider)</tspan><tspan fill="#334155"> + </tspan><tspan fill="#b45309">Execution (Instance)</tspan><tspan fill="#334155"> + </tspan><tspan fill="#6d28d9">Code (Implementation)</tspan><tspan fill="#334155"> = Closed loop</tspan></text>
+    </g>
+  </g>
+
+  <!-- ============ SECTION 5 — responsibility matrix ============ -->
+  <g transform="translate(0,1900)">
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">5. Responsibility matrix</text>
+
+    <g transform="translate(40,40)">
+      <rect x="120" y="0" width="200" height="34" rx="6" fill="#dbeafe"/>
+      <rect x="328" y="0" width="200" height="34" rx="6" fill="#dcfce7"/>
+      <rect x="536" y="0" width="180" height="34" rx="6" fill="#fef3c7"/>
+      <rect x="724" y="0" width="196" height="34" rx="6" fill="#ede9fe"/>
+      <text x="220" y="22" font-size="13" font-weight="800" fill="#1e40af" text-anchor="middle">Extension</text>
+      <text x="428" y="22" font-size="13" font-weight="800" fill="#15803d" text-anchor="middle">Workspace Provider</text>
+      <text x="626" y="22" font-size="13" font-weight="800" fill="#92400e" text-anchor="middle">Workspace Instance</text>
+      <text x="822" y="22" font-size="13" font-weight="800" fill="#6d28d9" text-anchor="middle">Implementation</text>
+
+      <rect x="0" y="44" width="920" height="40" fill="#f8fafc"/>
+      <rect x="0" y="128" width="920" height="40" fill="#f8fafc"/>
+
+      <g font-size="12">
+        <text x="0" y="70" font-weight="700" fill="#334155">Is a…</text>
+        <text x="220" y="70" fill="#1e3a5f" text-anchor="middle">use-case package</text>
+        <text x="428" y="70" fill="#14532d" text-anchor="middle">reusable runtime</text>
+        <text x="626" y="70" fill="#7c4a03" text-anchor="middle">resolved exec env</text>
+        <text x="822" y="70" fill="#4c1d95" text-anchor="middle">executable code unit</text>
+
+        <text x="0" y="110" font-weight="700" fill="#334155">Answers</text>
+        <text x="220" y="110" fill="#1e3a5f" text-anchor="middle">what use case + rules?</text>
+        <text x="428" y="110" fill="#14532d" text-anchor="middle">how can code run?</text>
+        <text x="626" y="110" fill="#7c4a03" text-anchor="middle">where does it run now?</text>
+        <text x="822" y="110" fill="#4c1d95" text-anchor="middle">what enforces the rule?</text>
+
+        <text x="0" y="146" font-weight="700" fill="#334155">Owns</text>
+        <text x="220" y="146" fill="#1e3a5f" text-anchor="middle">conventions, scopes,</text>
+        <text x="220" y="162" fill="#1e3a5f" text-anchor="middle">gates, rule_ids</text>
+        <text x="428" y="146" fill="#14532d" text-anchor="middle">language, runner,</text>
+        <text x="428" y="162" fill="#14532d" text-anchor="middle">command, contract</text>
+        <text x="626" y="146" fill="#7c4a03" text-anchor="middle">resolved files,</text>
+        <text x="626" y="162" fill="#7c4a03" text-anchor="middle">cache, run state</text>
+        <text x="822" y="146" fill="#4c1d95" text-anchor="middle">src, tests, fixtures,</text>
+        <text x="822" y="162" fill="#4c1d95" text-anchor="middle">emitted rule_ids</text>
+
+        <text x="0" y="194" font-weight="700" fill="#334155">Domain-specific?</text>
+        <text x="220" y="194" font-weight="700" fill="#1e40af" text-anchor="middle">yes</text>
+        <text x="428" y="194" font-weight="700" fill="#15803d" text-anchor="middle">no</text>
+        <text x="626" y="194" font-weight="700" fill="#b45309" text-anchor="middle">no</text>
+        <text x="822" y="194" font-weight="700" fill="#6d28d9" text-anchor="middle">usually yes</text>
+
+        <text x="0" y="232" font-weight="700" fill="#334155">Example</text>
+        <text x="220" y="232" font-family="monospace" font-size="10.5" fill="#1e40af" text-anchor="middle">component-header-validator</text>
+        <text x="428" y="232" font-family="monospace" font-size="11" fill="#15803d" text-anchor="middle">python-pytest</text>
+        <text x="626" y="232" font-family="monospace" font-size="10" fill="#92400e" text-anchor="middle">…/python-pytest/1.0.0</text>
+        <text x="822" y="232" font-family="monospace" font-size="10.5" fill="#6d28d9" text-anchor="middle">component-header</text>
+      </g>
+      <line x1="0" y1="250" x2="920" y2="250" stroke="#e2e8f0"/>
+      <text x="120" y="272" font-size="11.5" font-weight="700" fill="#3730a3">authored · committed</text>
+      <text x="536" y="272" font-size="11.5" font-weight="700" fill="#92400e">generated · not committed</text>
+      <text x="724" y="272" font-size="11.5" font-weight="700" fill="#6d28d9">authored · runs in instance</text>
+    </g>
+  </g>
+
+  <!-- ============ SECTION 6 — takeaway & decision ============ -->
+  <g transform="translate(0,2210)">
+    <text x="40" y="24" font-size="22" font-weight="800" fill="#172033">6. Key takeaway &amp; the decision</text>
+
+    <rect x="40" y="40" width="448" height="250" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <circle cx="80" cy="80" r="20" fill="#2563eb"/><text x="80" y="88" font-size="20" fill="#fff" text-anchor="middle">★</text>
+    <text x="116" y="78" font-size="17" font-weight="800" fill="#1e40af">Key takeaway</text>
+    <text x="116" y="98" font-size="13" fill="#1e3a5f">The sharp line</text>
+    <text x="64" y="142" font-size="14" fill="#1e3a5f"><tspan font-weight="800">Extension</tspan> = a specific, owned, installable</text>
+    <text x="64" y="164" font-size="14" fill="#1e3a5f">use case.</text>
+    <text x="64" y="194" font-size="14" fill="#1e3a5f"><tspan font-weight="800">Workspace provider</tspan> = a reusable,</text>
+    <text x="64" y="216" font-size="14" fill="#1e3a5f">domain-agnostic runtime.</text>
+    <text x="64" y="252" font-size="12.5" fill="#475569">Domain (backend / frontend / infra) is</text>
+    <text x="64" y="270" font-size="12.5" fill="#475569">extension metadata — never on the runtime.</text>
+
+    <rect x="512" y="40" width="448" height="250" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+    <circle cx="552" cy="80" r="20" fill="#16a34a"/><text x="552" y="88" font-size="22" fill="#fff" text-anchor="middle">✓</text>
+    <text x="588" y="78" font-size="17" font-weight="800" fill="#15803d">Decided</text>
+    <text x="588" y="98" font-size="13" fill="#14532d">shared runtimes are first-class</text>
+    <text x="536" y="142" font-size="14" fill="#14532d">A runtime used by more than one extension</text>
+    <text x="536" y="164" font-size="14" fill="#14532d">is a <tspan font-weight="800">first-class provider</tspan> from day one —</text>
+    <text x="536" y="186" font-size="14" fill="#14532d">referenced by id + contract, never copied.</text>
+    <rect x="536" y="206" width="388" height="64" rx="10" fill="#fff" stroke="#86efac"/>
+    <text x="552" y="230" font-size="12.5" fill="#14532d"><tspan font-weight="800" fill="#15803d">contract_version</tspan> ties them together: the</text>
+    <text x="552" y="250" font-size="12.5" fill="#14532d">resolver checks SemVer compatibility and</text>
+    <text x="552" y="266" font-size="12.5" fill="#14532d">refuses a provider/implementation mismatch.</text>
+  </g>
+
+  <text x="500" y="2510" font-size="12" fill="#94a3b8" text-anchor="middle">ATDD Extensions · github.com/afokapu/atdd-extensions — the four-layer model: Extension → Workspace Provider → Workspace Instance → Implementation</text>
+</svg>

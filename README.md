@@ -1,5 +1,9 @@
 # ATDD Extensions
 
+> 📊 **One-page poster:** [The Four Layers of an ATDD Extension](poster.svg) — a visual explainer for how ATDD packages rules, runtimes, and validator code (great for visual learners).
+
+[![The Four Layers of an ATDD Extension — Extension, Workspace Provider, Workspace Instance, Implementation](poster.svg)](poster.svg)
+
 This repository hosts the official ATDD extension hub.
 
 It contains:
