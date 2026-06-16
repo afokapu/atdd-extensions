@@ -1,0 +1,17 @@
+schema_version: "1.0.0"
+
+# The RULE (declarative). The extension owns this; the implementation enforces it;
+# the workspace provider executes the implementation.
+rule_id: coder.source.component-header-required
+kind: rule
+status: active
+
+statement: >
+  Every source file must declare a component header on its first line so the
+  artifact's role and layer are machine-readable.
+
+terms:
+  component_header:
+    text: "A leading comment of the form `# Component: component:<...>`."
+  source_file:
+    text: "A first-party implementation file in scope for this extension."

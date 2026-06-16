@@ -1,0 +1,17 @@
+schema_version: "1.0.0"
+
+# Executable IMPLEMENTATION (subtype: validator). Owns src/tests/fixtures and the
+# rule_ids it emits. Runs INSIDE the provider it targets.
+implementation_id: component-header
+kind: implementation
+subtype: validator
+
+# The workspace provider this implementation runs inside, and the provider
+# contract version it satisfies. The resolver checks `contract_version` against
+# the provider's `contract_version` (SemVer) and refuses on mismatch.
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.0.0"
+
+entrypoint: src/check_component_header.py
+emits_rule_ids:
+  - coder.source.component-header-required
