@@ -13,12 +13,22 @@ version: "0.1.0"
 # when the discovery/run contract changes incompatibly.
 contract_version: "1.0.0"
 
-# The runtime machinery. No backend/frontend/domain semantics live here.
-runtime:
-  language: python
-  runner: pytest
-  package_manager: pip
-  command: pytest
+# Typed CAPABILITIES this workspace provides (#1138). A workspace is no longer
+# defined by a single runner; it declares one or more capabilities, each with a
+# `domain` (closed vocab), package-specific `type`, and a versioned `contract`
+# that defines the capability's required fields. python-pytest provides exactly
+# one capability: an execution command-runner. No backend/frontend/domain
+# semantics live here.
+capabilities:
+  - capability_id: execution.python-pytest
+    domain: execution
+    type: test-runner
+    contract: atdd.workspace.capability.execution.command-runner.v1
+    runtime:
+      language: python
+      runner: pytest
+      package_manager: pip
+      command: pytest
 
 # Shared runtime files materialized into each workspace INSTANCE at resolve time.
 shared_runtime:
