@@ -64,3 +64,23 @@ jobs:
             exit 1
           fi
           echo "✓ gate correctly rejected the broken package"
+
+  # Provider conformance: a REAL pytest run proving atdd.workspace.python-pytest
+  # satisfies its workspace-provider contract (discover + run → violation-output).
+  # The compose-gate above only proves manifests load/validate; this proves the
+  # provider's adapter mechanics actually work. Runner-specific and independent of
+  # the composition gate, so it runs as its own job.
+  provider-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install conformance deps
+        run: pip install pytest pyyaml
+
+      - name: Run atdd.workspace.python-pytest provider conformance
+        run: pytest official/atdd.workspace.python-pytest/conformance/ -v
