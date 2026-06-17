@@ -1,0 +1,55 @@
+schema_version: "1.0.0"
+
+# Workspace PROVIDER for the cmux + Claude agent runtime: it ORCHESTRATES agent
+# sessions (spawn/deliver/signal a Claude worker inside a cmux pane) and TRANSPORTS
+# commands/events between the coach and its workers over a durable feed. It owns
+# no execution runner and no isolation boundary — those are other providers
+# (python-pytest, git-worktree). Namespaced id (scope segment is `workspace`):
+#   <publisher>.workspace.<name>
+workspace_id: atdd.workspace.cmux-claude
+kind: workspace
+version: "0.1.0"
+
+# Provider version — versions the capability contracts below as a set.
+contract_version: "1.0.0"
+
+# Typed CAPABILITIES (#1138). cmux-claude provides two, neither an execution
+# runner (so no `runtime` block):
+#   1. orchestration.agent-session — spawn/deliver/signal an agent process
+#   2. transport.command-feed      — a durable, ordered command/event feed
+capabilities:
+  # ── orchestration.agent-session ──────────────────────────────────────────
+  # Manage the lifecycle of an agent SESSION: spawn the agent process (a Claude
+  # worker launched inside a cmux pane in production), deliver a prompt to it, and
+  # signal it (interrupt / terminate). The launch COMMAND is injectable so the
+  # mechanics are exercisable with any process — production wires the cmux+claude
+  # command; conformance injects a trivial local process.
+  - capability_id: orchestration.agent-session
+    domain: orchestration
+    type: agent-session
+    contract: atdd.workspace.capability.orchestration.agent-session.v1
+    session:
+      surface: cmux-pane            # one persistent cmux pane per agent session
+      agent: claude                 # the worker launched into the pane
+      operations: [open, deliver, signal, close]
+      command_injectable: true      # the launch argv is supplied, not hardcoded
+  # ── transport.command-feed ───────────────────────────────────────────────
+  # A durable, append-only, ordered feed carrying commands/events between the
+  # coach and its workers. Readers poll by sequence; the feed survives a restart
+  # (file-backed). This is the mechanism only — message SCHEMAS are owned by the
+  # extensions/coach that use the feed.
+  - capability_id: transport.command-feed
+    domain: transport
+    type: command-feed
+    contract: atdd.workspace.capability.transport.command-feed.v1
+    feed:
+      backing: append-only-jsonl    # durable, single-writer, line == sequence
+      ordering: monotonic-sequence  # readers poll by `since` sequence
+      delivery: at-least-once
+
+# No execution runner, no implementation discovery — session + feed are mechanics,
+# not executable units shipped by extensions. Conformance is mechanism-level.
+governed_by_conventions:
+  - coach.runtime.one-persistent-pane-per-issue
+  - coach.runtime.durable-feed-survives-restart
+  - coach.runtime.agent-session-lifecycle

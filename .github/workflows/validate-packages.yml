@@ -85,6 +85,11 @@ jobs:
       - name: Run atdd.workspace.python-pytest provider conformance
         run: pytest official/atdd.workspace.python-pytest/conformance/ -v
 
+      - name: Run atdd.workspace.cmux-claude provider conformance
+        # REAL suite — subprocess round-trip + durable feed + two-way channel. No
+        # cmux binary / Claude API needed (the agent command is injected).
+        run: pytest official/atdd.workspace.cmux-claude/conformance/ -v
+
   # Real end-to-end: the python-pytest provider DISCOVERS every github extension
   # implementation manifest and RUNS its suite. Proves the provider<->implementation
   # contract chain works, not just that manifests load.
