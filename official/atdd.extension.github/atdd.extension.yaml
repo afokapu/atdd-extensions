@@ -66,6 +66,8 @@ depends_on:
   # Core coach nodes (shipped in Slice 2 / core PR #1117) that the left-column
   # GitHub behaviors realize. Referenced by id; never copied here. Core remains
   # the authority for WHEN a unit may advance or close.
+  # targets.coach_nodes lists ONLY shipped, resolvable core nodes. A loader may
+  # assume every entry here resolves.
   targets:
     coach_nodes:
       - coach.lifecycle.phase-machine
@@ -73,7 +75,11 @@ depends_on:
       - coach.lifecycle.no-terminal-before-lifecycle-satisfied
       - coach.execution.runtime-state-not-a-delivery-artifact
       - coach.execution.atomic-registry-write
-      # design_candidate — work-provenance node tracked in afokapu/atdd#1122
+  # design_candidates are NOT yet shipped core nodes — kept out of targets so
+  # depends_on stays strictly resolvable. The README mapping table carries the
+  # narrative reference. Tracked in afokapu/atdd#1122.
+  design_candidates:
+    coach_nodes:
       - coach.execution.work-provenance
   # Implementations (validators / shims) run inside a shared workspace provider.
   # STUBS in this slice; the target is declared now so the build phase echoes it
