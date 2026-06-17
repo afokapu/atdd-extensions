@@ -1,0 +1,66 @@
+# Composition gate (afokapu/atdd#1132): continuously prove every package in this repo
+# still COMPOSES against installed ATDD core. Installs the atdd toolkit (which ships the
+# composition CLI + the core nodes/schema as package data) and runs `atdd validate
+# package` — load/validate/compose only, NO runtime execution, and NO composition
+# semantics are defined here (they live in atdd core: compose.py / feature
+# author-atdd-substrate:package-composition).
+name: validate-packages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compose-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ATDD toolkit (composition CLI + core nodes via package-data)
+        run: pip install "git+https://github.com/afokapu/atdd.git@main"
+
+      - name: Validate every OFFICIAL package composes against installed core
+        # Scope: official/ packages are the composition guarantee consumers rely on.
+        # examples/ are illustrative (may intentionally be partial) and are NOT gated.
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          found=0
+          for pkg in official/*/; do
+            [ -f "$pkg/atdd.extension.yaml" ] || [ -f "$pkg/atdd.workspace.yaml" ] || continue
+            found=1
+            echo "::group::atdd validate package $pkg"
+            atdd validate package "$pkg"   # exits non-zero on any composition violation
+            echo "::endgroup::"
+          done
+          if [ "$found" = 0 ]; then echo "::error::no official packages discovered to validate"; exit 1; fi
+
+      - name: Negative canary — the gate rejects an invalid realization
+        # Proves the gate has teeth (criteria 3-6). The full negative contract — bad
+        # manifest shape, unresolved core node, realized design_candidate, authored
+        # cross-package edge — is enforced by `atdd validate package` and covered by
+        # atdd core's C007 acceptance tests; here we exercise one representative case.
+        run: |
+          set -euo pipefail
+          broken="$RUNNER_TEMP/broken-extension"
+          cp -r official/atdd.extension.github "$broken"
+          python - "$broken/atdd.extension.yaml" <<'PY'
+          import sys, yaml
+          p = sys.argv[1]
+          d = yaml.safe_load(open(p))
+          d.setdefault("realizes", []).append({
+              "extension_node": "github.pr.merge-blocks-on-pre-smoke-close",
+              "core_node": "coach.bogus.does-not-exist",   # unresolved -> must fail
+          })
+          yaml.safe_dump(d, open(p, "w"), sort_keys=False)
+          PY
+          if atdd validate package "$broken"; then
+            echo "::error::composition gate FAILED to reject an invalid realization"
+            exit 1
+          fi
+          echo "✓ gate correctly rejected the broken package"
