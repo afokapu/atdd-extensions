@@ -1,0 +1,67 @@
+schema_version: "1.0.0"
+
+# First-class workspace PROVIDER: a reusable, domain-agnostic environment that
+# many extensions target. Unlike a runner (python-pytest), this provider owns no
+# execution capability — it provides an ISOLATION BOUNDARY and the SOURCE-CONTROL
+# mechanics (safe per-worktree git config, commit-trailer insertion) that other
+# capabilities run inside. Namespaced id (scope segment is `workspace`):
+#   <publisher>.workspace.<name>
+workspace_id: atdd.workspace.git-worktree
+kind: workspace
+version: "0.1.0"
+
+# Provider version. In capability-mode `contract_version` is optional and only
+# shape-checked; it versions this provider's capability contracts as a set. Bump
+# the MAJOR when a capability contract changes incompatibly.
+contract_version: "1.0.0"
+
+# Typed CAPABILITIES this workspace provides (#1138). A workspace is defined by
+# the capabilities it declares, not by a single runner. git-worktree provides two:
+#   1. environment.isolation     — a per-branch filesystem isolation boundary
+#   2. source_control.commit-trailers — git commit-trailer mechanics
+# Neither is an execution capability, so no `runtime` block is required or present.
+capabilities:
+  # ── environment.isolation ────────────────────────────────────────────────
+  # Each unit of work runs in its own git worktree: a flat sibling checkout of a
+  # single branch, sharing the object store but with an isolated working tree and
+  # index. The provider never mutates the shared git directory; per-worktree
+  # config is written with `git config --worktree` only.
+  - capability_id: environment.git-worktree
+    domain: environment
+    type: filesystem-isolation
+    contract: atdd.workspace.capability.environment.isolation.v1
+    isolation:
+      mechanism: git-worktree
+      layout: flat-sibling          # worktrees are flat siblings of the main checkout
+      boundary: per-branch          # exactly one worktree per branch
+      lifecycle:
+        create: "git worktree add ../<prefix>-<slug> -b <prefix>/<slug>"
+        remove: "git worktree remove <path>   # only AFTER the branch's PR lands"
+      # Per-worktree git config only — never touch the shared git dir. These keys
+      # corrupt sibling worktrees if set on the shared config and are guarded.
+      safe_git_config:
+        scope: "--worktree"
+        danger_keys: [core.bare, core.worktree, core.hooksPath]
+  # ── source_control.commit-trailers ───────────────────────────────────────
+  # Mechanics for appending machine-readable trailers to commit messages (the
+  # POLICY — which trailers are required — is owned by the consuming extension,
+  # e.g. atdd.extension.github's trailer-required convention). This capability
+  # owns only the insertion mechanism and idempotency, never a trailer schema.
+  - capability_id: source_control.commit-trailers
+    domain: source_control
+    type: commit-trailers
+    contract: atdd.workspace.capability.source-control.commit-trailers.v1
+    vcs: git
+    trailers:
+      mechanism: git-interpret-trailers   # canonical RFC-822-style trailer block
+      idempotent: true                     # re-applying a trailer must not duplicate it
+      placement: message-footer            # trailers occupy the final paragraph
+      policy_owned_by: extension           # required keys come from the extension
+
+# This provider does not discover or run implementations — isolation and trailer
+# mechanics are not executable units shipped by extensions. No `discovers` /
+# `conformance` runner block; conformance is mechanism-level (see conformance/).
+governed_by_conventions:
+  - coach.git.worktree-layout
+  - coach.git.worktree-config-safety
+  - coach.git.commit-trailer-mechanics
