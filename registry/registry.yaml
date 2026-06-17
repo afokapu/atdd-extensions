@@ -5,4 +5,5 @@ schema_version: "1.0.0"
 registry_id: atdd.artifact-registry
 entries:
   - entries/atdd.workspace.python-pytest.yaml
+  - entries/atdd.extension.github.yaml
   - entries/acme.extension.component-header-validator.yaml

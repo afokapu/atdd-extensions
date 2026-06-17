@@ -1,0 +1,49 @@
+schema_version: 1.1.0
+rule_id: github.pr.mass-delete-guard
+kind: rule
+status: active
+name: Mass-delete PRs require a decommission escape hatch
+statement: A PR that deletes >100 files or >10,000 lines must carry a decommission escape hatch — a title
+  prefix chore(decom, refactor(remove, or chore(archive), OR a commit body containing [mass-delete-approved].
+  This is a GitHub-platform safety rule owned outright by this extension — it has no core lifecycle counterpart.
+source:
+  legacy_path: src/atdd/coach/conventions/rule-id.convention.yaml
+  legacy_section: rules
+  legacy_rule_id: coach.pr.mass-delete-guard
+  legacy_sha: 6892b8c7d07bb073
+  extraction_mode: high_fidelity
+content:
+  summary: Platform-local guard against accidental large deletions slipping through a PR (the Wave 12
+    contamination class).
+  normative_text: |
+    Added after the Wave 12 contamination incident (PRs #625/#627 deleted 1,277 files / 220,000 lines
+    by accident, from a worktree with core.bare=true). Thresholds: >100 deleted files OR >10,000 deleted
+    lines without an approved escape hatch.
+  fix_hint: |
+    A PR exceeded the mass-delete thresholds without an approved escape hatch. Choose one:
+      A. Intentional decommission/archive — edit the PR title to begin with `chore(decom):`,
+         `refactor(remove):`, or `chore(archive):`.
+      B. Intentional but title fixed — add a commit whose body contains the exact token
+         `[mass-delete-approved]` (e.g. `git commit --allow-empty -m "approve mass delete"
+         -m "[mass-delete-approved]"`).
+      C. Accidental (Wave 12 class) — audit for core.bare=true contamination, then:
+         git diff origin/main..HEAD --stat | tail -5 ; git reset --soft origin/main ;
+         git checkout -- . ; re-apply only the intended changes ; push the corrected branch.
+  exceptions:
+    - approved decommission via title prefix or the [mass-delete-approved] commit token
+metadata:
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 3.43.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: false
+  implementation_preserved: false
+  fix_hint_preserved: true
+  reviewed_at: '2026-06-17'
+terms:
+- term_id: mass_delete_threshold
+  text: the >100 deleted files or >10,000 deleted lines boundary above which a PR requires an escape hatch.
+- term_id: decommission_escape_hatch
+  text: a title prefix (chore(decom/refactor(remove/chore(archive)) or a [mass-delete-approved] commit
+    token that signals a deletion is deliberate.

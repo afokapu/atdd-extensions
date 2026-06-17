@@ -1,0 +1,77 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.github.
+#
+# IMPORTANT (boundary spec §6.2): core↔extension edges are NOT authored here.
+# Whether/how a core coach node composes with these github nodes is an
+# unresolved prerequisite design (Slice-2 guardrail; cf. afokapu/atdd#1122
+# coach.extension.*). The core targets a github node *realizes* are declared
+# narratively in atdd.extension.yaml::depends_on.targets and in the README
+# mapping table — NOT as graph edges. Only extension-internal edges live here.
+graph_id: atdd.extension.github.relationships
+
+nodes:
+  - github.issue.tracking-on-github-issues
+  - github.issue.label-taxonomy
+  - github.issue.auto-phase-on-merge
+  - github.issue.projects-access-fallback
+  - github.issue.create-via-atdd-not-gh
+  - github.issue.trailer-required
+  - github.pr.merge-blocks-on-pre-smoke-close
+  - github.pr.closes-keyword-discipline
+  - github.pr.green-ships-without-smoke
+  - github.pr.runtime-artifacts-blocked
+  - github.pr.base-must-be-default-branch
+  - github.pr.mass-delete-guard
+  - github.shim.gh-issue-create-blocked
+  - github.command.forbidden-gh-patterns
+
+edges:
+  # --- label taxonomy underpins phase + auto-phase expression ---
+  - from: github.issue.auto-phase-on-merge
+    to: github.issue.label-taxonomy
+    type: depends_on
+    rationale: Auto-phase advances by swapping the atdd:{PHASE} label defined by the taxonomy.
+
+  - from: github.issue.projects-access-fallback
+    to: github.issue.auto-phase-on-merge
+    type: refines
+    rationale: The fallback narrows auto-phase behavior when the workflow token lacks Projects R/W.
+
+  - from: github.issue.projects-access-fallback
+    to: github.issue.label-taxonomy
+    type: depends_on
+    rationale: Label-only sync degrades to swapping the taxonomy's atdd:{PHASE} label.
+
+  - from: github.issue.label-taxonomy
+    to: github.issue.tracking-on-github-issues
+    type: part_of
+    rationale: The label taxonomy is one facet of the three-layer GitHub issue tracking model.
+
+  # --- issue-create enforcement triad realizes one intent across sites ---
+  - from: github.shim.gh-issue-create-blocked
+    to: github.issue.create-via-atdd-not-gh
+    type: enforces
+    rationale: The PATH shim + pre-commit grep are the harness-agnostic enforcement of the create-via-atdd rule.
+
+  - from: github.command.forbidden-gh-patterns
+    to: github.issue.create-via-atdd-not-gh
+    type: enforces
+    rationale: The in-harness classifier hard-blocks gh issue create, the L1 enforcement of the same rule.
+
+  # --- PR auto-close discipline cluster ---
+  - from: github.pr.closes-keyword-discipline
+    to: github.pr.merge-blocks-on-pre-smoke-close
+    type: complements
+    rationale: Keyword discipline ensures the body's declared close set matches what the pre-smoke gate evaluates.
+
+  - from: github.pr.green-ships-without-smoke
+    to: github.pr.merge-blocks-on-pre-smoke-close
+    type: complements
+    rationale: Both guard code/auto-close crossing the PR boundary before SMOKE evidence exists.
+
+  # --- forbidden-pattern policy also governs PR creation safety ---
+  - from: github.command.forbidden-gh-patterns
+    to: github.pr.base-must-be-default-branch
+    type: enforces
+    rationale: Blocking gh pr create routes PR creation through atdd pr, which enforces the default-branch base rule.

@@ -1,0 +1,55 @@
+schema_version: 1.1.0
+rule_id: github.pr.closes-keyword-discipline
+kind: rule
+status: active
+name: Auto-close intent lives only in the PR body and matches closingIssuesReferences
+statement: Auto-close intent on a PR must be declared exclusively and unambiguously in the PR body and
+  must match exactly what GitHub will actually auto-close (closingIssuesReferences). Negated/qualified body
+  keywords still fire (GitHub ignores negation) and commit-injected closes not declared in the body are
+  both forbidden. This realizes the core no-terminal-before-lifecycle-satisfied rule at the GitHub keyword
+  boundary.
+source:
+  legacy_path: src/atdd/coach/conventions/pr.convention.yaml
+  legacy_section: rules
+  legacy_rule_id: coach.pr.closes-keyword-discipline
+  legacy_sha: 30c82fcc9aae8570
+  extraction_mode: high_fidelity
+content:
+  summary: The PR body is the single editable source of truth for auto-close intent; it must agree with
+    GitHub's effective closing set.
+  normative_text: |
+    Two divergences are forbidden because GitHub's closing-keyword parser is silently buggy in both:
+    (1) NEGATED/QUALIFIED body keyword — a phrase like `Does NOT close #N` still fires auto-close; use
+    `Refs #N`. (2) COMMIT-INJECTED close not declared in the body — an issue appears in
+    closingIssuesReferences (so it WILL auto-close on merge) but the PR body carries no affirmative
+    `Closes #N` (the close is injected by an immutable commit message — the #927 incident).
+  fix_hint: |
+    A PR's effective auto-close set (closingIssuesReferences) diverges from what its BODY declares, OR
+    the body contains a negated/qualified closing keyword GitHub ignores. The body is the single,
+    editable source of truth — repair so the two agree:
+      (a) COMMIT-INJECTED — if the PR fully closes #N: add `Closes #N` to the body
+          (`gh pr edit <N> --body "<new-body>"`) and advance the issue label first
+          (`atdd issue <N> --status SMOKE` → `--status REFACTOR`). If partial/umbrella: amend the
+          commit message to `Refs #N` and force-push.
+      (b) NEGATED-BODY — replace the negated phrase with `Refs #N` (`gh pr edit <N> --body "..."`).
+    Rule of thumb: use `Closes #N` ONLY in the PR body and ONLY for a full close; everywhere else use
+    `Refs #N`. Strict by design — bypass is forbidden. See issue #928 / the #927 incident.
+metadata:
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 3.87.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: false
+  implementation_preserved: false
+  fix_hint_preserved: true
+  reviewed_at: '2026-06-17'
+terms:
+- term_id: closing_issues_references
+  text: >-
+    GitHub's GraphQL field listing the issues a PR will auto-close on merge — the platform's effective
+    close set.
+- term_id: refs_keyword
+  text: >-
+    the non-closing `Refs #N` reference used for partial deliveries, commit messages, and negated
+    mentions so auto-close does not fire.
