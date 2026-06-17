@@ -1,0 +1,8 @@
+schema_version: "1.0.0"
+kind: implementation
+implementation_id: github.shim.gh-issue-create-blocked.impl
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.0.0"
+
+realizes_convention: github.shim.gh-issue-create-blocked
+entrypoint: gh_shim.py
