@@ -24,19 +24,21 @@ jobs:
       - name: Install ATDD toolkit (composition CLI + core nodes via package-data)
         run: pip install "git+https://github.com/afokapu/atdd.git@main"
 
-      - name: Validate every package composes against installed core
+      - name: Validate every OFFICIAL package composes against installed core
+        # Scope: official/ packages are the composition guarantee consumers rely on.
+        # examples/ are illustrative (may intentionally be partial) and are NOT gated.
         run: |
           set -euo pipefail
           shopt -s nullglob
           found=0
-          for pkg in official/*/ examples/*/; do
+          for pkg in official/*/; do
             [ -f "$pkg/atdd.extension.yaml" ] || [ -f "$pkg/atdd.workspace.yaml" ] || continue
             found=1
             echo "::group::atdd validate package $pkg"
             atdd validate package "$pkg"   # exits non-zero on any composition violation
             echo "::endgroup::"
           done
-          if [ "$found" = 0 ]; then echo "::error::no packages discovered to validate"; exit 1; fi
+          if [ "$found" = 0 ]; then echo "::error::no official packages discovered to validate"; exit 1; fi
 
       - name: Negative canary — the gate rejects an invalid realization
         # Proves the gate has teeth (criteria 3-6). The full negative contract — bad
