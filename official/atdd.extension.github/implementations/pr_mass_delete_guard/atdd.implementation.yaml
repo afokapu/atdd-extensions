@@ -1,0 +1,8 @@
+schema_version: "1.0.0"
+kind: implementation
+implementation_id: github.pr.mass-delete-guard.impl
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.0.0"
+
+realizes_convention: github.pr.mass-delete-guard
+entrypoint: mass_delete.py

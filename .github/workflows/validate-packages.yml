@@ -84,3 +84,41 @@ jobs:
 
       - name: Run atdd.workspace.python-pytest provider conformance
         run: pytest official/atdd.workspace.python-pytest/conformance/ -v
+
+  # Real end-to-end: the python-pytest provider DISCOVERS every github extension
+  # implementation manifest and RUNS its suite. Proves the provider<->implementation
+  # contract chain works, not just that manifests load.
+  github-implementations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install pytest pyyaml
+
+      - name: Provider discovers + runs every github implementation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path("official/atdd.workspace.python-pytest/adapter").resolve()))
+          import discover, run
+          ext = Path("official/atdd.extension.github/implementations").resolve()
+          impls = discover.discover_implementations(ext)
+          assert len(impls) == 5, f"expected 5 implementations, discovered {len(impls)}"
+          failed = []
+          for i in impls:
+              res = run.run_implementation(i.implementation_id, i.manifest_path.parent)
+              print(f"[{'PASS' if res.passed else 'FAIL'}] {i.implementation_id} exit={res.exit_code}")
+              if not res.passed:
+                  failed.append(i.implementation_id)
+                  print(res.stdout[-800:])
+          if failed:
+              sys.exit(f"implementations failed: {failed}")
+          print("all 5 github implementations discovered and green")
+          PY

@@ -1,0 +1,8 @@
+schema_version: "1.0.0"
+kind: implementation
+implementation_id: github.pr.merge-blocks-on-pre-smoke-close.impl
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.0.0"
+
+realizes_convention: github.pr.merge-blocks-on-pre-smoke-close
+entrypoint: merge_gate.py

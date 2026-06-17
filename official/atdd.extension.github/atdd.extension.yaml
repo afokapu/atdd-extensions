@@ -20,8 +20,9 @@ flow_wagon: govern-lifecycle
 feature: github-platform-binding
 
 # What this package owns. Conventions + relationships are authored here;
-# implementations are STUBS in this slice (no runtime ported — see §6.3 of the
-# boundary spec).
+# implementations are real, discoverable units (pure decision core + pytest) under
+# implementations/<name>/atdd.implementation.yaml, targeting the python-pytest
+# provider. See implementations/README.md.
 owns:
   conventions:
     - conventions/github.issue.tracking-on-github-issues.convention.yaml
@@ -41,7 +42,7 @@ owns:
   relationships:
     - relationships.yaml
   implementations:
-    # STUBS in this slice — see implementations/README.md. No runtime ported.
+    # Real, discoverable + runnable units — see implementations/README.md.
     - implementations/gh_path_shim
     - implementations/pr_merge_gate
     - implementations/pr_base_branch_validator
@@ -81,9 +82,9 @@ depends_on:
   design_candidates:
     coach_nodes:
       - coach.execution.work-provenance
-  # Implementations (validators / shims) run inside a shared workspace provider.
-  # STUBS in this slice; the target is declared now so the build phase echoes it
-  # in each implementations/<name>/atdd.implementation.yaml.
+  # Implementations (validators / shims) run inside this shared workspace
+  # provider; each implementations/<name>/atdd.implementation.yaml echoes the
+  # target id + a contract_version satisfying the range below.
   workspaces:
     - id: atdd.workspace.python-pytest
       contract: "^1.0.0"
