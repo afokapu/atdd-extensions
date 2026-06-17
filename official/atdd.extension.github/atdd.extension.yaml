@@ -1,0 +1,92 @@
+schema_version: "1.0.0"
+
+# Official ATDD GitHub platform extension.
+#
+# Boundary (see README + docs/atdd-extension-github-boundary.md in core, issue
+# afokapu/atdd#1118):
+#   "Core owns the lifecycle. This extension maps GitHub concepts onto the
+#    lifecycle." This extension contributes GitHub platform behavior (labels,
+#   PR-merge gates, gh shims, forbidden-command patterns, issue/PR trailers).
+#   It NEVER redeclares a core lifecycle/role/graph node — it references them.
+extension_id: atdd.extension.github
+version: "0.1.0"
+kind: extension
+
+# This extension realizes coach-protocol behavior on the GitHub platform. The
+# implementations are PR/issue gates and PATH shims, not a single role's
+# source surface, so the closest role is the lifecycle orchestrator (coach).
+role: coach
+flow_wagon: govern-lifecycle
+feature: github-platform-binding
+
+# What this package owns. Conventions + relationships are authored here;
+# implementations are STUBS in this slice (no runtime ported — see §6.3 of the
+# boundary spec).
+owns:
+  conventions:
+    - conventions/github.issue.tracking-on-github-issues.convention.yaml
+    - conventions/github.issue.label-taxonomy.convention.yaml
+    - conventions/github.issue.auto-phase-on-merge.convention.yaml
+    - conventions/github.issue.projects-access-fallback.convention.yaml
+    - conventions/github.issue.create-via-atdd-not-gh.convention.yaml
+    - conventions/github.issue.trailer-required.convention.yaml
+    - conventions/github.pr.merge-blocks-on-pre-smoke-close.convention.yaml
+    - conventions/github.pr.closes-keyword-discipline.convention.yaml
+    - conventions/github.pr.green-ships-without-smoke.convention.yaml
+    - conventions/github.pr.runtime-artifacts-blocked.convention.yaml
+    - conventions/github.pr.base-must-be-default-branch.convention.yaml
+    - conventions/github.pr.mass-delete-guard.convention.yaml
+    - conventions/github.shim.gh-issue-create-blocked.convention.yaml
+    - conventions/github.command.forbidden-gh-patterns.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations:
+    # STUBS in this slice — see implementations/README.md. No runtime ported.
+    - implementations/gh_path_shim
+    - implementations/pr_merge_gate
+    - implementations/pr_base_branch_validator
+    - implementations/pr_mass_delete_guard
+    - implementations/forbidden_command_policy
+  schemas: []
+  gates: []
+  scopes:
+    # Selector types this extension uses (boundary spec §6, §7).
+    - github_issue
+    - github_pr
+
+# This extension TARGETS the core coach protocol. It does not redeclare any core
+# lifecycle/role/graph node — every GitHub behavior maps onto a core node that
+# remains the authority (see README §"Convention → lifecycle mapping").
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  # Core coach nodes (shipped in Slice 2 / core PR #1117) that the left-column
+  # GitHub behaviors realize. Referenced by id; never copied here. Core remains
+  # the authority for WHEN a unit may advance or close.
+  # targets.coach_nodes lists ONLY shipped, resolvable core nodes. A loader may
+  # assume every entry here resolves.
+  targets:
+    coach_nodes:
+      - coach.lifecycle.phase-machine
+      - coach.lifecycle.single-step-advance-on-delivery
+      - coach.lifecycle.no-terminal-before-lifecycle-satisfied
+      - coach.execution.runtime-state-not-a-delivery-artifact
+      - coach.execution.atomic-registry-write
+  # design_candidates are NOT yet shipped core nodes — kept out of targets so
+  # depends_on stays strictly resolvable. The README mapping table carries the
+  # narrative reference. Tracked in afokapu/atdd#1122.
+  design_candidates:
+    coach_nodes:
+      - coach.execution.work-provenance
+  # Implementations (validators / shims) run inside a shared workspace provider.
+  # STUBS in this slice; the target is declared now so the build phase echoes it
+  # in each implementations/<name>/atdd.implementation.yaml.
+  workspaces:
+    - id: atdd.workspace.python-pytest
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

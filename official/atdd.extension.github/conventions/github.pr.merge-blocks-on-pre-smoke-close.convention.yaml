@@ -1,0 +1,55 @@
+schema_version: 1.1.0
+rule_id: github.pr.merge-blocks-on-pre-smoke-close
+kind: rule
+status: active
+name: PR auto-close is blocked while the linked issue is pre-SMOKE
+statement: >-
+  An open PR that auto-closes an ATDD issue (via Closes/Fixes/Resolves #N or the closingIssuesReferences
+  GraphQL field) must reference an issue whose phase label is atdd:REFACTOR or atdd:COMPLETE; PRs targeting
+  an issue at atdd:RED or atdd:GREEN are blocked. This realizes the core no-terminal-before-lifecycle-satisfied
+  rule at the GitHub PR boundary.
+source:
+  legacy_path: src/atdd/coach/conventions/pr.convention.yaml
+  legacy_section: rules
+  legacy_rule_id: coach.pr.merge-blocks-on-pre-smoke-close
+  legacy_sha: 30c82fcc9aae8570
+  extraction_mode: high_fidelity
+content:
+  summary: GitHub's auto-close keyword/field is the platform trigger; whether terminal-close is allowed
+    yet is owned by the core lifecycle rule.
+  normative_text: |
+    Merge-blocked phases: INIT, PLANNED, RED, GREEN. Merge-allowed: SMOKE, REFACTOR, COMPLETE.
+    Out of scope: BLOCKED, OBSOLETE. PRs targeting an issue at atdd:RED or atdd:GREEN are blocked —
+    the issue must transition through SMOKE+REFACTOR before merge, otherwise GitHub's auto-close fires
+    while the lifecycle is still pre-SMOKE (the 2026-05-13 substrate-asymmetry incident, #681).
+  fix_hint: |
+    The named open PR references an ATDD issue still at atdd:RED or atdd:GREEN via an auto-closing
+    keyword, so a merge would fire GitHub's auto-close before the issue reaches SMOKE+REFACTOR.
+      1. Read the violation — it cites "PR#<N>" and the linked issue + current phase label
+         (run `gh pr view <N>` and `gh issue view <issue> --json labels`).
+      2. Drive the issue forward (substitute <issue> with the cited number, e.g. "681"):
+           atdd issue <issue> --status SMOKE
+           atdd issue <issue> --status REFACTOR
+      3. Re-run the gate on the same PR.
+      4. If the PR should NOT close the issue, edit the body and replace "Closes #<issue>" with
+         "Refs #<issue>" (run `gh pr edit <N> --body "<new-body>"`).
+    Strict by design — bypass is forbidden. See issue #681.
+  exceptions:
+    - issues at atdd:BLOCKED or atdd:OBSOLETE are out of scope (no auto-close should target them)
+metadata:
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 3.50.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: false
+  implementation_preserved: false
+  fix_hint_preserved: true
+  reviewed_at: '2026-06-17'
+terms:
+- term_id: auto_close_keyword
+  text: a GitHub closing keyword (close/closes/closed/fix/fixes/fixed/resolve/resolves/resolved) in a PR
+    body that fires issue auto-close on merge.
+- term_id: merge_eligible_phase
+  text: a phase (SMOKE, REFACTOR, COMPLETE) at which an auto-closing PR may merge; the core lifecycle
+    rule owns this eligibility.

@@ -1,0 +1,31 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.github
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.github
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# The runtime this extension's implementations target (declared in its manifest).
+# Implementations are stubs in this slice; the target is recorded for the build phase.
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+
+categories:
+  - github
+  - issue-tracking
+  - pull-request
+  - lifecycle-binding
+  - official
+
+description: Official ATDD GitHub platform extension — maps GitHub issues, labels, Projects v2, and PR
+  rules onto the ATDD lifecycle.
