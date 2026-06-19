@@ -75,3 +75,17 @@ edges:
     to: github.pr.base-must-be-default-branch
     type: enforces
     rationale: Blocking gh pr create routes PR creation through atdd pr, which enforces the default-branch base rule.
+
+  # --- coverage: wire the remaining standalone nodes into the local graph ---
+  - from: github.issue.trailer-required
+    to: github.issue.tracking-on-github-issues
+    type: part_of
+    rationale: The required trailer (Issue #N) is the mechanism that binds a commit/PR to the tracked GitHub issue.
+  - from: github.pr.mass-delete-guard
+    to: github.pr.merge-blocks-on-pre-smoke-close
+    type: complements
+    rationale: The mass-delete escape-hatch guard complements the pre-smoke-close merge gate as a PR-merge safety check.
+  - from: github.pr.runtime-artifacts-blocked
+    to: github.pr.merge-blocks-on-pre-smoke-close
+    type: complements
+    rationale: Blocking runtime artifacts in the PR diff complements the merge gate by keeping non-deliverable state out of a merging PR.
