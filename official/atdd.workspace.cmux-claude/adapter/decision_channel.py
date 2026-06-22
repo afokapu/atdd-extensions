@@ -14,6 +14,9 @@ for questions) — and imports nothing from core. The session delivery is inject
 cmux-pane option-select + submit keystroke.
 
 Round-trip semantics mirror the core reference (InMemoryDecisionChannel):
+  * readiness       → whether the channel is LIVE (the cmux wrapper will publish); a
+                      not-live verdict is the signal the core dispatch rule uses to
+                      refuse/escalate instead of spawning an unmediated worker
   * surface_pending → the decisions still awaiting mediation (not yet resolved/escalated)
   * deliver_reply   → SELECT + SUBMIT so the worker advances; advances ONLY on a valid
                       option selection (the silent ``delivered:true`` footgun on a
@@ -22,7 +25,7 @@ Round-trip semantics mirror the core reference (InMemoryDecisionChannel):
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Mapping, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 # The required decision payload fields (the cross-repo contract with core's
 # DecisionRequest). A feed message carrying all of these is a surfaced decision.
@@ -33,12 +36,38 @@ _TERMINAL = ("resolved", "escalated")
 class DecisionChannelAdapter:
     """Two-way decision channel over a CommandFeed + an injected session deliverer."""
 
-    def __init__(self, feed: Any, *, deliver: Callable[[str], bool]) -> None:
+    def __init__(
+        self,
+        feed: Any,
+        *,
+        deliver: Callable[[str], bool],
+        readiness_probe: Optional[Callable[[], Any]] = None,
+    ) -> None:
         # feed: a transport.command-feed (CommandFeed) — append(payload)->seq, poll(since)->[FeedMessage]
         # deliver: callable(prompt) -> bool — delivers the reply into the worker session
         #          and reports whether the worker ADVANCED (production: cmux select+submit).
+        # readiness_probe: callable() -> ChannelReadiness — reports whether the channel is
+        #          live (default: the live cmux env probe). Injected so readiness is
+        #          exercisable without a live cmux.
         self._feed = feed
         self._deliver = deliver
+        self._readiness_probe = readiness_probe
+
+    def readiness(self) -> Any:
+        """Report whether the decision channel is live — the core readiness obligation.
+
+        Delegates to the injected readiness probe (default: the cmux env probe, which
+        is live iff the wrapper will inject its ``PermissionRequest -> feed`` hook). A
+        not-live verdict is the signal for the core dispatch rule to refuse or escalate
+        rather than spawn an unmediated worker; the provider only supplies the live
+        signal, it does not own the refuse/escalate policy.
+        """
+        probe = self._readiness_probe
+        if probe is None:
+            from readiness import cmux_channel_readiness  # lazy: default live cmux probe
+
+            probe = cmux_channel_readiness
+        return probe()
 
     def _scan(self) -> tuple[Dict[str, Mapping], set]:
         """Reduce the feed to (pending-decisions-by-id, terminal-request-ids)."""
