@@ -5,5 +5,11 @@ schema_version: "1.0.0"
 registry_id: atdd.artifact-registry
 entries:
   - entries/atdd.workspace.python-pytest.yaml
+  - entries/atdd.workspace.typescript.yaml
+  - entries/atdd.workspace.dart-flutter.yaml
+  - entries/atdd.workspace.supabase.yaml
+  - entries/atdd.workspace.fastapi.yaml
   - entries/atdd.extension.github.yaml
+  - entries/atdd.extension.coder.yaml
+  - entries/atdd.extension.tester.yaml
   - entries/acme.extension.component-header-validator.yaml

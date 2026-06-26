@@ -1,0 +1,26 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.workspace.dart-flutter
+kind: workspace
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.workspace.dart-flutter
+  type: local
+
+version: "0.1.0"
+contract_version: "1.0.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+categories:
+  - dart
+  - flutter
+  - runtime
+  - workspace-provider
+  - official
+
+description: Official ATDD Dart/Flutter design-system workspace provider (reusable runtime).
+  Skeleton in this slice — adapter is a NotImplementedError stub.

@@ -1,0 +1,56 @@
+schema_version: "1.0.0"
+
+# Official ATDD coder-role extension.
+#
+# Owns every coder convention node classified `extension` in the coder/tester
+# decomposition (see docs/coder-tester-extension-decomposition/DESIGN.md §1A/§2.1)
+# — the stack-bound coder rules (per-language file suffixes, JSX/React detectors,
+# Flutter design-system, TS/Python complexity+quality+dup metrics, FastAPI route
+# auth, etc.). Convention bodies are authored in a later slice and reference the
+# deduped core coder node ids; this manifest ships the structural skeleton only.
+extension_id: atdd.extension.coder
+version: "0.1.0"
+kind: extension
+
+# Realizes coder-role source-surface validation. Conventions here express
+# stack-specific realizations of core coder principles; they never redeclare a
+# core lifecycle/role/graph node — they reference it.
+role: coder
+flow_wagon: validate-source-surface
+feature: coder-extension-conventions
+
+# What this package owns. Conventions + implementations are authored in the build
+# slice (they need the deduped core coder node ids first), so those lists start
+# empty; relationships.yaml ships as an empty extension-local graph skeleton.
+owns:
+  conventions: []
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  # Reusable runtimes this extension's implementations target. Referenced by id +
+  # contract range; never copied in. Coder detectors fan out across five runtimes.
+  workspaces:
+    - id: atdd.workspace.python-pytest
+      contract: "^1.0.0"
+    - id: atdd.workspace.typescript
+      contract: "^1.0.0"
+    - id: atdd.workspace.dart-flutter
+      contract: "^1.0.0"
+    - id: atdd.workspace.supabase
+      contract: "^1.0.0"
+    - id: atdd.workspace.fastapi
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

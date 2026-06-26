@@ -1,0 +1,27 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.workspace.fastapi
+kind: workspace
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.workspace.fastapi
+  type: local
+
+version: "0.1.0"
+contract_version: "1.0.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+categories:
+  - fastapi
+  - http-rest
+  - python
+  - runtime
+  - workspace-provider
+  - official
+
+description: Official ATDD FastAPI/HTTP-REST workspace provider (reusable runtime). Skeleton in
+  this slice — adapter is a NotImplementedError stub.

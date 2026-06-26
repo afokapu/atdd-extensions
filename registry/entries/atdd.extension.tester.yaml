@@ -1,0 +1,38 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.tester
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.tester
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# The runtimes this extension's implementations target (declared in its manifest).
+# Conventions + implementations are authored in the build slice; the targets are
+# recorded here for that phase.
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+  - id: atdd.workspace.typescript
+    contract: "^1.0.0"
+  - id: atdd.workspace.supabase
+    contract: "^1.0.0"
+  - id: atdd.workspace.fastapi
+    contract: "^1.0.0"
+
+categories:
+  - tester
+  - test-validator
+  - role-binding
+  - official
+
+description: Official ATDD tester-role extension — owns the stack-bound tester convention nodes
+  (test filename mechanics, Supabase/Postgres migration naming, runtime-path routing, preact-DOM
+  presentation smoke, contract persistence + api_structure bindings). Skeleton in this slice.
