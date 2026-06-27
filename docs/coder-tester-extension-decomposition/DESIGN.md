@@ -434,43 +434,41 @@ official/atdd.workspace.<id>/
 
 # 3. AUTHORING-MECHANISM FINDING (#1098)
 
-**Is the EXTENSION track blocked on the core `atdd author convention-node` CLI (#1098)? → NO.**
+**CORRECTED 2026-06-26.** The earlier draft of this section claimed the CLI was
+"too thin" and that nodes must be hand-authored. **That was wrong** — it was based
+on reading the STALE `author.py` in the divergent local-`main` worktree (3.133.2),
+not the real CLI. Verified against the actual installed CLI (`atdd author
+convention-node --help`, 3.134.0+):
 
-Evidence (verified against both repos):
+**`atdd author convention-node` ALREADY emits the full 15-field v1.1.0 schema.** It
+exposes flags for every group: `--name`, `--statement`, `--rationale`, `--note`,
+`--term`, `--kind`, `--status`, `--implementation` (JSON `{type, ref}`), `--content`
+(JSON summary/normative_text/operational_guidance/examples/counter_examples/
+constraints/exceptions/fix_hint), `--bidirectional` (JSON array), `--metadata`
+(JSON aliases/severity/disposition/introduced_in/suppression_deadline),
+`--node-source` (JSON legacy_path/legacy_section/legacy_rule_id/legacy_sha/
+extraction_mode), `--parity` (JSON), plus targeting flags `--core` / `--extension
+<pkg>` / `--role`, and `--family`/`--template` to scaffold a convention-graph variant.
 
-1. **The CLI is structurally too thin.** `create_convention_node()` in
-   `/Users/alecfokapu/Github/atdd/main/src/atdd/planner/commands/author.py`
-   (lines 167–176) emits only: `schema_version` (hardcoded `"1.0.0"`), `rule_id`,
-   `kind`, `status`, `statement`, optional `rationale`, `terms` (`{term_id,text}`
-   only), optional `notes` — **≤8 of the 15 schema groups**. It has **no flags**
-   for `name`, `source` (legacy_path/section/sha/extraction_mode), `content`
-   (summary/normative_text/fix_hint/examples/exceptions), `metadata`
-   (severity/disposition/introduced_in), `parity`, `implementation`, or
-   `bidirectional` — the entire provenance/fidelity surface.
+**Authoring mechanism (compliance-by-construction, available NOW — not blocked on any CLI work):**
 
-2. **The github nodes were NOT produced by that CLI.** All 14 nodes in
-   `./official/atdd.extension.github/conventions/` carry `schema_version: 1.1.0`
-   (the CLI hardcodes `1.0.0`) and uniformly include `source.legacy_*`, `content.*`,
-   `metadata.*`, `parity.*`, `name` — none of which the CLI can write. `git log`
-   shows a single authored commit (`f312ed3 feat(github): author atdd.extension.github
-   package (conventions-first) (#3)`); there is no node-generator script in the repo.
-   The github README states nodes were authored *conventions-first* with
-   `extraction_mode: high_fidelity`. They were hand-authored directly to the full
-   v1.1.0 schema (the "validated-dict migration" path).
+- **Phase A (core nodes):** `atdd author convention-node --core --role {coder,tester}
+  --rule-id <id> --name … --statement … --metadata '{…}' --content '{…}'
+  --node-source '{…}' --parity '{…}' [--implementation '{…}']`. No publisher
+  namespace ⇒ no guard. This is the path for core atomization.
+- **Phase B (extension nodes in this repo):** the public authoring path **refuses**
+  the reserved `atdd` publisher (`atdd author rejected input: the 'atdd' publisher
+  is reserved for official ATDD packages`). Guard lives in
+  `author_context.py::_validate_package_id(..., allow_reserved=False)` — it stops
+  END USERS claiming `atdd.*`, while structural validation of an already-official
+  manifest passes `allow_reserved=True`. Since `atdd.extension.coder/tester` are
+  **official** packages (like `atdd.extension.github`), Phase B node authoring uses
+  the **official-maintainer path** for `atdd.*` (the same way github's official nodes
+  were created), NOT the end-user `atdd author --extension` invocation. Exact
+  maintainer invocation/bypass to be confirmed before Phase B authoring.
 
-3. **The project already decided to bypass the CLI for nodes.** Both core decomposition
-   issue docs lock the mechanism: *"validated-dict migration + `atdd author relationship`
-   CLI for edges — CLI `convention-node` too thin for provenance/parity"*
-   (`tester-...-issues.md` line 69; `coder-...-issues.md` line 170). The CLI is used
-   **only for relationship edges**, not for node bodies.
-
-**Conclusion:** Extension convention nodes are authored **directly to the 15-field
-v1.1.0 schema** (exactly as github's were), validated against the schema, with
-`atdd author relationship` used only for `relationships.yaml` edges. The extension
-track does **not** wait on enriching the CLI. (Caveat: the literal "too thin"
-citations in the docs reference #1110/#1116; a grep for "1098" found no doc
-reference. The substantive finding holds regardless of which issue number tracks
-the CLI-enrichment work — the github precedent demonstrably did not wait for it.)
+The interface is flag + JSON (nested schema groups passed as JSON objects), not a
+single node-file input; output is schema-validated either way (compliance-by-construction).
 
 ---
 
