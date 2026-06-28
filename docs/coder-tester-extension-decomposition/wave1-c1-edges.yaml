@@ -1,0 +1,64 @@
+# Wave 1 — cluster C1 obligation-node graph edges (FRAGMENT, overseer merges).
+#
+# Authored by the wave1-c1 migration worker for the four nodes migrated in this
+# cluster. The overseer merges these into
+# official/atdd.extension.coder/relationships.yaml (and/or carries the
+# core-targeted ones narratively per boundary spec §6.2 — see `boundary:` below).
+#
+# Edge vocabulary follows DESIGN §2.1/§4 + relationships.yaml header:
+#   * refines           — a stack-specific node refines its language-neutral
+#                         sibling (e.g. the *-typescript detector). Extension-INTERNAL.
+#   * co-extracted-from — both nodes were high-fidelity-extracted from the SAME
+#                         legacy convention file (provenance link). Extension-INTERNAL.
+#   * specializes       — a concrete detector node specializes a broader CORE
+#                         principle node (DESIGN "principle vs detector" split).
+#                         CROSSES the core↔extension boundary -> per §6.2 this is
+#                         narrative, NOT a graph edge; flagged boundary: core-narrative
+#                         so the overseer places it correctly.
+#
+# Each of the four new nodes has >= 1 incident edge below.
+
+edges:
+  # ── coder.dead-code.reachability-typescript ───────────────────────────────────
+  # The TS reachability detector refines its language-neutral sibling (the Python
+  # reachability node). Both are coder-extension nodes -> extension-internal.
+  # Covers BOTH dead-code nodes (one is source, one is target).
+  - source_ref: coder.dead-code.reachability-typescript
+    target_ref: coder.dead-code.reachability
+    type: refines
+    boundary: extension-internal
+    reason: >
+      Same "all production source is reachable from a graph root" obligation, peeled
+      to the TypeScript stack (regex import-graph, index.ts barrels/app entry roots)
+      from the language-neutral Python sibling. DESIGN §2.1 *-typescript-refines-sibling
+      pattern; both nodes live in atdd.extension.coder.
+
+  # ── coder.logging.coach-silent-swallow ────────────────────────────────────────
+  # Provenance sibling of coder.logging.structured: both nodes were extracted from
+  # the SAME legacy file (src/atdd/coder/conventions/logging.convention.yaml) and
+  # are observability obligations of the same disposition (suppress-and-clean).
+  - source_ref: coder.logging.coach-silent-swallow
+    target_ref: coder.logging.structured
+    type: co-extracted-from
+    boundary: extension-internal
+    reason: >
+      Both high-fidelity-extracted from logging.convention.yaml (legacy_sha
+      b5999f8489b06e20); sibling observability obligations (an event must carry
+      structured context / a handler must observably react), both disposition
+      suppress-and-clean. Extension-internal provenance link.
+
+  # ── coder.refactor.nplus1 ─────────────────────────────────────────────────────
+  # nplus1 is the concrete N+1 detector; its broader principle is the CORE node
+  # coder.performance.perf ("No IO-in-loop / N+1 principle", DESIGN line 195/229).
+  # This is the ONLY semantic parent nplus1 has, and it lives in core -> boundary
+  # is core-narrative (per §6.2, NOT a graph edge). Flagged for the overseer.
+  - source_ref: coder.refactor.nplus1
+    target_ref: coder.performance.perf
+    type: specializes
+    boundary: core-narrative
+    reason: >
+      nplus1 is the Python detector realization of the agnostic "no IO/query inside a
+      loop" principle owned by the core node coder.performance.perf (DESIGN: "principle
+      = performance.perf, CA"). Because the target is a CORE node, boundary spec §6.2
+      keeps this narrative (declared in the node body), not a relationships.yaml graph
+      edge. Surfaced here so the overseer records the link; see the wave1-c1 final note.
