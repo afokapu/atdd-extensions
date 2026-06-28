@@ -1,0 +1,79 @@
+# Wave-2 cluster C2 — obligation-node relationship fragment.
+#
+# Edges among the 7 quality-metric obligation nodes migrated in this cluster
+# (test_quality_metrics.py -> 5 python rule_ids; test_quality_metrics_typescript.py
+# -> 2 typescript rule_ids). The OVERSEER consolidates these into
+# atdd.extension.coder/relationships.yaml; this fragment is the input.
+#
+# All edges are EXTENSION-INTERNAL (both endpoints are new atdd.extension.coder
+# nodes) — no core↔extension links, so none carries `boundary: core-narrative`.
+#
+# NO-ORPHAN: every node authored in this cluster appears in >= 1 edge below.
+#   coder.refactor.quality-mi                    (hub: target of 5 edges)
+#   coder.refactor.quality-comments              (source 1, target 1)
+#   coder.refactor.quality-duplication           (source 1)
+#   coder.refactor.quality-naming                (source 1)
+#   coder.refactor.quality-file-length           (source 1)
+#   coder.refactor.quality-mi-typescript         (source 1, target 1)
+#   coder.refactor.quality-comments-typescript   (source 2)
+
+cluster: wave2-c2
+extension: atdd.extension.coder
+
+edges:
+# ── the 5 python quality facets are co-emitted by ONE detector run ────────────
+# (quality_metrics_detector emits_rule_ids) and all extracted from the same
+# `quality_metrics:` section of refactor.convention.yaml. None narrows another;
+# they are co-equal facets, linked to the primary (quality-mi) as the hub.
+- source_ref: coder.refactor.quality-comments
+  target_ref: coder.refactor.quality-mi
+  type: relates-to
+  reason: 'Co-emitted python quality facets from one detector run (quality_metrics_detector emits both):
+    quality-mi scores overall maintainability while quality-comments enforces the comment ratio that feeds
+    the MI formula''s comment term. Both high-fidelity-extracted from the quality_metrics section of
+    refactor.convention.yaml (legacy_sha 3c4ee089cff5ec9e); co-equal, neither narrows the other.'
+- source_ref: coder.refactor.quality-duplication
+  target_ref: coder.refactor.quality-mi
+  type: relates-to
+  reason: 'Co-emitted python quality facets from one detector run: quality-mi guards per-module
+    maintainability while quality-duplication guards cross-file structural duplication; together they keep
+    REFACTOR-phase code maintainable. Co-extracted from the same quality_metrics convention section, both
+    disposition strict.'
+- source_ref: coder.refactor.quality-naming
+  target_ref: coder.refactor.quality-mi
+  type: relates-to
+  reason: 'Co-emitted python quality facets from one detector run: quality-mi scores maintainability while
+    quality-naming enforces PEP 8 identifier casing; both are facets of "code stays readable and
+    changeable" extracted from the same quality_metrics convention section.'
+- source_ref: coder.refactor.quality-file-length
+  target_ref: coder.refactor.quality-mi
+  type: relates-to
+  reason: 'Co-emitted python quality facets from one detector run: quality-mi scores maintainability while
+    quality-file-length tracks file size against the 500-line report threshold (input to a downstream
+    growth ratchet); co-extracted from the same quality_metrics convention section.'
+
+# ── the 2 typescript facets refine their language-neutral python siblings ─────
+# (DESIGN §2.1 *-typescript-refines-sibling pattern): same obligation, peeled to
+# the TS stack with a regex approximation instead of the radon/AST python detector.
+- source_ref: coder.refactor.quality-mi-typescript
+  target_ref: coder.refactor.quality-mi
+  type: refines
+  reason: 'Same "modules meet a minimum maintainability index (>= 20)" obligation, peeled to the
+    TypeScript stack: the TS rule approximates the SEI MI formula with a regex-estimated Halstead volume
+    (no radon, no AST) where the python sibling uses radon''s mi_visit. DESIGN §2.1
+    *-typescript-refines-sibling; both nodes live in atdd.extension.coder.'
+- source_ref: coder.refactor.quality-comments-typescript
+  target_ref: coder.refactor.quality-comments
+  type: refines
+  reason: 'Same "source has an adequate comment ratio (>= 10%)" obligation, peeled to the TypeScript
+    stack: the TS rule counts //, /* */, and JSDoc comment lines where the python sibling counts # comments
+    and triple-quoted docstrings. DESIGN §2.1 *-typescript-refines-sibling; both nodes live in
+    atdd.extension.coder.'
+
+# ── the 2 typescript facets are themselves co-emitted by one TS detector run ──
+- source_ref: coder.refactor.quality-comments-typescript
+  target_ref: coder.refactor.quality-mi-typescript
+  type: relates-to
+  reason: 'Co-emitted TypeScript quality facets from one detector run (quality_metrics_typescript_detector
+    emits both): quality-mi-typescript scores approximate maintainability while quality-comments-typescript
+    enforces the comment ratio that feeds the MI comment term. Co-equal TS facets, both disposition strict.'
