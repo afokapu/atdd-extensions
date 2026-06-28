@@ -1,0 +1,40 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.coder
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.coder
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# The runtimes this extension's implementations target (declared in its manifest).
+# Conventions + implementations are authored in the build slice; the targets are
+# recorded here for that phase.
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+  - id: atdd.workspace.typescript
+    contract: "^1.0.0"
+  - id: atdd.workspace.dart-flutter
+    contract: "^1.0.0"
+  - id: atdd.workspace.supabase
+    contract: "^1.0.0"
+  - id: atdd.workspace.fastapi
+    contract: "^1.0.0"
+
+categories:
+  - coder
+  - source-validator
+  - role-binding
+  - official
+
+description: Official ATDD coder-role extension — owns the stack-bound coder convention nodes
+  (per-language suffixes, JSX/React detectors, Flutter design-system, TS/Python metrics, FastAPI
+  route auth) that realize the core coder principles. Skeleton in this slice.

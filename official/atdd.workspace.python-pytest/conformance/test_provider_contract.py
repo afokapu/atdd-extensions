@@ -1,11 +1,15 @@
-"""Conformance suite for atdd.workspace.python-pytest (contract_version 1.0.0).
+"""Conformance suite for atdd.workspace.python-pytest (contract_version 1.1.0).
 
 A real pytest run — not a stub — proving the provider's discover + run halves
 satisfy the contract. A different runtime (node-vitest, go-test) claiming this
 contract proves it by making an equivalent suite pass.
+
+Split into v1.0.0 (exit-code fallback, unchanged) and v1.1.0 (structured report
+channel + scan-mount) sections so back-compat is visible at a glance.
 """
 from __future__ import annotations
 
+import json
 import sys
 import textwrap
 from pathlib import Path
@@ -93,6 +97,120 @@ def test_run_failing_yields_one_violation_keyed_by_impl(tmp_path: Path) -> None:
     assert result.ran
     assert not result.passed
     assert result.exit_code == 1
+    assert not result.structured  # v1.0.0 fallback channel
     assert len(result.violations) == 1
     assert result.violations[0]["rule_id"] == "ext.bad"
     assert result.violations[0]["location"] == "."
+
+
+# ── v1.1: structured report channel + scan-mount ─────────────────────────────
+
+
+def _report_writer_test(violations_literal: str) -> str:
+    """A test file that writes a v1.1 report to $ATDD_VIOLATIONS_REPORT and passes."""
+    return textwrap.dedent(
+        f"""\
+        import json, os
+        def test_emit():
+            path = os.environ.get("ATDD_VIOLATIONS_REPORT")
+            if path:
+                with open(path, "w") as fh:
+                    json.dump({{"contract_version": "1.1.0",
+                               "violations": {violations_literal}}}, fh)
+            assert True
+        """
+    )
+
+
+def test_run_reads_structured_report_channel(tmp_path: Path) -> None:
+    """A run that emits a report returns its RAW violations (structured=True)."""
+    viol = (
+        '[{"rule_id": "coder.logging.structured", "file": "a.py", "line": 3, '
+        '"col": 4, "evidence": "no extra=", "source_line": "logger.info(\\"x\\")"}]'
+    )
+    test_file = tmp_path / "test_emit.py"
+    test_file.write_text(_report_writer_test(viol))
+
+    result = run_mod.run_implementation("coder.logging.structured", test_file)
+
+    assert result.ran
+    assert result.structured
+    assert len(result.violations) == 1
+    v = result.violations[0]
+    assert v["rule_id"] == "coder.logging.structured"
+    assert v["line"] == 3 and v["col"] == 4
+    assert "source_line" in v  # RAW line carried for downstream disposition
+
+
+def test_run_emits_multiple_distinct_rule_ids(tmp_path: Path) -> None:
+    """One run may carry several distinct rule_ids (gap 3 — multi-rule)."""
+    viol = (
+        '[{"rule_id": "coder.logging.print", "file": "a.py", "line": 1, "col": 0,'
+        ' "evidence": "print", "source_line": "print(1)"},'
+        ' {"rule_id": "coder.logging.structured", "file": "a.py", "line": 2, "col": 0,'
+        ' "evidence": "no extra", "source_line": "logger.info(2)"}]'
+    )
+    test_file = tmp_path / "test_multi.py"
+    test_file.write_text(_report_writer_test(viol))
+
+    result = run_mod.run_implementation("multi", test_file)
+
+    assert result.structured
+    assert {v["rule_id"] for v in result.violations} == {
+        "coder.logging.print",
+        "coder.logging.structured",
+    }
+
+
+def test_run_malformed_report_falls_back_not_silent_pass(tmp_path: Path) -> None:
+    """A malformed report must NOT be read as zero violations — fall back instead."""
+    bad = textwrap.dedent(
+        """\
+        import os
+        def test_emit():
+            path = os.environ.get("ATDD_VIOLATIONS_REPORT")
+            if path:
+                with open(path, "w") as fh:
+                    fh.write("not json {{{")
+            assert 1 == 2
+        """
+    )
+    test_file = tmp_path / "test_bad_report.py"
+    test_file.write_text(bad)
+
+    result = run_mod.run_implementation("ext.bad", test_file)
+
+    # Malformed report -> v1.0.0 fallback (exit-code mapping), not a clean pass.
+    assert not result.structured
+    assert not result.passed
+    assert result.violations == [
+        v for v in result.violations if v.get("location") == "."
+    ]
+    assert result.violations and result.violations[0]["rule_id"] == "ext.bad"
+
+
+def test_run_injects_scan_roots_and_excludes(tmp_path: Path) -> None:
+    """scan_roots / exclude_globs are injected as JSON env vars for the detector."""
+    test_file = tmp_path / "test_env.py"
+    test_file.write_text(
+        textwrap.dedent(
+            """\
+            import json, os
+            def test_emit():
+                roots = json.loads(os.environ["ATDD_SCAN_ROOTS"])
+                excl = json.loads(os.environ["ATDD_SCAN_EXCLUDES"])
+                assert roots == ["python", "web/src"]
+                assert excl == ["**/migrations/**"]
+            """
+        )
+    )
+
+    result = run_mod.run_implementation(
+        "ext.scan",
+        test_file,
+        scan_roots=["python", "web/src"],
+        exclude_globs=["**/migrations/**"],
+    )
+
+    assert result.ran
+    assert result.passed  # the in-subprocess assertions held

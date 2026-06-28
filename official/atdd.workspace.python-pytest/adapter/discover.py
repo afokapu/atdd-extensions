@@ -1,4 +1,4 @@
-"""Discovery half of the python-pytest provider contract (contract_version 1.0.0).
+"""Discovery half of the python-pytest provider contract (contract_version 1.1.0).
 
 Given a resolved workspace instance root, locate the validator implementations an
 extension ships (``**/atdd.implementation.yaml``) and return the ones whose
@@ -7,6 +7,12 @@ calls this before ``run`` materializes the instance.
 
 Self-contained: the provider owns its own contract math (a caret SemVer check) so
 the adapter runs without importing ATDD core internals.
+
+v1.1.0 (Phase 0.5) is a MINOR, additive bump over v1.0.0: ``contract_compatible``
+keeps the same same-major / ``impl <= provider`` rule, so a v1.0.0 implementation
+(e.g. the Phase-0 ``coder.logging.print`` detector) stays discoverable on this
+v1.1.0 provider, AND a v1.1.0 implementation (the structured-report channel,
+``run.py``) is discoverable too. See PROVIDER-CONTRACT-v1.1.md §4.
 """
 from __future__ import annotations
 
@@ -16,7 +22,7 @@ from pathlib import Path
 
 import yaml
 
-CONTRACT_VERSION = "1.0.0"
+CONTRACT_VERSION = "1.1.0"
 IMPLEMENTATION_GLOB = "atdd.implementation.yaml"
 
 _SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")

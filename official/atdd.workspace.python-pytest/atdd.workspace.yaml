@@ -11,7 +11,13 @@ version: "0.1.0"
 # contract they satisfy (`contract_version`), and the resolver checks SemVer
 # compatibility against this value, refusing on mismatch. Bump the MAJOR only
 # when the discovery/run contract changes incompatibly.
-contract_version: "1.0.0"
+#
+# v1.1.0 (Phase 0.5) is a MINOR, back-compatible bump over v1.0.0: it adds the
+# explicit scan-mount inputs (ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES) and the
+# structured JSON violation-report channel (ATDD_VIOLATIONS_REPORT) carrying
+# multi-rule, line-level RAW violations. v1.0.0 implementations run unchanged via
+# the exit-code fallback. See docs/.../PROVIDER-CONTRACT-v1.1.md.
+contract_version: "1.1.0"
 
 # Typed CAPABILITIES this workspace provides (#1138). A workspace is no longer
 # defined by a single runner; it declares one or more capabilities, each with a
