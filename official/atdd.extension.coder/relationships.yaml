@@ -11,6 +11,10 @@ schema_version: "1.0.0"
 # this skeleton carries the graph header with no nodes/edges yet.
 graph_id: atdd.extension.coder.relationships
 
-nodes: []
+# Phase-0 de-risk proof (docs/coder-tester-extension-decomposition/PHASE0-PROOF.md)
+# seeded the first migrated node. Bulk migration appends the remaining coder
+# nodes plus the dedup/refine edges sketched in DESIGN §2.1/§4.
+nodes:
+  - coder.logging.print
 
 edges: []
