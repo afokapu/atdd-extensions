@@ -11,7 +11,7 @@ statement: When production application code emits an observability event through
   non-test Python production code) is the python-pytest workspace implementation referenced below — the
   obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.logging.structured
 content:
   summary: An agnostic "log with structured context, not a bare string" obligation. The Python

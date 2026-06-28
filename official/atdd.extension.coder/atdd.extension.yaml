@@ -1,56 +1,54 @@
-schema_version: "1.0.0"
-
-# Official ATDD coder-role extension.
-#
-# Owns every coder convention node classified `extension` in the coder/tester
-# decomposition (see docs/coder-tester-extension-decomposition/DESIGN.md §1A/§2.1)
-# — the stack-bound coder rules (per-language file suffixes, JSX/React detectors,
-# Flutter design-system, TS/Python complexity+quality+dup metrics, FastAPI route
-# auth, etc.). Convention bodies are authored in a later slice and reference the
-# deduped core coder node ids; this manifest ships the structural skeleton only.
+schema_version: 1.0.0
 extension_id: atdd.extension.coder
-version: "0.1.0"
+version: 0.1.0
 kind: extension
-
-# Realizes coder-role source-surface validation. Conventions here express
-# stack-specific realizations of core coder principles; they never redeclare a
-# core lifecycle/role/graph node — they reference it.
 role: coder
 flow_wagon: validate-source-surface
 feature: coder-extension-conventions
-
-# What this package owns. Conventions + implementations are authored in the build
-# slice (they need the deduped core coder node ids first), so those lists start
-# empty; relationships.yaml ships as an empty extension-local graph skeleton.
 owns:
-  conventions: []
+  conventions:
+  - conventions/coder.boundaries.http-client.convention.yaml
+  - conventions/coder.dead-code.reachability-typescript.convention.yaml
+  - conventions/coder.dead-code.reachability.convention.yaml
+  - conventions/coder.duplication.no-intra-layer-code-python.convention.yaml
+  - conventions/coder.duplication.no-intra-layer-code-typescript.convention.yaml
+  - conventions/coder.error-response.bare-string.convention.yaml
+  - conventions/coder.error-response.code-format.convention.yaml
+  - conventions/coder.logging.coach-silent-swallow.convention.yaml
+  - conventions/coder.logging.print.convention.yaml
+  - conventions/coder.logging.structured.convention.yaml
+  - conventions/coder.performance.perf.convention.yaml
+  - conventions/coder.presentation.gsap-commons.convention.yaml
+  - conventions/coder.presentation.gsap-layer.convention.yaml
+  - conventions/coder.presentation.i18n-config.convention.yaml
+  - conventions/coder.presentation.i18n-switcher.convention.yaml
+  - conventions/coder.refactor.coach-ratchet-pres.convention.yaml
+  - conventions/coder.refactor.composition-consumer.convention.yaml
+  - conventions/coder.refactor.composition-root.convention.yaml
+  - conventions/coder.refactor.nplus1.convention.yaml
   relationships:
-    - relationships.yaml
+  - relationships.yaml
   implementations: []
   schemas: []
   gates: []
   scopes: []
-
 depends_on:
   core:
-    - atdd.core.convention-node-schema
-    - atdd.core.relationship-schema
-    - atdd.core.workspace-schema
-    - atdd.core.implementation-schema
-    - atdd.core.violation-output-schema
-  # Reusable runtimes this extension's implementations target. Referenced by id +
-  # contract range; never copied in. Coder detectors fan out across five runtimes.
+  - atdd.core.convention-node-schema
+  - atdd.core.relationship-schema
+  - atdd.core.workspace-schema
+  - atdd.core.implementation-schema
+  - atdd.core.violation-output-schema
   workspaces:
-    - id: atdd.workspace.python-pytest
-      contract: "^1.0.0"
-    - id: atdd.workspace.typescript
-      contract: "^1.0.0"
-    - id: atdd.workspace.dart-flutter
-      contract: "^1.0.0"
-    - id: atdd.workspace.supabase
-      contract: "^1.0.0"
-    - id: atdd.workspace.fastapi
-      contract: "^1.0.0"
-
+  - id: atdd.workspace.python-pytest
+    contract: ^1.0.0
+  - id: atdd.workspace.typescript
+    contract: ^1.0.0
+  - id: atdd.workspace.dart-flutter
+    contract: ^1.0.0
+  - id: atdd.workspace.supabase
+    contract: ^1.0.0
+  - id: atdd.workspace.fastapi
+    contract: ^1.0.0
 removal_policy:
   allowed_if_no_external_dependents: true

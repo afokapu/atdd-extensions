@@ -13,7 +13,7 @@ statement: When two TypeScript/TSX production files are classified to the SAME a
   python-pytest workspace implementation referenced below — the obligation is agnostic, the detection
   algorithm is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.duplication.no-intra-layer-code-typescript
 content:
   summary: An agnostic "do not copy-paste structurally identical logic within one architectural

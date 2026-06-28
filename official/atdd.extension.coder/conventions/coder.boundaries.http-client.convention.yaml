@@ -11,7 +11,7 @@ statement: When frontend production code performs an HTTP request, it MUST go th
   frontend source root, honoring a whitelist) is the python-pytest workspace implementation
   referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.boundaries.http-client
 content:
   summary: An agnostic "all HTTP access flows through the governed client" boundary obligation. The

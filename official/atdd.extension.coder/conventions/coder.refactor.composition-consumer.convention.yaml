@@ -11,7 +11,7 @@ statement: Within a feature, each implementation file in a source layer (domain,
   checks each layer file for an upstream consumer in an allowed layer) is the python-pytest workspace
   implementation referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.refactor.composition-consumer
 content:
   summary: An agnostic "no unwired layer files" obligation. The python realization builds an

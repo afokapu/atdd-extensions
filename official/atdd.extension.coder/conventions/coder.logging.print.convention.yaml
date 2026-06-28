@@ -10,7 +10,7 @@ statement: Production application code MUST NOT emit diagnostic output by writin
   Python production code) is the python-pytest workspace implementation referenced below — the obligation
   is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.logging.print
 content:
   summary: An agnostic "use the logger, not the console" obligation. The Python realization forbids

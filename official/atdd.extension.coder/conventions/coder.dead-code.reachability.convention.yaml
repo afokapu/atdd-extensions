@@ -10,7 +10,7 @@ statement: Every production Python source file MUST be reachable from at least o
   convention roots, reporting files no root transitively imports) is the python-pytest workspace
   implementation referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.dead-code.reachability
 content:
   summary: An agnostic "all production source is reachable from an entry point" obligation. The Python

@@ -10,7 +10,7 @@ statement: When production frontend code imports a UI animation library (the sta
   imports in non-presentation TypeScript files under a web source root) is the python-pytest workspace
   implementation referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.presentation.gsap-layer
 content:
   summary: An agnostic "animation belongs to the view layer" obligation. The web realization forbids

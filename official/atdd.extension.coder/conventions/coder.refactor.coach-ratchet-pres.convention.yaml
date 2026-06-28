@@ -11,7 +11,7 @@ statement: When a change set reduces a presentation-layer file's line count by m
   past the threshold) is the python-pytest workspace implementation referenced below — the obligation is
   agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.refactor.coach-ratchet-pres
 content:
   summary: An agnostic "mechanical trimming of the view layer must be smoke-verified" obligation. The

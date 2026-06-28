@@ -10,7 +10,7 @@ statement: The runtime localization configuration of a frontend application MUST
   file for a hardcoded locale array that does not reference the manifest) is the python-pytest workspace
   implementation referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.presentation.i18n-config
 content:
   summary: An agnostic "single source of truth for supported locales" obligation. The web realization

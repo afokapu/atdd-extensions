@@ -11,13 +11,97 @@ schema_version: "1.0.0"
 # this skeleton carries the graph header with no nodes/edges yet.
 graph_id: atdd.extension.coder.relationships
 
-# Phase-0 de-risk proof (docs/coder-tester-extension-decomposition/PHASE0-PROOF.md)
-# seeded the first migrated node. Phase-0.5 (PHASE05-PROOF.md) added the
-# non-strict sibling `coder.logging.structured` (disposition suppress-and-clean)
-# to re-prove the v1.1 contract. Bulk migration appends the remaining coder nodes
-# plus the dedup/refine edges sketched in DESIGN §2.1/§4.
 nodes:
-  - coder.logging.print
-  - coder.logging.structured
-
-edges: []
+- coder.boundaries.http-client
+- coder.dead-code.reachability-typescript
+- coder.dead-code.reachability
+- coder.duplication.no-intra-layer-code-python
+- coder.duplication.no-intra-layer-code-typescript
+- coder.error-response.bare-string
+- coder.error-response.code-format
+- coder.logging.coach-silent-swallow
+- coder.logging.print
+- coder.logging.structured
+- coder.performance.perf
+- coder.presentation.gsap-commons
+- coder.presentation.gsap-layer
+- coder.presentation.i18n-config
+- coder.presentation.i18n-switcher
+- coder.refactor.coach-ratchet-pres
+- coder.refactor.composition-consumer
+- coder.refactor.composition-root
+- coder.refactor.nplus1
+edges:
+- source_ref: coder.dead-code.reachability-typescript
+  target_ref: coder.dead-code.reachability
+  type: refines
+  reason: "Same \"all production source is reachable from a graph root\" obligation, peeled to the TypeScript\
+    \ stack (regex import-graph, index.ts barrels/app entry roots) from the language-neutral Python sibling.\
+    \ DESIGN \xA72.1 *-typescript-refines-sibling pattern; both nodes live in atdd.extension.coder."
+- source_ref: coder.logging.coach-silent-swallow
+  target_ref: coder.logging.structured
+  type: co-extracted-from
+  reason: Both high-fidelity-extracted from logging.convention.yaml (legacy_sha b5999f8489b06e20); sibling
+    observability obligations (an event must carry structured context / a handler must observably react),
+    both disposition suppress-and-clean. Extension-internal provenance link.
+- source_ref: coder.duplication.no-intra-layer-code-typescript
+  target_ref: coder.duplication.no-intra-layer-code-python
+  type: complements
+  reason: "Both realize the single coder.duplication obligation (no structurally identical fragment duplicated\
+    \ across different files of the same architectural layer) for their respective stacks \u2014 the TypeScript\
+    \ rule via regex structural normalization, the Python rule via AST-subtree hashing. Neither narrows\
+    \ the other; they are co-equal language facets of one convention."
+- source_ref: coder.error-response.code-format
+  target_ref: coder.error-response.bare-string
+  type: complements
+  reason: 'Both enforce the commons:error:response structured-error envelope from one detector run: bare-string
+    governs that the HTTPException detail is a structured dict at all, while code-format governs that
+    the dict''s error_code field is a stable UPPER_SNAKE_CASE identifier. Together they make one error
+    response both structured and machine-classifiable.'
+- source_ref: coder.boundaries.http-client
+  target_ref: coder.error-response.bare-string
+  type: complements
+  reason: 'Both discipline the frontend<->backend HTTP seam: http-client requires egress to flow through
+    the contract-driven client so request/response contracts apply uniformly, and bare-string requires
+    the error responses returning over that seam to carry the structured envelope the client''s contracts
+    expect. Governing the same boundary from the request and the error-response sides, they complement
+    each other.'
+- source_ref: coder.presentation.gsap-commons
+  target_ref: coder.presentation.gsap-layer
+  type: refines
+  reason: 'gsap-commons is the commons-specific companion of the general layer-purity rule: where gsap-layer
+    confines animation imports to a feature''s presentation/ layer, gsap-commons forbids them outright
+    under web/src/commons (which has no presentation sub-layer). Same detector (one emits_rule_ids run),
+    same animation-library tokens; commons is the stricter special case.'
+- source_ref: coder.presentation.i18n-switcher
+  target_ref: coder.presentation.i18n-config
+  type: relates-to
+  reason: "Both realize the same Localization Manifest obligation \u2014 supported locales have a single\
+    \ source of truth \u2014 on two surfaces: i18n-config governs the runtime config file, i18n-switcher\
+    \ governs the language-switcher component. One detector emits both rule_ids; the switcher reads the\
+    \ list the config exposes from the manifest."
+- source_ref: coder.refactor.composition-root
+  target_ref: coder.refactor.composition-consumer
+  type: relates-to
+  reason: 'The two halves of intra-feature composition completeness, emitted by one detector: composition-consumer
+    requires every layer file to have a valid upstream consumer; composition-root requires the feature
+    composition.py to reach every existing layer. Together they assert the vertical slice is fully wired
+    from both the leaf and the root.'
+- source_ref: coder.refactor.coach-ratchet-pres
+  target_ref: coder.refactor.composition-root
+  type: relates-to
+  reason: 'Both are REFACTOR-phase coder obligations that protect feature structure: composition-root
+    guards that the composition root still wires every layer, while coach-ratchet-pres guards that mechanical
+    ratchet trimming of the presentation layer does not silently remove behavior without smoke evidence.
+    They co-govern the integrity of a feature during the REFACTOR phase.'
+- source_ref: coder.logging.print
+  target_ref: coder.logging.structured
+  type: co-extracted-from
+  reason: "Both high-fidelity-extracted from logging.convention.yaml; sibling observability obligations\
+    \ \u2014 extension-internal provenance link."
+- source_ref: coder.refactor.nplus1
+  target_ref: coder.performance.perf
+  type: specializes
+  reason: nplus1 is the Python database-client realization of the agnostic no-per-item-IO-in-loop performance
+    principle; both nodes now live in the coder extension (the principle migrated out of core per the
+    zero-coder-in-core ruling).

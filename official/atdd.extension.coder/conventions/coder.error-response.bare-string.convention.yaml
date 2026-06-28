@@ -11,7 +11,7 @@ statement: When production code raises an HTTP error, the error detail MUST be a
   is the python-pytest workspace implementation referenced below — the obligation is agnostic, the
   detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.error-response.bare-string
 content:
   summary: An agnostic "HTTP error responses carry a structured, machine-readable body" obligation.

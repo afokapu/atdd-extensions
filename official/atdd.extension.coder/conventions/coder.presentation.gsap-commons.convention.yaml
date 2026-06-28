@@ -10,7 +10,7 @@ statement: Production frontend shared/commons modules MUST NOT import a UI anima
   commons tree) is the python-pytest workspace implementation referenced below — the obligation is
   agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.presentation.gsap-layer
 content:
   summary: An agnostic "commons stays motion-free" obligation, the commons-specific companion to

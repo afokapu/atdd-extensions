@@ -11,7 +11,7 @@ statement: When production code emits an `error_code` value in an error response
   in Python production code) is the python-pytest workspace implementation referenced below
   — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.error-response.code-format
 content:
   summary: An agnostic "error_code is a machine-stable UPPER_SNAKE_CASE identifier" obligation. The

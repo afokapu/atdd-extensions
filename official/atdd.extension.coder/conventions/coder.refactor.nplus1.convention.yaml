@@ -11,7 +11,7 @@ statement: Production application code MUST NOT issue a database client call (or
   comprehensions) is the python-pytest workspace implementation referenced below — the obligation is
   agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.refactor.nplus1
 content:
   summary: An agnostic "do not query inside a loop" obligation. The Python realization flags any DB

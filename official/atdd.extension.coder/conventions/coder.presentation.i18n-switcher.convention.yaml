@@ -10,7 +10,7 @@ statement: A frontend language/locale switcher component MUST source the list of
   component for a hardcoded locale array that does not reference the shared list) is the python-pytest
   workspace implementation referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.presentation.i18n-config
 content:
   summary: An agnostic "the locale switcher reflects the manifest" obligation, the UI companion to

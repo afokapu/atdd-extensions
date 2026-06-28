@@ -11,7 +11,7 @@ statement: When production application code catches an exception, the handler MU
   `pass`) is the python-pytest workspace implementation referenced below — the obligation is agnostic,
   the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.logging.coach-silent-swallow
 content:
   summary: An agnostic "an exception handler must observably react, never silently swallow" obligation.

@@ -10,7 +10,7 @@ statement: A feature's composition root MUST reach every EXISTING layer of that 
   reachability scan from `composition.py`, honoring called-setter wiring) is the python-pytest workspace
   implementation referenced below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.refactor.composition-consumer
 content:
   summary: An agnostic "the DI root composes the whole slice" obligation. The python realization computes

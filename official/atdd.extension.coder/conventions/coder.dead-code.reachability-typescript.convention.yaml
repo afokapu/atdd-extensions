@@ -10,7 +10,7 @@ statement: Every production TypeScript source file (`*.ts`/`*.tsx`) MUST be reac
   and BFS-walks it from the convention roots) is the python-pytest workspace implementation referenced
   below — the obligation is agnostic, the detector is not.
 implementation:
-  type: atdd.workspace.python-pytest
+  type: validator
   ref: coder.dead-code.reachability-typescript
 content:
   summary: An agnostic "all production source is reachable from an entry point" obligation, the TypeScript
