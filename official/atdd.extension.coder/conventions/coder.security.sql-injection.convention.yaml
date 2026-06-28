@@ -40,7 +40,7 @@ metadata:
   aliases:
     - SECURITY-SQL-INJECTION-001
     - SPEC-CODER-SEC-0001
-  severity: 5
+  severity: 4
   disposition: strict
   introduced_in: 1.67.0
 source:
