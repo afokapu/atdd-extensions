@@ -12,9 +12,12 @@ schema_version: "1.0.0"
 graph_id: atdd.extension.coder.relationships
 
 # Phase-0 de-risk proof (docs/coder-tester-extension-decomposition/PHASE0-PROOF.md)
-# seeded the first migrated node. Bulk migration appends the remaining coder
-# nodes plus the dedup/refine edges sketched in DESIGN §2.1/§4.
+# seeded the first migrated node. Phase-0.5 (PHASE05-PROOF.md) added the
+# non-strict sibling `coder.logging.structured` (disposition suppress-and-clean)
+# to re-prove the v1.1 contract. Bulk migration appends the remaining coder nodes
+# plus the dedup/refine edges sketched in DESIGN §2.1/§4.
 nodes:
   - coder.logging.print
+  - coder.logging.structured
 
 edges: []
