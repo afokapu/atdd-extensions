@@ -33,6 +33,7 @@ Pure stdlib (``ast``, ``pathlib``) — no third-party or core imports.
 from __future__ import annotations
 
 import ast
+import fnmatch
 from pathlib import Path
 
 # The convention rule_id this detector realizes. Kept == implementation_id so a
@@ -77,26 +78,63 @@ def is_excluded(py_file: Path) -> bool:
     return False
 
 
-def _collect_files(scan_dir: Path) -> list[Path]:
-    """Collect in-scope ``*.py`` production files under ``scan_dir`` (recursive)."""
+def _matches_exclude(rel: Path, exclude_globs: list[str]) -> bool:
+    """True when ``rel`` (relative to its scan base) matches any exclusion glob.
+
+    Mirrors the structured_logging detector: ``ATDD_SCAN_EXCLUDES`` globs are
+    fnmatch-ed against the path RELATIVE to the scan base, so a caller-supplied
+    glob like ``*/generated/*`` drops generated trees the same way it does there.
+    """
+    rel_str = str(rel)
+    return any(fnmatch.fnmatch(rel_str, pat) for pat in exclude_globs)
+
+
+def _collect_files(scan_dir: Path, exclude_globs: list[str] | None = None) -> list[Path]:
+    """Collect in-scope ``*.py`` production files under ``scan_dir`` (recursive).
+
+    Applies BOTH the hard-coded ``is_excluded`` filter (test code, caches, shims)
+    AND any caller-supplied ``exclude_globs`` (``ATDD_SCAN_EXCLUDES``), the latter
+    fnmatch-ed against each file's path relative to ``scan_dir``.
+    """
     if not scan_dir.exists():
         return []
-    return [p for p in sorted(scan_dir.rglob("*.py")) if not is_excluded(p)]
+    exclude_globs = exclude_globs or []
+    out: list[Path] = []
+    for p in sorted(scan_dir.rglob("*.py")):
+        if is_excluded(p):
+            continue
+        try:
+            rel = p.relative_to(scan_dir)
+        except ValueError:
+            rel = p
+        if exclude_globs and _matches_exclude(rel, exclude_globs):
+            continue
+        out.append(p)
+    return out
 
 
-def scan_path(target: Path) -> list[dict]:
+def scan_path(target: Path, exclude_globs: list[str] | None = None) -> list[dict]:
     """Scan ``target`` (a file or directory) and return violation dicts.
 
     Each violation is ``{"rule_id", "location", "evidence"}`` — the
     python-pytest run-contract violation shape. ``location`` is ``<relpath>:line:col``
     relative to ``target`` (or to its parent when ``target`` is a file).
+
+    ``exclude_globs`` is the ``ATDD_SCAN_EXCLUDES`` exclusion-glob list (§2 of the
+    provider contract). Previously this v1.0.0 detector SILENTLY IGNORED excludes
+    (only structured_logging honored them) — wiring a rule whose detector drops
+    excludes would be a correctness bug (PHASE0-PROOF GAP G2). Now honored, the
+    same way structured_logging does: globs are fnmatch-ed against each file's
+    path relative to the scan base.
     """
     target = Path(target)
+    exclude_globs = exclude_globs or []
     if target.is_dir():
-        files = _collect_files(target)
+        files = _collect_files(target, exclude_globs)
         base = target
     else:
-        files = [] if is_excluded(target) else [target]
+        excluded = is_excluded(target) or _matches_exclude(target.name, exclude_globs)
+        files = [] if excluded else [target]
         base = target.parent
 
     violations: list[dict] = []
