@@ -1,0 +1,33 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.workspace.cmux-claude
+kind: workspace
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.workspace.cmux-claude
+  type: local
+
+version: "0.1.0"
+contract_version: "1.0.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+categories:
+  - cmux
+  - claude
+  - agent-session
+  - command-feed
+  - orchestration
+  - transport
+  - workspace-provider
+  - official
+
+description: >-
+  Official ATDD cmux + Claude workspace provider (reusable runtime): orchestrates
+  agent sessions (spawn/deliver/signal a Claude worker in a cmux pane) and transports
+  commands/events over a durable, ordered command-feed. Owns no execution runner and
+  no isolation boundary. Carries the core two-way decision channel
+  (atdd.coach.decision_channel) on its command-feed + agent-session capabilities.
