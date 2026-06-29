@@ -9,6 +9,16 @@ schema_version: "1.0.0"
 # header with no nodes/edges yet.
 graph_id: atdd.extension.tester.relationships
 
-nodes: []
-
-edges: []
+nodes:
+- tester.filename.urn
+- tester.migration.naming
+edges:
+- source_ref: tester.migration.naming
+  target_ref: tester.filename.urn
+  type: relates-to
+  reason: 'Both are documentation-only, stack-bound NAMING-discipline obligations: a test/migration artifact
+    is named deterministically from its identity (the acceptance/test URN for tester.filename.urn; the
+    migration ID for tester.migration.naming) and colocated with what it covers, so the artifact and its
+    proof never drift apart. Co-equal naming facets of the tester extension, each realized by a different
+    per-stack detector (tester.filename.urn -> python-pytest; tester.migration.naming -> the not-yet-built
+    atdd.workspace.supabase provider). Extension-internal link.'

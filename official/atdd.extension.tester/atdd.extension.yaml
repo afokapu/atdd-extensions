@@ -1,55 +1,35 @@
-schema_version: "1.0.0"
-
-# Official ATDD tester-role extension.
-#
-# Owns every tester convention node classified `extension` in the coder/tester
-# decomposition (see docs/coder-tester-extension-decomposition/DESIGN.md §1B/§2.2)
-# — the stack-bound tester rules (test filename mechanics, Postgres/Supabase
-# migration naming, runtime-path routing, preact-DOM presentation smoke, contract
-# persistence + api_structure bindings). Convention bodies are authored in a later
-# slice and reference the deduped core tester node ids; this manifest ships the
-# structural skeleton only.
+schema_version: 1.0.0
 extension_id: atdd.extension.tester
-version: "0.1.0"
+version: 0.1.0
 kind: extension
-
-# Realizes tester-role test-surface validation. Conventions here express
-# stack-specific realizations of core tester principles; they never redeclare a
-# core lifecycle/role/graph node — they reference it.
 role: tester
 flow_wagon: validate-test-surface
 feature: tester-extension-conventions
-
-# What this package owns. Conventions + implementations are authored in the build
-# slice (they need the deduped core tester node ids first), so those lists start
-# empty; relationships.yaml ships as an empty extension-local graph skeleton.
 owns:
-  conventions: []
+  conventions:
+  - conventions/tester.filename.urn.convention.yaml
+  - conventions/tester.migration.naming.convention.yaml
   relationships:
-    - relationships.yaml
+  - relationships.yaml
   implementations: []
   schemas: []
   gates: []
   scopes: []
-
 depends_on:
   core:
-    - atdd.core.convention-node-schema
-    - atdd.core.relationship-schema
-    - atdd.core.workspace-schema
-    - atdd.core.implementation-schema
-    - atdd.core.violation-output-schema
-  # Reusable runtimes this extension's implementations target. Referenced by id +
-  # contract range; never copied in. Tester detectors fan out across four runtimes.
+  - atdd.core.convention-node-schema
+  - atdd.core.relationship-schema
+  - atdd.core.workspace-schema
+  - atdd.core.implementation-schema
+  - atdd.core.violation-output-schema
   workspaces:
-    - id: atdd.workspace.python-pytest
-      contract: "^1.0.0"
-    - id: atdd.workspace.typescript
-      contract: "^1.0.0"
-    - id: atdd.workspace.supabase
-      contract: "^1.0.0"
-    - id: atdd.workspace.fastapi
-      contract: "^1.0.0"
-
+  - id: atdd.workspace.python-pytest
+    contract: ^1.0.0
+  - id: atdd.workspace.typescript
+    contract: ^1.0.0
+  - id: atdd.workspace.supabase
+    contract: ^1.0.0
+  - id: atdd.workspace.fastapi
+    contract: ^1.0.0
 removal_policy:
   allowed_if_no_external_dependents: true
