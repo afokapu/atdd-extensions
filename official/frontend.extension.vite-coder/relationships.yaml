@@ -1,6 +1,46 @@
 schema_version: "1.0.0"
-# Extension-LOCAL relationship graph for frontend.extension.vite-coder. Nodes + no-orphan edges wired at
-# assembly (workers are add-only). Core<->extension edges are narrative.
+
+# Extension-LOCAL relationship graph for frontend.extension.vite-coder (no orphans).
 graph_id: frontend.extension.vite-coder.relationships
-nodes: []
-edges: []
+
+nodes:
+  - coder.vite.boundaries-http-client
+  - coder.vite.design-orphan-ui
+  - coder.vite.design-primitives
+  - coder.vite.design-token-color
+  - coder.vite.design-token-hardcoded
+  - coder.vite.presentation-gsap-commons
+  - coder.vite.presentation-gsap-layer
+  - coder.vite.presentation-i18n-config
+  - coder.vite.presentation-i18n-switcher
+  - coder.vite.refactor-coach-ratchet-pres
+
+edges:
+  - source_ref: coder.vite.design-token-color
+    target_ref: coder.vite.design-token-hardcoded
+    type: relates-to
+    reason: 'Token-value vs hardcoded-literal facets of the same color-token rule.'
+  - source_ref: coder.vite.design-orphan-ui
+    target_ref: coder.vite.design-primitives
+    type: relates-to
+    reason: 'Design-system hygiene: unused components vs primitive usage.'
+  - source_ref: coder.vite.design-primitives
+    target_ref: coder.vite.design-token-color
+    type: relates-to
+    reason: 'Primitives consume design tokens.'
+  - source_ref: coder.vite.presentation-gsap-commons
+    target_ref: coder.vite.presentation-gsap-layer
+    type: relates-to
+    reason: 'Where GSAP lives (commons) and which layer may animate.'
+  - source_ref: coder.vite.presentation-i18n-config
+    target_ref: coder.vite.presentation-i18n-switcher
+    type: relates-to
+    reason: 'i18n config and the switcher that drives it.'
+  - source_ref: coder.vite.presentation-gsap-layer
+    target_ref: coder.vite.refactor-coach-ratchet-pres
+    type: relates-to
+    reason: 'Both are presentation-layer discipline rules.'
+  - source_ref: coder.vite.boundaries-http-client
+    target_ref: coder.vite.presentation-i18n-config
+    type: relates-to
+    reason: 'Both govern how presentation reaches a runtime service (network client / i18n runtime).'

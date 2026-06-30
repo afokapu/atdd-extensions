@@ -1,0 +1,17 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.vite.design-token-hardcoded
+targets_workspace: frontend.workspace.runtime
+contract_version: "1.1.0"
+
+realizes_convention: coder.vite.design-token-hardcoded
+
+emits_rule_ids:
+  - coder.vite.design-token-hardcoded   # disposition: strict
+
+# The detector module. Scans ATDD_SCAN_ROOTS for *.tsx/*.css and flags each
+# hardcoded hex / rgb() / rgba() color literal (common neutrals tolerated). Writes
+# the RAW v1.1 report to ATDD_VIOLATIONS_REPORT.
+entrypoint: detect.mjs
+
+report: detect.mjs

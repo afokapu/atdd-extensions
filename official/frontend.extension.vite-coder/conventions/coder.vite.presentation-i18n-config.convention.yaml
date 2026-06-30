@@ -1,0 +1,83 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-i18n-config
+kind: rule
+status: active
+name: i18n config must wire both a provider and resources
+statement: A Vite/React i18n config/init module that sets up localization MUST wire the two pieces i18n
+  needs to function — a PROVIDER that publishes the active locale to the component tree, and the RESOURCES
+  (dictionaries / translation tables) the translator reads from. A config that initializes i18n while
+  missing either piece is a violation. This is the Vite/React realization of the agnostic "i18n runtime
+  configuration is complete and centralized" obligation owned by the coder extension. The stack-specific
+  detector that enforces it (a zero-dependency Node scan of the recognized i18n config file for the provider/resources
+  wiring) is the frontend.workspace.runtime implementation referenced below — the obligation is agnostic,
+  the detector is not.
+terms:
+- term_id: i18n_config
+  text: the runtime localization config/init module (basename `i18n.ts(x)` / `i18nConfig.ts` / `i18n-config.ts`)
+    — the single entry point that sets up the i18n runtime for the app.
+- term_id: i18n_provider
+  text: a `*Provider` component (e.g. `LanguageProvider`, `I18nextProvider`) that publishes the active
+    locale and translator to the component tree; required wiring
+- term_id: i18n_resources
+  text: the dictionaries / translation tables (`resources`, `dictionaries`, `translations`) the translator
+    resolves keys against; required wiring
+implementation:
+  type: validator
+  ref: coder.vite.presentation-i18n-config
+source:
+  legacy_path: official/atdd.extension.coder/conventions/coder.presentation.i18n-config.convention.yaml
+  legacy_section: rules
+  legacy_rule_id: coder.presentation.i18n-config
+  extraction_mode: high_fidelity
+content:
+  summary: An agnostic "the i18n runtime is fully wired" obligation, the config companion to `coder.vite.presentation-i18n-switcher`.
+    The Vite/React realization locates the i18n config among a fixed candidate naming (`i18n.ts(x)`, `i18nConfig.ts`,
+    `i18n-config.ts`) and flags it when the file initializes i18n (`i18next` / `createInstance` / `.init(`
+    / a `LanguageProvider` / `createContext`) but is missing a `*Provider` component OR a resources/dictionaries
+    reference.
+  normative_text: 'i18n only works when two things are present at the root: a provider that makes the
+    active locale (and
+
+    the translator) available to every component, and the resource tables the translator resolves keys
+
+    against. A config that calls `i18next.init({ lng })` with no `resources`, or that never exports a
+
+    provider, ships a half-wired runtime — components mount with no i18n context, or `t(key)` resolves
+    to
+
+    nothing. The obligation is "the i18n config wires BOTH a provider and resources"; WHICH file is the
+
+    config and HOW the wiring is detected is delegated to the per-stack detector. For Vite/React the
+
+    detector locates the i18n config by basename, confirms the file actually initializes i18n, and then
+
+    requires a `*Provider` reference and a `resources`/`dictionaries`/`translations` reference; absent
+
+    either, it emits the RAW finding naming the missing piece(s).
+
+    '
+  fix_hint: "Wire both halves in the i18n config:\n  i18next.init({ lng: 'en' })                     \
+    \             ->  FORBIDDEN (no resources, no provider)\n  const DICTIONARIES = { en, sw }       \
+    \                       ->  add the resource tables\n  export function LanguageProvider({ children\
+    \ }) { ... }       ->  publish the locale to the tree\nKeep the config the single, complete entry\
+    \ point for localization. This rule is `strict`: a half-wired\ni18n config is not suppressible and\
+    \ fails.\n"
+  exceptions:
+  - A config that references BOTH a `*Provider` and a resources/dictionaries table is fully wired and
+    absolved.
+  - A file matching the i18n-config naming that does not actually initialize i18n is inert (nothing to
+    check).
+  - If no recognized i18n config file exists, the rule is inert.
+  - Test code (`*.test.*` / `*.spec.*`) is excluded; vendored/build dirs are skipped.
+metadata:
+  aliases:
+  - VITE-PRESENTATION-I18N-CONFIG-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: true
+  implementation_preserved: true
+  fix_hint_preserved: true
+  reviewed_at: '2026-07-01'

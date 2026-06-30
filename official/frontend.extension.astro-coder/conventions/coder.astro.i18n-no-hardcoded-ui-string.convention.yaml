@@ -1,0 +1,62 @@
+schema_version: 1.1.0
+rule_id: coder.astro.i18n-no-hardcoded-ui-string
+kind: rule
+status: active
+name: Astro user-facing text must come from the i18n/ui.ts table
+statement: User-facing copy rendered in `.astro` markup MUST be sourced from the `i18n/ui.ts` translation
+  table (via the `t(locale, key)` helper or a bound expression), not written as a hardcoded literal string
+  in the template. A multi-word literal text node in markup is untranslatable and drifts out of the locale
+  catalog.
+terms:
+- term_id: ui_table
+  text: the `i18n/ui.ts` translation catalog mapping a per-locale dictionary of keys to strings, read
+    at render time through the `t(locale, key)` helper.
+- term_id: hardcoded_ui_string
+  text: a literal markup text node (content between a tag close `>` and the next tag open `<`) containing
+    a multi-word user-facing phrase, as opposed to a value bound through a `{...}` expression such as
+    `{t(locale, key)}`.
+implementation:
+  type: validator
+  ref: coder.astro.i18n-no-hardcoded-ui-string
+content:
+  summary: A "no hardcoded user-facing copy in Astro markup" obligation. The realization is a zero-dependency
+    JS detector that strips frontmatter, `<script>`/`<style>` bodies, HTML comments, and `{...}` expressions
+    (the bound/`t(...)` values), then flags any remaining literal markup text node containing a multi-word
+    phrase (two or more alphabetic words in a row) as copy that should live in the i18n catalog.
+  normative_text: 'apps/web is internationalized: every string a user reads is keyed in `i18n/ui.ts` and
+
+    rendered through `t(locale, key)`. Text typed directly into `.astro` markup escapes that
+
+    system — it renders in one language only, never appears in the locale catalog, and
+
+    silently breaks the moment a second locale is added. The obligation is "user-facing copy
+
+    is a catalog lookup, not a literal"; HOW literals are recognized is delegated to the
+
+    per-stack detector. The detector treats a markup text node (content between a tag''s `>`
+
+    and the next `<`) containing two or more consecutive alphabetic words as user-facing copy;
+
+    values rendered through `{...}` (including `{t(locale, key)}`) are expressions, not
+
+    literals, and are out of scope.
+
+    '
+  fix_hint: "Move the string into the i18n catalog and render it through the helper:\n  * add a key to\
+    \ each locale block in `i18n/ui.ts` (e.g. `\"home.hero.cta\": \"Join a League\"`);\n  * replace the\
+    \ literal in markup with `{t(locale, \"home.hero.cta\")}`;\n  * for attributes, bind the same way\
+    \ (e.g. `aria-label={t(locale, \"nav.openMenu\")}`).\nDisposition is `documentation-only`: the detector\
+    \ reports the call sites as a catalog-gap\ninventory; it does not fail a gate. Genuinely non-translatable\
+    \ tokens (brand names, symbols)\nneed not be keyed.\n"
+  exceptions:
+  - Expressions in `{...}` (including `{t(locale, key)}` and other bound values) are not literals and
+    are never flagged.
+  - Frontmatter, `<script>`/`<style>` bodies, and HTML comments are out of scope.
+  - Single-word tokens, slugs, and symbol-only nodes (no two-word phrase) are not flagged.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`, `_generated`) are skipped.
+metadata:
+  aliases:
+  - ASTRO-I18N-HARDCODED-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0

@@ -1,0 +1,72 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-token-color
+kind: rule
+status: active
+name: Color style properties reference tokens, not raw color literals
+statement: A Vite/React app file MUST set color-bearing style properties (`color`, `backgroundColor`,
+  `borderColor`, `outlineColor`, `fill`, `stroke`) from design-system color tokens rather than inline
+  color literals (a named color or a hex string), so theming stays centralized and consistent. This is
+  the Vite-stack realization of the agnostic "colors come from tokens" obligation owned by the coder extension
+  (the python-pytest sibling is `coder.design.token-color`). The detector that enforces it — a regex-over-source
+  scan that reports each color property assigned to a non-token string literal in a `*.tsx` file — is
+  the frontend.workspace.runtime implementation referenced below; the obligation is stack-bound, the detector
+  is JS-specific.
+terms:
+- term_id: color_token
+  text: a named color value defined in the design-system theme (referenced via a `colors.` / `theme.`
+    accessor) that centralizes the palette; the value a color property must take.
+- term_id: raw_color_literal
+  text: an inline color value embedded directly as a string literal in a color-bearing style property
+    — a named color (`'tomato'`) or a hex (`'#3a7bd5'`) — that bypasses the token set.
+implementation:
+  type: validator
+  ref: coder.vite.design-token-color
+content:
+  summary: A "color values come from design tokens" obligation, the Vite/React sibling of coder.design.token-color.
+    The realization is a zero-dependency JS detector that flags each color-bearing style property (`color`/`backgroundColor`/`borderColor`/`outlineColor`/`fill`/
+    `stroke`) assigned to a raw string-literal color in a `*.tsx` file — whether a named color (`'tomato'`)
+    or a hex (`'#3a7bd5'`). A token reference (`colors.accent`) is not a string literal and is therefore
+    not matched; CSS-var and keyword values are tolerated.
+  normative_text: 'Color is a design token: when a UI file assigns a color property to an inline literal
+    it forks
+
+    the palette away from the centralized theme, so a future re-theme silently misses it. The
+
+    obligation: color style properties take their value from a design token, not an inline literal.
+
+    WHICH properties are color-bearing and WHICH literal values are tolerated is delegated to the
+
+    per-stack detector. For the Vite/React stack the detector matches `color`/`backgroundColor`/
+
+    `borderColor`/`outlineColor`/`fill`/`stroke` assigned to a quoted string literal (single, double,
+
+    or backtick) and reports each site whose value is not a tolerated keyword (`transparent`,
+
+    `inherit`, `currentColor`, `none`, `unset`, `initial`, `revert`) and not a CSS custom property
+
+    (`var(--...)`). A token reference, being an identifier expression rather than a string literal,
+
+    is never matched. This rule overlaps by design with `coder.vite.design-token-hardcoded` (the raw
+
+    hex/rgb literal detector): a `color: ''#3a7bd5''` triggers both.
+
+    '
+  fix_hint: "Replace the raw literal with a design token:\n  const style = { color: 'tomato' }       \
+    \             ->  FORBIDDEN\n  import { colors } from '@/design/theme'\n  const style = { color: colors.accent\
+    \ }               ->  allowed\nPull the color from the token/theme set so a single source defines\
+    \ the palette. This rule's\ndisposition is `strict`: a color property assigned to a raw literal is\
+    \ not suppressible and fails.\n"
+  exceptions:
+  - Tolerated keyword values (`transparent`, `inherit`, `currentColor`, `none`, `unset`, `initial`, `revert`)
+    are not flagged.
+  - CSS custom-property values (`var(--color-accent)`) are not flagged.
+  - Token references (`colors.accent`, `theme.fg`) are identifier expressions, not string literals, and
+    are never matched.
+  - Test files (`*.test.*` / `*.spec.*`) and comment lines are out of scope; vendored/build directories
+    (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+metadata:
+  aliases:
+  - VITE-DESIGN-TOKEN-COLOR-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

@@ -1,0 +1,12 @@
+---
+import Counter from "@/components/Counter.jsx";
+import Widget from "@/components/Widget.jsx";
+const items = ["a", "b", "c"];
+---
+
+<section>
+  <!-- DEAD interactivity: React-style handlers with no client:* directive.
+       Astro emits the markup but never hydrates, so nothing happens on click. -->
+  <Counter onClick={items.length} />
+  <Widget onInput={items} />
+</section>

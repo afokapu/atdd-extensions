@@ -1,0 +1,7 @@
+/* Colors come from CSS custom properties (design tokens). The only literals here
+   are tolerated neutrals (#fff / #000), so nothing forks the palette. */
+.badge {
+  color: var(--color-accent);
+  background: var(--color-surface);
+  border-color: #fff;
+}

@@ -1,6 +1,25 @@
 schema_version: "1.0.0"
-# Extension-LOCAL relationship graph for frontend.extension.astro-coder. Nodes + no-orphan edges wired at
-# assembly (workers are add-only). Core<->extension edges are narrative.
+
+# Extension-LOCAL relationship graph for frontend.extension.astro-coder (no orphans).
 graph_id: frontend.extension.astro-coder.relationships
-nodes: []
-edges: []
+
+nodes:
+  - coder.astro.client-directive-explicit
+  - coder.astro.component-frontmatter-fence
+  - coder.astro.i18n-no-hardcoded-ui-string
+  - coder.astro.no-hardcoded-color
+  - coder.astro.no-secret-in-frontmatter
+
+edges:
+  - source_ref: coder.astro.no-hardcoded-color
+    target_ref: coder.astro.i18n-no-hardcoded-ui-string
+    type: relates-to
+    reason: 'Two no-hardcoded-literal facets in .astro markup.'
+  - source_ref: coder.astro.client-directive-explicit
+    target_ref: coder.astro.component-frontmatter-fence
+    type: relates-to
+    reason: 'Both are .astro island/structure discipline.'
+  - source_ref: coder.astro.no-secret-in-frontmatter
+    target_ref: coder.astro.component-frontmatter-fence
+    type: relates-to
+    reason: 'Both govern the .astro frontmatter fence content.'

@@ -1,0 +1,19 @@
+---
+const cls = "text-[var(--color-gold-soft)]";
+---
+
+<section class="bg-[var(--color-charcoal)] text-[var(--color-text-on-dark)]">
+  <!-- theme-color meta is markup metadata, not a styling value — out of scope. -->
+  <meta name="theme-color" content="#1a1a1a" />
+  <p class={cls}>tokens only</p>
+</section>
+
+<style>
+  .panel {
+    color: var(--color-ivory);
+    background: var(--color-charcoal);
+  }
+  :root {
+    --color-local: #f6f1e7;
+  }
+</style>

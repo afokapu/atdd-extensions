@@ -1,0 +1,6 @@
+/* VIOLATION: a hardcoded hex color literal (#3a7bd5) instead of a design token —
+   a re-theme will silently miss it. */
+.card {
+  color: #3a7bd5;
+  background: var(--color-surface);
+}

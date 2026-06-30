@@ -1,0 +1,16 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.astro.component-frontmatter-fence
+targets_workspace: frontend.workspace.runtime
+contract_version: "1.1.0"
+
+realizes_convention: coder.astro.component-frontmatter-fence
+
+# Single rule_id (disposition advisory, severity 1). RAW emit only.
+emits_rule_ids:
+  - coder.astro.component-frontmatter-fence   # disposition: advisory
+
+# Scans `.astro` for `<script>` blocks whose body is build-time component logic
+# (imports + computation, no DOM/browser API) that belongs in the `---` fence.
+entrypoint: detect.mjs
+report: detect.mjs

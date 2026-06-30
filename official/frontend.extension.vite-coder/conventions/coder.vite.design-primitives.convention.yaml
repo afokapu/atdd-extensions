@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-primitives
+kind: rule
+status: active
+name: App code composes design-system primitives, not raw HTML elements
+statement: Vite/React app code that renders an interactive control MUST compose the shared design-system
+  primitive (e.g. `<Button>`, `<Input>`, `<Select>`) rather than a raw platform element (`<button>`, `<input>`,
+  `<select>`, `<textarea>`), so interactive UI stays themed, accessible, and consistent through the shared
+  system. This is the Vite-stack realization of the agnostic "the view layer is built from the design
+  system" obligation owned by the coder extension (the python-pytest sibling is `coder.design.primitives`).
+  The detector that enforces it — a regex-over-source scan that reports each raw interactive HTML element
+  in a `*.tsx` file — is the frontend.workspace.runtime implementation referenced below; the obligation
+  is stack-bound, the detector is JS-specific.
+terms:
+- term_id: design_system_primitive
+  text: a shared, themed, accessible UI control exported by the design system (a PascalCase component
+    such as `<Button>`, `<Input>`, `<Select>`) that app code composes instead of a raw element.
+- term_id: raw_interactive_element
+  text: a raw platform interactive HTML tag — `<button`, `<input`, `<select`, `<textarea` — rendered directly
+    in app code, bypassing the design-system primitive; the construct this rule flags.
+implementation:
+  type: validator
+  ref: coder.vite.design-primitives
+content:
+  summary: A "interactive UI is composed from design-system primitives" obligation, the Vite/React sibling
+    of coder.design.primitives. The realization is a zero-dependency JS detector that flags every raw
+    interactive HTML element — `<button`, `<input`, `<select`, `<textarea` — used in a `*.tsx` app file,
+    where a capitalized design-system primitive (`<Button>`, `<Input>`, ...) should be used instead. PascalCase
+    tags (`<ButtonGroup`) are not matched.
+  normative_text: 'Interactive controls are the seam where the design system applies theming, focus states,
+    and
+
+    accessibility affordances. A raw `<button>`/`<input>`/`<select>`/`<textarea>` dropped into app
+
+    code bypasses the shared primitive entirely, producing unthemed, inconsistent, and often
+
+    inaccessible UI that drifts from the system. The obligation: interactive controls in app code
+
+    are composed from the design-system primitive, not the raw platform element. WHICH elements are
+
+    in scope and HOW JSX usage is detected is delegated to the per-stack detector; for the
+
+    Vite/React stack it matches a JSX open tag `<button`/`<input`/`<select`/`<textarea` (the tag
+
+    name immediately followed by whitespace, `>`, or `/`), case-sensitively so design-system
+
+    PascalCase components are exempt by construction.
+
+    '
+  fix_hint: "Compose the design-system primitive instead of the raw element:\n  <button type=\"submit\"\
+    >create account</button>           ->  FORBIDDEN\n  import { Button } from '@/design/primitives'\n\
+    \  <Button type=\"submit\">create account</Button>            ->  allowed\nPull the primitive from\
+    \ the design system so theming, focus, and accessibility are applied\nuniformly. This rule's disposition\
+    \ is `strict`: a raw interactive HTML element in app code is not\nsuppressible and fails the gate.\n"
+  exceptions:
+  - Design-system PascalCase components (`<Button>`, `<Input>`, `<ButtonGroup>`) are not matched — only
+    lowercase raw HTML tags are.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Comment lines (single-line and block) are skipped.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+  - The design-system source that DEFINES the primitives legitimately wraps the raw elements; scope it
+    out via the consumer's scan excludes.
+metadata:
+  aliases:
+  - VITE-DESIGN-PRIMITIVES-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

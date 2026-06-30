@@ -8,7 +8,12 @@ feature: astro-coder-conventions
 # Front-end (Astro) coder conventions — native rules grounded in apps/web (no Core equivalent).
 # from the Convex wave. owns.conventions wired at assembly (workers are add-only).
 owns:
-  conventions: []
+  conventions:
+    - conventions/coder.astro.client-directive-explicit.convention.yaml
+    - conventions/coder.astro.component-frontmatter-fence.convention.yaml
+    - conventions/coder.astro.i18n-no-hardcoded-ui-string.convention.yaml
+    - conventions/coder.astro.no-hardcoded-color.convention.yaml
+    - conventions/coder.astro.no-secret-in-frontmatter.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

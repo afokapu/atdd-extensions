@@ -8,7 +8,17 @@ feature: vite-coder-conventions
 # Front-end (Vite/React) coder conventions — the 10 Core front-end rules deferred
 # from the Convex wave. owns.conventions wired at assembly (workers are add-only).
 owns:
-  conventions: []
+  conventions:
+    - conventions/coder.vite.boundaries-http-client.convention.yaml
+    - conventions/coder.vite.design-orphan-ui.convention.yaml
+    - conventions/coder.vite.design-primitives.convention.yaml
+    - conventions/coder.vite.design-token-color.convention.yaml
+    - conventions/coder.vite.design-token-hardcoded.convention.yaml
+    - conventions/coder.vite.presentation-gsap-commons.convention.yaml
+    - conventions/coder.vite.presentation-gsap-layer.convention.yaml
+    - conventions/coder.vite.presentation-i18n-config.convention.yaml
+    - conventions/coder.vite.presentation-i18n-switcher.convention.yaml
+    - conventions/coder.vite.refactor-coach-ratchet-pres.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

@@ -1,0 +1,17 @@
+---
+// Build-time logic correctly lives in the frontmatter fence.
+import { localizePath } from "@/i18n/utils";
+const links = ["/", "/the-forge", "/ladder"].map((p) => localizePath(p, "en"));
+---
+
+<nav>
+  {links.map((href) => <a href={href}>link</a>)}
+</nav>
+
+<script>
+  // Genuine CLIENT behavior: this touches the DOM, so it belongs in a <script> block.
+  const btn = document.getElementById("toggle");
+  btn?.addEventListener("click", () => {
+    document.body.classList.toggle("menu-open");
+  });
+</script>

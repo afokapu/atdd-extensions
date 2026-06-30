@@ -1,0 +1,15 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.vite.refactor-coach-ratchet-pres
+targets_workspace: frontend.workspace.runtime
+contract_version: "1.1.0"
+
+realizes_convention: coder.vite.refactor-coach-ratchet-pres
+
+# Single rule_id (disposition advisory). The detector emits RAW findings; the
+# smoke-evidence gate / advisory verdict is a downstream coach/consumer concern.
+emits_rule_ids:
+  - coder.vite.refactor-coach-ratchet-pres   # disposition: advisory
+
+entrypoint: detect.mjs
+report: detect.mjs

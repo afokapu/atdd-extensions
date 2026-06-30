@@ -1,0 +1,5 @@
+.alert {
+  /* Hardcoded literals used as values instead of referencing a design token. */
+  color: #abcdef;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}

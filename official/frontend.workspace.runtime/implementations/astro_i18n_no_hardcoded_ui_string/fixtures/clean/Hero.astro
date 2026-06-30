@@ -1,0 +1,13 @@
+---
+import { t } from "@/i18n/ui";
+import { type Locale } from "@/i18n/config";
+const { locale } = Astro.props as { locale: Locale };
+---
+
+<section>
+  <!-- All user-facing copy flows through the i18n/ui.ts table. -->
+  <h1>{t(locale, "home.hero.h1")}</h1>
+  <p>{t(locale, "home.hero.sub")}</p>
+  <a href="/join">{t(locale, "home.hero.cta")}</a>
+  <span aria-hidden="true">→</span>
+</section>
