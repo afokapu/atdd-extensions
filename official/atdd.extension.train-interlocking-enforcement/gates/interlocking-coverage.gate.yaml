@@ -1,14 +1,22 @@
 schema_version: "1.0.0"
 
-# Gate: WHEN the interlocking route-coverage check runs (afokapu/atdd-extensions#26).
+# Gate: WHEN the interlocking TESTER checks run (afokapu/atdd-extensions#26).
 #
-# The coverage validator proves every admissible route in an interlocking has
-# production / e2e test coverage. Final severity (strict vs advisory) is a
-# property of the convention node #26 authors (metadata.disposition); this gate
-# records the runtime stage. Default is CI/strict; flip the stage mode to
-# advisory here iff #26's convention lands as documentation-only/advisory.
+# The interlocking-coverage validator runs once and emits FOUR strict tester
+# rule_ids: route-coverage, production-runner-used, smoke-coverage-for-station-master,
+# and trace-binds-declared-route. Final severity is a property of each convention
+# node's metadata.disposition (all four land strict); this gate records the runtime
+# stage. Default is CI/strict.
 gate_id: atdd.extension.train-interlocking-enforcement.coverage
+# Primary realized convention (the headline binding); the same gate run covers all
+# four conventions the implementation emits — enumerated below + edged in
+# relationships.yaml (convention -> gate, type: gated-by).
 realizes_convention: tester.interlocking.route-coverage   # authored by #26
+realizes_conventions:
+  - tester.interlocking.route-coverage
+  - tester.interlocking.production-runner-used
+  - tester.interlocking.smoke-coverage-for-station-master
+  - tester.interlocking.trace-binds-declared-route
 implementation: implementations/interlocking-coverage
 scope: scopes/interlocking-targets.scope.yaml
 
@@ -16,6 +24,9 @@ stages:
   - id: ci
     mode: strict
     description: >-
-      Block on CI when an interlocking route has no e2e test exercising it.
-      Downgrade this stage to mode: advisory if #26's route-coverage convention
-      ships at advisory/documentation-only severity.
+      Block on CI when an interlocking tester check fails: an admissible route has
+      no e2e test, an interlocking test mocks the production runner, an exposed
+      Station Master action lacks smoke coverage, or a trace assertion omits a
+      required route-binding field. The smoke check's exposed-vs-internal policy is
+      explicit in the smoke-coverage-for-station-master node (exposed=strict;
+      internal exposed:false out of scope).
