@@ -1,0 +1,89 @@
+schema_version: "1.0.0"
+rule_id: atdd.workspace.cmux-claude.readiness-satisfier
+kind: rule
+status: active
+name: cmux-claude reports decision-channel readiness so dispatch can verify it live
+statement: >-
+  The cmux + Claude workspace provider MUST expose a decision-channel readiness signal
+  that reports the channel LIVE iff the cmux Claude wrapper will inject its
+  `PermissionRequest -> 'cmux hooks feed'` hook for the worker (requires `CMUX_SURFACE_ID`
+  set and a reachable cmux socket), and NOT-live — with an actionable reason — otherwise;
+  this is the cmux satisfier of core's `coach.execution.dispatch-verifies-channel-live`
+  obligation, supplying the readiness signal dispatch uses to refuse or escalate a not-live
+  channel before spawning an unmediated worker.
+rationale: >-
+  Core owns the obligation (a worker spawned against a dead mediation channel runs
+  unmediated: its gated decisions never reach the Feed, so the autonomous loop cannot
+  close — live 2026-06-22: l004 hung 202s with no permissionRequest, e012 had
+  mediated==None after 603s). Core states it transport-agnostically; this provider OWNS
+  the concrete cmux transport, so it MUST carry the readiness signal on that transport.
+  This node is the provider's declaration that `cmux_channel_readiness` realizes the core
+  obligation; the `realizes` edge in atdd.workspace.yaml binds it to
+  `coach.execution.dispatch-verifies-channel-live`.
+implementation:
+  type: validator
+  ref: adapter/readiness.py::cmux_channel_readiness
+content:
+  summary: >-
+    A "the cmux provider reports decision-channel readiness" satisfier. The probe
+    `cmux_channel_readiness(env)` returns `ChannelReadiness{live, reason}`: live iff
+    `CMUX_SURFACE_ID` is set AND `CMUX_SOCKET_PATH` names a reachable unix socket; otherwise
+    not-live, naming the first missing precondition. The field shape mirrors core's
+    `ChannelReadiness` by FIELD NAME (cross-repo contract) while importing nothing from core.
+  normative_text: |
+    Core's `coach.execution.dispatch-verifies-channel-live` (a principle) requires that
+    before the coach relies on a workspace's decision-mediation channel, dispatch verify the
+    channel is live via the workspace provider's readiness signal; a not-live channel MUST
+    cause the work unit to refuse or escalate rather than spawn an unmediated worker — never
+    a silent continue. That obligation is transport-agnostic; WHICH preconditions make the
+    channel live is delegated to the provider that owns the transport.
+
+    This cmux provider renders the signal: the channel is live exactly when the cmux Claude
+    wrapper will inject its `PermissionRequest -> feed` hook for the worker, which requires
+    the worker to run under the wrapper with `CMUX_SURFACE_ID` set and a reachable cmux
+    socket. Without both, a spawned worker's decisions never reach the Feed and it hangs
+    unmediated, so the probe reports not-live and names the first missing precondition so an
+    operator (or the escalation) gets an actionable cause instead of a silent hang.
+
+    The satisfier is the readiness probe `adapter/readiness.py::cmux_channel_readiness`; its
+    conformance (`conformance/test_readiness.py`) proves the live/not-live signal against a
+    real on-disk socket with an injected environment. WIRING `readiness()` into the live cmux
+    launch path (refuse/escalate at spawn time) is owned elsewhere (the `mediate_worker_decisions`
+    runtime relocation, ext#16/#29); this node is the `realizes` declaration that keeps the
+    provider admittable under core's `coach.substrate.transport-realizes-mediation` forcing rule.
+  fix_hint: |
+    Keep `cmux_channel_readiness` and its `ChannelReadiness{live, reason}` shape in sync with
+    core's `ChannelReadiness` field names, and keep the `realizes` edge in
+    `official/atdd.workspace.cmux-claude/atdd.workspace.yaml`
+    (`extension_node: atdd.workspace.cmux-claude.readiness-satisfier ->
+    core_node: coach.execution.dispatch-verifies-channel-live`) in place — a transport/orchestration
+    provider that drops the edge is refused at admission by core's
+    `coach.substrate.transport-realizes-mediation` forcing rule.
+metadata:
+  aliases:
+    - CMUX-CLAUDE-READINESS-SATISFIER-001
+  severity: 3
+  disposition: strict
+  introduced_in: "0.1.0"
+notes: >-
+  Cross-repo contract: `ChannelReadiness{live: bool, reason: str}` mirrors core's
+  `ChannelReadiness` by FIELD NAME; the provider imports nothing from core. The core design
+  node this realizes (coach.execution.dispatch-verifies-channel-live) is referenced
+  NARRATIVELY here and bound machine-readably via the `realizes` edge in atdd.workspace.yaml —
+  not as a relationship-graph edge (boundary spec §6.2).
+terms:
+  - term_id: channel_readiness
+    text: >-
+      the workspace provider readiness signal — `ChannelReadiness{live, reason}`: live, or
+      not-live with an actionable reason. The cmux Feed transport is a workspace concern; the
+      signal is what core's dispatch reads to verify the channel before relying on it.
+  - term_id: live_channel
+    text: >-
+      a cmux decision channel whose wrapper will inject the `PermissionRequest -> feed` hook for
+      the worker — true iff `CMUX_SURFACE_ID` is set and `CMUX_SOCKET_PATH` names a reachable unix
+      socket. A worker on a live channel has its gated decisions delivered to the Feed.
+  - term_id: unmediated_worker
+    text: >-
+      a worker spawned against a not-live channel: its `PermissionRequest` decisions never reach
+      the Feed, so they are never mediated and the autonomous loop cannot close (it hangs). The
+      readiness signal exists so dispatch refuses/escalates instead of spawning one.
