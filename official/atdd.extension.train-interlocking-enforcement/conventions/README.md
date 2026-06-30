@@ -6,8 +6,8 @@ the build slices add:
 
 | Convention id (planned)                  | Owner | Realized by                          | Realizes (core design)        |
 |------------------------------------------|-------|--------------------------------------|-------------------------------|
-| `coder.interlocking.runner-infrastructure` | #25 | `validators/interlocking-infrastructure` | afokapu/atdd#1251             |
-| `tester.interlocking.route-coverage`       | #26 | `validators/interlocking-coverage`       | afokapu/atdd#1248, #1249      |
+| `coder.interlocking.runner-infrastructure` | #25 | `implementations/interlocking-infrastructure` | afokapu/atdd#1251             |
+| `tester.interlocking.route-coverage`       | #26 | `implementations/interlocking-coverage`       | afokapu/atdd#1248, #1249      |
 | bilateral declaration<->runtime binding (id TBD) | #27 | TBD                              | afokapu/atdd#1248 (entrypoint/action fields) |
 
 Each convention node added here MUST follow the convention-node schema (see the

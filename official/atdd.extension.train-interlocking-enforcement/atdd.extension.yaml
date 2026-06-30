@@ -51,8 +51,8 @@ owns:
   relationships:
     - relationships.yaml
   implementations:
-    - validators/interlocking-infrastructure
-    - validators/interlocking-coverage
+    - implementations/interlocking-infrastructure
+    - implementations/interlocking-coverage
   schemas: []
   gates:
     - gates/interlocking-infrastructure.gate.yaml

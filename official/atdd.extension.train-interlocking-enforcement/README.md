@@ -46,7 +46,7 @@ Cargo / Wagon     = payload transport / transformation inside the selected train
 - **Conventions (home; authored by #25/#26/#27)** — `conventions/` is a
   placeholder this slice; see `conventions/README.md`.
 - **Implementations (manifests + skeletons; logic by #25/#26)** —
-  `validators/interlocking-infrastructure` and `validators/interlocking-coverage`,
+  `implementations/interlocking-infrastructure` and `implementations/interlocking-coverage`,
   each a real discoverable unit (`atdd.implementation.yaml` + `src/ tests/
   fixtures/`) targeting `atdd.workspace.python-pytest`.
 - **Scopes** — `scopes/interlocking-targets.scope.yaml`: consumer selectors for
@@ -67,11 +67,11 @@ fill the convention + detector cells.
 |-----------------------------|------------------------------------------------------------|-------------------|
 | Convention node             | `conventions/<id>.convention.yaml`                         | home only (#25/#26) |
 | → implementation ref        | impl `realizes_convention` + `relationships.yaml` edge     | impl manifests present |
-| Implementation manifest     | `validators/<name>/atdd.implementation.yaml`               | present |
+| Implementation manifest     | `implementations/<name>/atdd.implementation.yaml`               | present |
 | → workspace contract        | impl `targets_workspace` + `contract_version`              | present (python-pytest ^1.0.0 / 1.1.0) |
 | Scope selector              | `scopes/interlocking-targets.scope.yaml`                   | present |
 | Gate                        | `gates/<name>.gate.yaml`                                    | present |
-| Tests / fixtures            | `validators/<name>/{tests,fixtures/clean,fixtures/dirty}`  | skeleton (#25/#26) |
+| Tests / fixtures            | `implementations/<name>/{tests,fixtures/clean,fixtures/dirty}`  | skeleton (#25/#26) |
 | Expected evidence keys      | impl `emits_rule_ids` + report channel                     | declared (rule ids) |
 | Cross-repo core design ref  | this README + manifest header + node body (narrative §6.2) | present |
 
@@ -79,8 +79,8 @@ fill the convention + detector cells.
 
 | Convention id (planned)                    | Owner | Validator                              | Gate                                      | Realizes (core design, narrative) |
 |--------------------------------------------|-------|----------------------------------------|-------------------------------------------|-----------------------------------|
-| `coder.interlocking.runner-infrastructure` | #25   | `validators/interlocking-infrastructure` | `gates/interlocking-infrastructure.gate.yaml` | afokapu/atdd#1251 |
-| `tester.interlocking.route-coverage`       | #26   | `validators/interlocking-coverage`       | `gates/interlocking-coverage.gate.yaml`       | afokapu/atdd#1248, #1249 |
+| `coder.interlocking.runner-infrastructure` | #25   | `implementations/interlocking-infrastructure` | `gates/interlocking-infrastructure.gate.yaml` | afokapu/atdd#1251 |
+| `tester.interlocking.route-coverage`       | #26   | `implementations/interlocking-coverage`       | `gates/interlocking-coverage.gate.yaml`       | afokapu/atdd#1248, #1249 |
 | bilateral declaration↔runtime binding (TBD)| #27   | TBD                                    | TBD                                       | afokapu/atdd#1248 (entrypoint/action fields) |
 
 ## Cross-repo references

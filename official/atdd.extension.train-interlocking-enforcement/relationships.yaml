@@ -12,7 +12,7 @@ schema_version: "1.0.0"
 # atdd.extension.yaml's header + depends_on, in this package's README mapping
 # table, and in each convention node's body — never as relationship-graph edges.
 # Likewise implementation -> workspace-provider-contract is declared in each
-# validators/<name>/atdd.implementation.yaml (targets_workspace + contract_version),
+# implementations/<name>/atdd.implementation.yaml (targets_workspace + contract_version),
 # not as a graph edge. Only extension-INTERNAL edges live here.
 graph_id: atdd.extension.train-interlocking-enforcement.relationships
 
@@ -27,12 +27,12 @@ graph_id: atdd.extension.train-interlocking-enforcement.relationships
 #
 # Planned convention ids (agreed package contract for the build slices):
 #   #25 coder.interlocking.runner-infrastructure
-#       -> realized-by validators/interlocking-infrastructure
+#       -> realized-by implementations/interlocking-infrastructure
 #       -> scoped-by   scopes/interlocking-targets.scope.yaml (python_runtime selector)
 #       -> gated-by    gates/interlocking-infrastructure.gate.yaml
 #       -> realizes (narrative) afokapu/atdd#1251 (InterlockingRunner runtime contract)
 #   #26 tester.interlocking.route-coverage
-#       -> realized-by validators/interlocking-coverage
+#       -> realized-by implementations/interlocking-coverage
 #       -> scoped-by   scopes/interlocking-targets.scope.yaml (interlocking_yaml + e2e selectors)
 #       -> gated-by    gates/interlocking-coverage.gate.yaml
 #       -> realizes (narrative) afokapu/atdd#1248/#1249 (route space + projection)

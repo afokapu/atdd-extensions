@@ -9,7 +9,7 @@ schema_version: "1.0.0"
 # advisory here iff #26's convention lands as documentation-only/advisory.
 gate_id: atdd.extension.train-interlocking-enforcement.coverage
 realizes_convention: tester.interlocking.route-coverage   # authored by #26
-implementation: validators/interlocking-coverage
+implementation: implementations/interlocking-coverage
 scope: scopes/interlocking-targets.scope.yaml
 
 stages:

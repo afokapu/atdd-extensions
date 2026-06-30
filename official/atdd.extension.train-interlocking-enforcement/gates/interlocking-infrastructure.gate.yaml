@@ -8,7 +8,7 @@ schema_version: "1.0.0"
 # is a hard defect, so this gate is CI/strict.
 gate_id: atdd.extension.train-interlocking-enforcement.infrastructure
 realizes_convention: coder.interlocking.runner-infrastructure   # authored by #25
-implementation: validators/interlocking-infrastructure
+implementation: implementations/interlocking-infrastructure
 scope: scopes/interlocking-targets.scope.yaml
 
 stages:
