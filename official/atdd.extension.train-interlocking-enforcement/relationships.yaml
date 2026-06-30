@@ -40,19 +40,94 @@ graph_id: atdd.extension.train-interlocking-enforcement.relationships
 #       afokapu/atdd#1248 exposes entrypoint/action fields or an equivalent metadata
 #       source is explicitly chosen (handoff contract).
 
-# --- #26 tester interlocking conventions (build slice) --------------------------
-# Adds the FOUR #26 tester nodes + their coverage-matrix edges. All four are
-# realized by, scoped by, and gated through the single interlocking-coverage
-# implementation (one detector run emits all four rule_ids — see the impl
-# manifest's emits_rule_ids). #25 adds its own coder node + edges in parallel; a
-# union merge reconciles the additions. core<->extension + implementation->
-# provider-contract references stay NARRATIVE (§6.2) — not authored as edges.
+# Build-slice nodes + edges (union: #25 coder + #26 tester).
 nodes:
+  # --- #25 five granular coder runtime-infrastructure conventions ---
+  - coder.train.interlocking-runner-exists
+  - coder.train.interlocking-resolution-model-exists
+  - coder.train.station-master-interlocking-routing
+  - coder.train.interlocking-delegates-to-trainrunner
+  - coder.train.interlocking-does-not-carry-cargo
   - tester.interlocking.route-coverage
   - tester.interlocking.production-runner-used
   - tester.interlocking.smoke-coverage-for-station-master
   - tester.interlocking.trace-binds-declared-route
+
 edges:
+  # --- #25 coverage matrix: each convention -> implementation / scope / gate.
+  # All five are realized by the single interlocking-infrastructure detector (one impl, five rule_ids),
+  # bound to the same scope, and gated by the same CI/strict gate.
+  - from: coder.train.interlocking-runner-exists
+    to: implementations/interlocking-infrastructure
+    type: realized-by
+    rationale: The detector flags a missing InterlockingRunner class / resolve_train under this rule_id.
+  - from: coder.train.interlocking-runner-exists
+    to: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    rationale: Bound to the python_runtime selector (python/trains/**/*.py) the detector inspects.
+  - from: coder.train.interlocking-runner-exists
+    to: gates/interlocking-infrastructure.gate.yaml
+    type: gated-by
+    rationale: A missing route-control layer is a hard CI/strict defect.
+
+  - from: coder.train.interlocking-resolution-model-exists
+    to: implementations/interlocking-infrastructure
+    type: realized-by
+    rationale: The detector flags a bare-train_id resolution (no InterlockingResolution model) under this rule_id.
+  - from: coder.train.interlocking-resolution-model-exists
+    to: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    rationale: Bound to the python_runtime selector where InterlockingResolution is defined.
+  - from: coder.train.interlocking-resolution-model-exists
+    to: gates/interlocking-infrastructure.gate.yaml
+    type: gated-by
+    rationale: Unstructured route resolution is a hard CI/strict defect.
+
+  - from: coder.train.station-master-interlocking-routing
+    to: implementations/interlocking-infrastructure
+    type: realized-by
+    rationale: The detector flags an unlinked / non-delegating Station Master under this rule_id.
+  - from: coder.train.station-master-interlocking-routing
+    to: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    rationale: Bound to the station_master selector (python/app.py) the detector inspects.
+  - from: coder.train.station-master-interlocking-routing
+    to: gates/interlocking-infrastructure.gate.yaml
+    type: gated-by
+    rationale: A Station Master not routing through InterlockingRunner -> TrainRunner is a hard CI/strict defect.
+
+  - from: coder.train.interlocking-delegates-to-trainrunner
+    to: implementations/interlocking-infrastructure
+    type: realized-by
+    rationale: The detector flags direct wagon execution from the interlocking layer under this rule_id.
+  - from: coder.train.interlocking-delegates-to-trainrunner
+    to: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    rationale: Bound to the python_runtime selector where the InterlockingRunner module lives.
+  - from: coder.train.interlocking-delegates-to-trainrunner
+    to: gates/interlocking-infrastructure.gate.yaml
+    type: gated-by
+    rationale: An interlocking that executes wagons / duplicates TrainRunner is a hard CI/strict defect.
+
+  - from: coder.train.interlocking-does-not-carry-cargo
+    to: implementations/interlocking-infrastructure
+    type: realized-by
+    rationale: The detector flags Cargo bleed and wagons importing interlocking code under this rule_id.
+  - from: coder.train.interlocking-does-not-carry-cargo
+    to: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    rationale: Bound to the python_runtime selector (InterlockingRunner module + wagon modules).
+  - from: coder.train.interlocking-does-not-carry-cargo
+    to: gates/interlocking-infrastructure.gate.yaml
+    type: gated-by
+    rationale: Cargo escaping TrainRunner execution is a hard CI/strict defect.
+
+# NOTE (boundary spec §6.2): the implementation -> workspace-provider-contract edge
+# (atdd.workspace.python-pytest ^1.0.0) is declared in
+# implementations/interlocking-infrastructure/atdd.implementation.yaml
+# (targets_workspace + contract_version), and the core design reference
+# (afokapu/atdd#1251, Part of #1246) is declared NARRATIVELY in the convention node body +
+# atdd.extension.yaml — neither is a relationship-graph edge.
   # === route-coverage =========================================================
   - source_ref: tester.interlocking.route-coverage
     target_ref: implementations/interlocking-coverage
