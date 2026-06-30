@@ -13,6 +13,7 @@ feature: convex-coder-conventions
 owns:
   conventions:
     - conventions/coder.convex.no-server-console-log.convention.yaml
+    - conventions/coder.convex.schema-at-root.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

@@ -20,7 +20,7 @@ backs it. Until then it is listed here as `planned` — no orphan obligations.
 | rule_id | Owner | Sev | Disp | Detector idea | Status |
 |---|---|---|---|---|---|
 | `coder.convex.no-server-console-log` | convex-coder | 2 | strict | regex `console.*` over `convex/**` (skip `_generated`, tests) | **active** |
-| `coder.convex.schema-at-root` (CONVEX-RT-001) | convex-coder | 4 | strict | assert `convex/schema.ts` exists | planned |
+| `coder.convex.schema-at-root` (CONVEX-RT-001) | convex-coder | 4 | strict | assert `convex/schema.ts` exists | **active** |
 | `coder.convex.http-router-at-root` (CONVEX-RT-002) | convex-coder | 4 | strict | if any `httpAction(` used, assert `convex/http.ts` exists | planned |
 | `coder.convex.api-no-underscore-dir` (CONVEX-RT-004) | convex-coder | 3 | strict | exported query/mutation/action must not sit under an `_`-prefixed dir | planned |
 | `coder.convex.layer-naming` (structure.layer_naming) | convex-coder | 2 | s&c | per-feature layer files named `api/application/domain/integration.ts` | planned |
