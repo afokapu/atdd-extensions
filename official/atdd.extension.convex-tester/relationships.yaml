@@ -2,12 +2,15 @@ schema_version: "1.0.0"
 
 # Extension-LOCAL relationship graph for atdd.extension.convex-tester.
 #
-# IMPORTANT (boundary spec §6.2): core↔extension edges are NOT authored here. Only
-# extension-internal edges live here. SKELETON: no nodes yet — the Vitest filename
-# node (and any siblings) are added as they are ported from the atdd-js draft (see
-# PORTING-PLAN.md), each landing with its atdd.workspace.convex detector.
+# IMPORTANT (boundary spec §6.2): core↔extension edges are NOT authored here. The
+# agnostic core node a convention realizes (the official `tester.filename.urn` is
+# the python-pytest sibling of `tester.convex.filename-urn`) is declared narratively
+# in the node's body, never as a graph edge. Only extension-internal edges live
+# here. As more Convex tester nodes are ported from the atdd-js draft (see
+# PORTING-PLAN.md), their intra-extension links are added here.
 graph_id: atdd.extension.convex-tester.relationships
 
-nodes: []
+nodes:
+  - tester.convex.filename-urn
 
 edges: []
