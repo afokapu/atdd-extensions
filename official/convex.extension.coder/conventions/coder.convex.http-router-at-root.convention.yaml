@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.convex.http-router-at-root
+kind: rule
+status: active
+name: Convex apps using httpAction must define convex/http.ts at the convex root
+statement: >-
+  If any Convex server module under the `convex/` function root uses `httpAction(`, the
+  app MUST have a `http.ts` file directly under that root. Convex auto-loads
+  `convex/http.ts` to mount the HTTP API (the router that registers each `httpAction`
+  handler); it does not recurse for it. An `httpAction` handler with no `convex/http.ts`
+  is never routed — the HTTP endpoint is silently absent. The detector that enforces it
+  — a per-root scan for `httpAction(` usage gated on the existence of a top-level
+  `http.ts` — is the convex.workspace.runtime implementation referenced below; the
+  obligation is stack-bound, the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: coder.convex.http-router-at-root
+content:
+  summary: >-
+    A conditional "if you use httpAction you must register a router" obligation. The
+    realization is a zero-dependency JS detector (a regex-over-source scan for
+    `httpAction(`, gated on a file-existence check for `http.ts`) that emits one
+    violation per scan root where `httpAction(` is used but `http.ts` is missing.
+  normative_text: |
+    Convex serves custom HTTP endpoints through `httpAction(...)` handlers that are
+    registered on a router exported as `default` from `convex/http.ts`. Convex auto-loads
+    that module from the convex root to mount the HTTP API; the file must sit DIRECTLY
+    under the root (no recursion). The obligation fires only when `httpAction(` is
+    actually used: an app with no HTTP handlers needs no `http.ts`. HOW the usage is
+    located is delegated to the per-stack detector. For Convex the detector scans each
+    supplied root for a `httpAction(` call site and, when one exists with no top-level
+    `http.ts`, emits one RAW violation (pointed at the expected `convex/http.ts` path,
+    with the demanding call site recorded in the evidence and source line).
+  fix_hint: |
+    Add a `convex/http.ts` at the convex root that builds and exports a router:
+      * import { httpRouter } from "convex/server";
+      * const http = httpRouter();
+      * http.route({ path, method, handler: httpAction(...) });
+      * export default http;
+    The router must be the top-level `convex/http.ts` — a router in a subdirectory is not
+    auto-loaded by Convex. This rule's disposition is `strict`: there is no
+    inline-suppression marker. The detector always emits the RAW result; any baseline
+    ratchet over pre-existing state is a downstream consumer/coach concern.
+  exceptions:
+    - A scan root with no `httpAction(` usage is not reported — `http.ts` is only
+      required when an HTTP handler exists.
+    - A scan root that does not exist on disk is skipped (a missing root is not a fault).
+    - Generated code under `convex/_generated/`, vendored/build dirs (`node_modules`,
+      `dist`, `build`, `.next`), and test files (`*.test.*` / `*.spec.*`) are excluded
+      from the `httpAction(` scan.
+    - The check is structural (it asserts a top-level `http.ts` exists); it does not
+      verify that the router actually routes the specific handler found.
+metadata:
+  aliases:
+    - CONVEX-RT-002
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: http_action_handler
+    text: >-
+      a Convex HTTP endpoint handler created with `httpAction(...)`. Its presence under a
+      convex root is what makes a top-level `http.ts` router mandatory.
+  - term_id: http_router_module
+    text: >-
+      the `convex/http.ts` module Convex auto-loads to mount the HTTP API; it builds an
+      `httpRouter()` and registers each `httpAction` handler. Must sit directly under the
+      convex root (no recursion).

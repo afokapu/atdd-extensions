@@ -6,7 +6,7 @@ detail as Core** — full decomposition, atomization, graph relationships, and
 convention-node body. No node is grouped or approximated. Each in-scope Core rule
 becomes exactly ONE atomic Convex node (`coder.convex.*` / `tester.convex.*`) with
 its own convention YAML **and** its own validator/detector under
-`atdd.workspace.convex/implementations/`.
+`convex.workspace.runtime/implementations/`.
 
 **Detector runtime decision (this wave):** zero-dependency Node ESM detectors
 (regex/heuristic over source), matching Phase 0 and Core's own method (Core enforces

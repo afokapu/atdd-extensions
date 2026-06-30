@@ -1,0 +1,36 @@
+schema_version: "1.0.0"
+extension_id: convex.extension.tester
+version: "0.1.0"
+kind: extension
+role: tester
+flow_wagon: validate-test-surface
+feature: convex-tester-conventions
+
+# Test-surface (tester) conventions for the Convex/Vitest stack. The first node
+# (Vitest + convex-test filename rendering of the acceptance URN) is realized by
+# its convex.workspace.runtime detector — see PORTING-PLAN.md. Each convention is the
+# stack-bound OBLIGATION; the detector that realizes it lives in the
+# convex.workspace.runtime provider (two-layer model). This extension owns ZERO runtime.
+owns:
+  conventions:
+    - conventions/tester.convex.filename-urn.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  workspaces:
+    - id: convex.workspace.runtime
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true
