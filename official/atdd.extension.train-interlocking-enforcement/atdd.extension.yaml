@@ -48,8 +48,12 @@ feature: train-interlocking-enforcement
 # concrete home; their decision modules are NotImplementedError stubs.
 owns:
   conventions:
-    # #25 coder runtime-infrastructure convention (sibling #26/#27 add theirs; union-merged).
-    - conventions/coder.interlocking.runner-infrastructure.convention.yaml
+    # #25 five granular coder runtime-infrastructure conventions (sibling #26/#27 add theirs; union-merged).
+    - conventions/coder.train.interlocking-runner-exists.convention.yaml
+    - conventions/coder.train.interlocking-resolution-model-exists.convention.yaml
+    - conventions/coder.train.station-master-interlocking-routing.convention.yaml
+    - conventions/coder.train.interlocking-delegates-to-trainrunner.convention.yaml
+    - conventions/coder.train.interlocking-does-not-carry-cargo.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
