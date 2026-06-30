@@ -21,7 +21,7 @@ backs it. Until then it is listed here as `planned` — no orphan obligations.
 |---|---|---|---|---|---|
 | `coder.convex.no-server-console-log` | convex-coder | 2 | strict | regex `console.*` over `convex/**` (skip `_generated`, tests) | **active** |
 | `coder.convex.schema-at-root` (CONVEX-RT-001) | convex-coder | 4 | strict | assert `convex/schema.ts` exists | **active** |
-| `coder.convex.http-router-at-root` (CONVEX-RT-002) | convex-coder | 4 | strict | if any `httpAction(` used, assert `convex/http.ts` exists | planned |
+| `coder.convex.http-router-at-root` (CONVEX-RT-002) | convex-coder | 4 | strict | if any `httpAction(` used, assert `convex/http.ts` exists | **active** |
 | `coder.convex.api-no-underscore-dir` (CONVEX-RT-004) | convex-coder | 3 | strict | exported query/mutation/action must not sit under an `_`-prefixed dir | planned |
 | `coder.convex.layer-naming` (structure.layer_naming) | convex-coder | 2 | s&c | per-feature layer files named `api/application/domain/integration.ts` | planned |
 | `coder.convex.domain-no-convex-import` (4-layer purity) | convex-coder | 3 | strict | files in `domain.ts`/`domain/` must not import `convex/*` or `_generated` | planned |
@@ -49,7 +49,7 @@ here.
 
 ## Build order (each = one vertical slice: detector + convention + fixtures)
 1. ✅ `coder.convex.no-server-console-log` (done — Phase 0).
-2. `coder.convex.schema-at-root` + `http-router-at-root` (trivial existence detectors).
+2. ✅ `coder.convex.schema-at-root` + `http-router-at-root` (trivial existence detectors).
 3. `coder.convex.domain-no-convex-import` (import-graph boundary detector).
 4. `tester.convex.filename-urn` (first tester node).
 5. `coder.convex.api-no-underscore-dir`, `layer-naming`, `feature-layout-promotion`.

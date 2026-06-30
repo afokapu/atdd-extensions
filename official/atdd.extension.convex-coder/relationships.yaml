@@ -13,5 +13,6 @@ graph_id: atdd.extension.convex-coder.relationships
 nodes:
   - coder.convex.no-server-console-log
   - coder.convex.schema-at-root
+  - coder.convex.http-router-at-root
 
 edges: []

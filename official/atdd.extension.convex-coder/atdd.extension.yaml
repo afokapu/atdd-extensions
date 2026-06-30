@@ -14,6 +14,7 @@ owns:
   conventions:
     - conventions/coder.convex.no-server-console-log.convention.yaml
     - conventions/coder.convex.schema-at-root.convention.yaml
+    - conventions/coder.convex.http-router-at-root.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []
