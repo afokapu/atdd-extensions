@@ -1,10 +1,16 @@
-"""Interlocking runtime-infrastructure detector for ``coder.interlocking.runner-infrastructure``.
+"""Interlocking runtime-infrastructure detector for the five coder.train.interlocking-* conventions.
 
-Realizes the agnostic obligation ``coder.interlocking.runner-infrastructure`` (disposition
-``strict``, severity 4) for the python stack: when a consumer interlocking declares guarded routes,
-the consumer runtime MUST ship an ``InterlockingRunner`` route-control layer that is reachable from
-the Station Master entrypoint and delegates linear train execution to ``TrainRunner`` — and that does
-NOT execute wagons, mutate Cargo, or bypass TrainRunner (core afokapu/atdd#1251, Part of #1246).
+Realizes (one implementation, five strict rule_ids) the granular coder obligations that a consumer
+interlocking declaring guarded routes ships an ``InterlockingRunner`` route-control layer (core
+afokapu/atdd#1251, Part of #1246):
+
+  * coder.train.interlocking-runner-exists            — runner class + resolve_train entry point
+  * coder.train.interlocking-resolution-model-exists  — structured resolution metadata, not a bare id
+  * coder.train.station-master-interlocking-routing   — Station Master routes through it + delegates
+  * coder.train.interlocking-delegates-to-trainrunner — no direct wagon execution / TrainRunner dup
+  * coder.train.interlocking-does-not-carry-cargo      — Cargo stays inside TrainRunner; wagons clean
+
+Each detection category maps to exactly one of these rule_ids (CATEGORY_RULE).
 
 PURE detector: the caller supplies the scan root (a consumer tree); this walks the scope's
 ``python_runtime`` (``python/trains/**/*.py``) + ``station_master`` (``python/app.py``) selectors with
@@ -20,8 +26,23 @@ import ast
 import json
 from pathlib import Path
 
-# The convention rule_id this detector realizes.
-RULE_ID = "coder.interlocking.runner-infrastructure"  # disposition: strict
+# The five convention rule_ids this detector realizes (all disposition: strict). One implementation
+# emits all five; each detection category maps to exactly one rule_id (CATEGORY_RULE below).
+RULE_RUNNER_EXISTS = "coder.train.interlocking-runner-exists"
+RULE_RESOLUTION_MODEL = "coder.train.interlocking-resolution-model-exists"
+RULE_STATION_ROUTING = "coder.train.station-master-interlocking-routing"
+RULE_DELEGATES = "coder.train.interlocking-delegates-to-trainrunner"
+RULE_NO_CARGO = "coder.train.interlocking-does-not-carry-cargo"
+
+ALL_RULE_IDS = frozenset(
+    {
+        RULE_RUNNER_EXISTS,
+        RULE_RESOLUTION_MODEL,
+        RULE_STATION_ROUTING,
+        RULE_DELEGATES,
+        RULE_NO_CARGO,
+    }
+)
 
 # Structured-resolution model contract (core afokapu/atdd#1251 InterlockingResolution).
 REQUIRED_RESOLUTION_FIELDS = frozenset(
@@ -47,6 +68,19 @@ CAT_STATION_NO_DELEGATE = "station-master-no-trainrunner-delegation"
 CAT_DIRECT_WAGON_EXEC = "interlocking-direct-wagon-execution"
 CAT_CARGO_MUTATION = "interlocking-cargo-mutation"
 CAT_WAGON_IMPORTS_INTERLOCKING = "wagon-imports-interlocking"
+
+# Each detection category belongs to exactly one convention rule_id. The category token stays in the
+# evidence string for human triage; the emitted ``rule_id`` is the mapped convention id.
+CATEGORY_RULE = {
+    CAT_MISSING_RUNNER: RULE_RUNNER_EXISTS,
+    CAT_MISSING_RESOLVE: RULE_RUNNER_EXISTS,
+    CAT_BARE_RESOLUTION: RULE_RESOLUTION_MODEL,
+    CAT_STATION_UNLINKED: RULE_STATION_ROUTING,
+    CAT_STATION_NO_DELEGATE: RULE_STATION_ROUTING,
+    CAT_DIRECT_WAGON_EXEC: RULE_DELEGATES,
+    CAT_CARGO_MUTATION: RULE_NO_CARGO,
+    CAT_WAGON_IMPORTS_INTERLOCKING: RULE_NO_CARGO,
+}
 
 
 # ── file discovery ─────────────────────────────────────────────────────────────
@@ -288,7 +322,7 @@ def _violation(root: Path, path: Path, line: int, col: int, category: str, detai
     except ValueError:
         rel = path
     return {
-        "rule_id": RULE_ID,
+        "rule_id": CATEGORY_RULE[category],
         "file": str(rel),
         "line": line,
         "col": col,
@@ -456,7 +490,7 @@ def detect(*args, **kwargs):
     return scan_root(Path(target))
 
 
-__all__ = ["RULE_ID", "scan_root", "scan_roots", "detect"]
+__all__ = ["ALL_RULE_IDS", "CATEGORY_RULE", "scan_root", "scan_roots", "detect"]
 
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation aid
