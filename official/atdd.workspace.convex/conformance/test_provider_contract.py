@@ -42,8 +42,9 @@ def test_contract_compatible_same_major_le_provider() -> None:
 
 def test_discover_returns_only_contract_compatible_for_this_workspace() -> None:
     impls = discover_mod.discover_implementations(_WS / "implementations")
-    assert [i.implementation_id for i in impls] == [_IMPL_ID]
-    assert impls[0].targets_workspace == "atdd.workspace.convex"
+    ids = {i.implementation_id for i in impls}
+    assert _IMPL_ID in ids  # membership, not exact-list: more detectors may ship
+    assert all(i.targets_workspace == "atdd.workspace.convex" for i in impls)
 
 
 @requires_node
