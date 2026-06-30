@@ -1,0 +1,35 @@
+schema_version: "1.0.0"
+extension_id: atdd.extension.convex-tester
+version: "0.1.0"
+kind: extension
+role: tester
+flow_wagon: validate-test-surface
+feature: convex-tester-conventions
+
+# Test-surface (tester) conventions for the Convex/Vitest stack. SKELETON: the
+# first node (Vitest + convex-test filename rendering of the acceptance URN) is
+# authored once its atdd.workspace.convex detector lands — see PORTING-PLAN.md.
+# Honest empty `conventions` for now: no obligation is declared without a detector
+# to realize it. This extension owns ZERO runtime.
+owns:
+  conventions: []
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  workspaces:
+    - id: atdd.workspace.convex
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

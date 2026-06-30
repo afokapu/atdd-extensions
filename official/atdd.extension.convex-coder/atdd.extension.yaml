@@ -1,0 +1,36 @@
+schema_version: "1.0.0"
+extension_id: atdd.extension.convex-coder
+version: "0.1.0"
+kind: extension
+role: coder
+flow_wagon: validate-source-surface
+feature: convex-coder-conventions
+
+# Source-surface (coder) conventions for the Convex backend stack. Each convention
+# is the agnostic-or-stack-bound OBLIGATION; the detector that realizes it lives in
+# the atdd.workspace.convex provider (two-layer model — see the workspace's
+# implementations/). This extension owns ZERO runtime.
+owns:
+  conventions:
+    - conventions/coder.convex.no-server-console-log.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  # The reusable runtime this extension's detectors target — the Convex/JS provider.
+  workspaces:
+    - id: atdd.workspace.convex
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

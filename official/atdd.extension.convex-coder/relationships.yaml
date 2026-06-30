@@ -1,0 +1,16 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.convex-coder.
+#
+# IMPORTANT (boundary spec §6.2): core↔extension edges are NOT authored here. The
+# agnostic core node a convention realizes (e.g. coder.logging.print is the
+# python-pytest sibling of coder.convex.no-server-console-log) is declared
+# narratively in each node's body, never as a graph edge. Only extension-internal
+# edges live here. As more Convex coder nodes are ported from the atdd-js draft
+# (see PORTING-PLAN.md), their intra-extension links are added here.
+graph_id: atdd.extension.convex-coder.relationships
+
+nodes:
+  - coder.convex.no-server-console-log
+
+edges: []
