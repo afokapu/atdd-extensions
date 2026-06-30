@@ -8,11 +8,12 @@ title: Match resolution route interlocking
 theme: match
 status: checked
 
+# exposed:false isolates this fixture to the route-coverage rule: an internal
+# interlocking has no Station Master action, so the smoke rule is out of scope.
 entrypoint:
-  exposed: true
-  actions:
-    - resolve_match
-  reason: null
+  exposed: false
+  actions: []
+  reason: internal-transition-only
 
 route_resolution:
   strategy: fail_on_multiple_match
