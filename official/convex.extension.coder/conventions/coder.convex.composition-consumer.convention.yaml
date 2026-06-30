@@ -26,7 +26,7 @@ terms:
     instead of receiving it, coupling itself to that implementation.
 implementation:
   type: validator
-  ref: coder.convex.composition-consumer
+  ref: convex_composition_detector
 content:
   summary: An agnostic "consumers receive deps by injection, not by constructing them" obligation, the
     Convex sibling of coder.refactor.composition-consumer. The realization is a zero-dependency JS detector

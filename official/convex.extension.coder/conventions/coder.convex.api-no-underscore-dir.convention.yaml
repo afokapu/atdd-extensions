@@ -24,7 +24,7 @@ terms:
     is never callable.
 implementation:
   type: validator
-  ref: coder.convex.api-no-underscore-dir
+  ref: convex_layout_structure_detector
 content:
   summary: A NATIVE Convex "exported API functions must stay on the API surface" obligation. The realization
     is a zero-dependency JS detector (regex over source, no TS runtime) that flags every `export const

@@ -26,7 +26,7 @@ terms:
     or `export default`; re-export forms (`export { ... }`, `export *`) are not counted.
 implementation:
   type: validator
-  ref: coder.convex.feature-layout-promotion
+  ref: convex_layout_structure_detector
 content:
   summary: A NATIVE Convex "promote a single-file layer to a directory when it grows" advisory. The realization
     is a zero-dependency JS detector that, for each single-file layer module (`api.ts`/ `application.ts`/`domain.ts`/`integration.ts`)

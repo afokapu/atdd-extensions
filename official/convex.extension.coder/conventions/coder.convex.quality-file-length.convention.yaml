@@ -20,7 +20,7 @@ terms:
     on further growth — applied by the consumer, never by the provider/detector.
 implementation:
   type: validator
-  ref: coder.convex.quality-file-length
+  ref: convex_quality_metrics_detector
 content:
   summary: An agnostic "track file size" obligation, the Convex sibling of coder.refactor.quality-file-length.
     The realization is a zero-dependency JS detector that counts the lines of each Convex server module

@@ -23,7 +23,7 @@ terms:
     stay free of animation-library imports and uses.
 implementation:
   type: validator
-  ref: coder.vite.presentation-gsap-layer
+  ref: vite_gsap_detector
 source:
   legacy_path: official/atdd.extension.coder/conventions/coder.presentation.gsap-layer.convention.yaml
   legacy_section: rules

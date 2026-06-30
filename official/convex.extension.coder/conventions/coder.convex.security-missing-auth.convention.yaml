@@ -26,7 +26,7 @@ terms:
     which the handler resolves the authenticated caller before acting on data.
 implementation:
   type: validator
-  ref: coder.convex.security-missing-auth
+  ref: convex_security_patterns_detector
 content:
   summary: A Convex-stack "no unauthenticated data access" obligation, the sibling of coder.security.missing-auth.
     The realization is a zero-dependency JS detector (regex over source, no TS runtime) that finds each

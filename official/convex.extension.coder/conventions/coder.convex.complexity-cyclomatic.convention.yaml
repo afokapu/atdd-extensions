@@ -25,7 +25,7 @@ terms:
     Core's TypeScript rule); the obligation is to stay at or below it.
 implementation:
   type: validator
-  ref: coder.convex.complexity-cyclomatic
+  ref: convex_complexity_detector
 content:
   summary: A "no over-branching Convex server function" obligation, the Convex sibling of coder.refactor.complexity-cyclomatic-typescript.
     The realization is a zero-dependency Node ESM detector (regex + brace matching over source, no TS

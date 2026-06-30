@@ -25,7 +25,7 @@ terms:
     decide conformance, mirroring the python sibling''s read of `"error_code": "…"`.'
 implementation:
   type: validator
-  ref: coder.convex.error-response-code-format
+  ref: convex_error_response_detector
 content:
   summary: 'A Convex-stack "ConvexError code is a machine-stable canonical identifier" obligation, the
     sibling of coder.error-response.code-format. The realization is a zero-dependency JS detector (regex

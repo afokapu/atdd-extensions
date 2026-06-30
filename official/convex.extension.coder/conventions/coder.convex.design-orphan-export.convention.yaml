@@ -24,7 +24,7 @@ terms:
     a consumer.
 implementation:
   type: validator
-  ref: coder.convex.design-orphan-export
+  ref: convex_design_detector
 content:
   summary: An agnostic "no dead exports" obligation, the Convex sibling of coder.design.orphan-export.
     The realization is a zero-dependency JS detector that reads each module's export declarations (`export

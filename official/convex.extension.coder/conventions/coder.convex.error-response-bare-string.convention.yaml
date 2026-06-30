@@ -30,7 +30,7 @@ terms:
     backend — the unit this rule scans.
 implementation:
   type: validator
-  ref: coder.convex.error-response-bare-string
+  ref: convex_error_response_detector
 content:
   summary: A Convex-stack "error responses carry a structured, coded body" obligation, the sibling of
     coder.error-response.bare-string. The realization is a zero-dependency JS detector (regex over source,

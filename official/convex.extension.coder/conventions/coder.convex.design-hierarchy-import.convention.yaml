@@ -28,7 +28,7 @@ terms:
     should mediate the access.
 implementation:
   type: validator
-  ref: coder.convex.design-hierarchy-import
+  ref: convex_design_detector
 content:
   summary: An agnostic "the feature dependency flow is one-directional (inward)" obligation, the Convex
     sibling of coder.design.hierarchy-import. The realization is a zero-dependency JS detector that classifies

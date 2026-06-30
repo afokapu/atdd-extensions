@@ -1,0 +1,17 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: convex_layout_structure_detector
+targets_workspace: convex.workspace.runtime
+contract_version: "1.1.0"
+# Validator FAMILY (Core pattern): one detector realizes a family of related
+# convention nodes, emitting multiple rule_ids from one run. Members live under
+# checks/ and run verbatim; detect.mjs aggregates their RAW reports.
+emits_rule_ids:
+  - coder.convex.schema-at-root
+  - coder.convex.http-router-at-root
+  - coder.convex.api-no-underscore-dir
+  - coder.convex.layer-naming
+  - coder.convex.domain-no-convex-import
+  - coder.convex.feature-layout-promotion
+entrypoint: detect.mjs
+report: detect.mjs

@@ -24,7 +24,7 @@ terms:
     function, a regex stand-in for an AST cyclomatic count, fed into the MI formula.'
 implementation:
   type: validator
-  ref: coder.convex.quality-mi
+  ref: convex_quality_metrics_detector
 content:
   summary: The Convex realization of the "modules stay maintainable" obligation. Because there is no AST/radon
     dependency for the JS runtime, the MI is approximated with the SEI formula over a regex-estimated

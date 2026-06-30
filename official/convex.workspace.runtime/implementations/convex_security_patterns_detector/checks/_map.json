@@ -1,0 +1,4 @@
+{
+  "convex_security_missing_auth": "coder.convex.security-missing-auth",
+  "convex_security_hardcoded_secret": "coder.convex.security-hardcoded-secret"
+}

@@ -17,7 +17,7 @@ terms:
     `onSubmit`, …), distinct from a lowercase string-valued inline HTML handler such as `onclick="…"`.
 implementation:
   type: validator
-  ref: coder.astro.client-directive-explicit
+  ref: astro_structure_detector
 content:
   summary: A "no un-hydrated interactivity in Astro markup" obligation. The realization is a zero-dependency
     JS detector that scans `.astro` template markup (frontmatter and `<style>` blocks excluded) for React/JSX-style

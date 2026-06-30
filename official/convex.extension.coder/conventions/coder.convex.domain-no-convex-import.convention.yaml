@@ -25,7 +25,7 @@ terms:
     `ctx.scheduler`, ...).
 implementation:
   type: validator
-  ref: coder.convex.domain-no-convex-import
+  ref: convex_layout_structure_detector
 content:
   summary: A NATIVE Convex "the domain layer stays free of Convex infrastructure" obligation. The realization
     is a zero-dependency JS detector (regex over source, no TS runtime) that, for each domain module (`domain.ts`

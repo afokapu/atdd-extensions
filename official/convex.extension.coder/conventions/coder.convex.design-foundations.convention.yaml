@@ -26,7 +26,7 @@ terms:
     or integration (`integration.ts`), in file or promoted-dir form.
 implementation:
   type: validator
-  ref: coder.convex.design-foundations
+  ref: convex_design_detector
 content:
   summary: A "every Convex feature rests on a domain foundation" obligation, the Convex sibling of coder.design.foundations.
     The realization is a zero-dependency JS detector that walks the scanned tree, marks each FEATURE directory

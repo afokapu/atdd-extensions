@@ -23,7 +23,7 @@ terms:
     TypeScript rule); the obligation is to stay at or below it.
 implementation:
   type: validator
-  ref: coder.convex.complexity-nesting
+  ref: convex_complexity_detector
 content:
   summary: A "no deeply nested Convex server function" obligation, the Convex sibling of coder.refactor.complexity-nesting-typescript.
     The realization is a zero-dependency Node ESM detector (regex + brace tracking over source, no TS

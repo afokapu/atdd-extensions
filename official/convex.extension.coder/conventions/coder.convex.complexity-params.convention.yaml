@@ -20,7 +20,7 @@ terms:
     below 6, parity with Core's default); the obligation is to stay at or below the limit.
 implementation:
   type: validator
-  ref: coder.convex.complexity-params
+  ref: convex_complexity_detector
 content:
   summary: A "no over-parameterized Convex server function" obligation, the Convex sibling of coder.refactor.complexity-params.
     The realization is a zero-dependency Node ESM detector (regex + brace/paren matching over source,

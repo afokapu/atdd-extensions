@@ -22,7 +22,7 @@ terms:
     module-level const assigned to a literal is flagged as a mis-cased constant.
 implementation:
   type: validator
-  ref: coder.convex.quality-naming
+  ref: convex_quality_metrics_detector
 content:
   summary: 'An agnostic "names are consistent" obligation, the Convex sibling of coder.refactor.quality-naming.
     The realization scans each Convex module for three concrete mis-casings: a function (declaration or

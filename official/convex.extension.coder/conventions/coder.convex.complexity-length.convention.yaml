@@ -21,7 +21,7 @@ terms:
     TypeScript rule); the obligation is to stay at or below it.
 implementation:
   type: validator
-  ref: coder.convex.complexity-length
+  ref: convex_complexity_detector
 content:
   summary: A "no over-long Convex server function" obligation, the Convex sibling of coder.refactor.complexity-length-typescript.
     The realization is a zero-dependency Node ESM detector (regex + brace matching over source, no TS

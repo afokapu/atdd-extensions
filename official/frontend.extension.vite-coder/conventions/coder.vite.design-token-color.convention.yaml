@@ -20,7 +20,7 @@ terms:
     — a named color (`'tomato'`) or a hex (`'#3a7bd5'`) — that bypasses the token set.
 implementation:
   type: validator
-  ref: coder.vite.design-token-color
+  ref: vite_design_system_detector
 content:
   summary: A "color values come from design tokens" obligation, the Vite/React sibling of coder.design.token-color.
     The realization is a zero-dependency JS detector that flags each color-bearing style property (`color`/`backgroundColor`/`borderColor`/`outlineColor`/`fill`/

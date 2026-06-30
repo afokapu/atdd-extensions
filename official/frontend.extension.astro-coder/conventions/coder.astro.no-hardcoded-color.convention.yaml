@@ -17,7 +17,7 @@ terms:
     definition (on a `--custom-prop:` line) does not count.
 implementation:
   type: validator
-  ref: coder.astro.no-hardcoded-color
+  ref: astro_hardcoded_literal_detector
 content:
   summary: 'A "no hardcoded color outside the token layer" obligation. The realization is a zero-dependency
     JS detector that flags hex and `rgb`/`rgba`/`hsl`/`hsla` literals in `.astro` styling contexts (scoped

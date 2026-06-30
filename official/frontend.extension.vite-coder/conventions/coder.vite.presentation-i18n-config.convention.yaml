@@ -23,7 +23,7 @@ terms:
     resolves keys against; required wiring
 implementation:
   type: validator
-  ref: coder.vite.presentation-i18n-config
+  ref: vite_i18n_detector
 source:
   legacy_path: official/atdd.extension.coder/conventions/coder.presentation.i18n-config.convention.yaml
   legacy_section: rules

@@ -20,7 +20,7 @@ terms:
     the switcher calls; its argument must be the picked locale, never a hardcoded string literal.
 implementation:
   type: validator
-  ref: coder.vite.presentation-i18n-switcher
+  ref: vite_i18n_detector
 source:
   legacy_path: official/atdd.extension.coder/conventions/coder.presentation.i18n-switcher.convention.yaml
   legacy_section: rules

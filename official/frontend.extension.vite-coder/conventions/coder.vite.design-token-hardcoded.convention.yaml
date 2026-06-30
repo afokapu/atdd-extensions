@@ -20,7 +20,7 @@ terms:
     `rgba(...)` call — that bypasses the token set; the construct this rule flags in `*.tsx`/`*.css`.
 implementation:
   type: validator
-  ref: coder.vite.design-token-hardcoded
+  ref: vite_design_system_detector
 content:
   summary: A "no hardcoded color literals" obligation, the Vite/React sibling of coder.design.token-hardcoded.
     The realization is a zero-dependency JS detector that flags each six- or three-digit hex literal and

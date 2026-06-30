@@ -29,7 +29,7 @@ terms:
     not by this rule.
 implementation:
   type: validator
-  ref: coder.convex.layer-naming
+  ref: convex_layout_structure_detector
 content:
   summary: A NATIVE Convex "feature modules are named after their layer" obligation. The realization is
     a zero-dependency JS detector that scans each `convex/**` module under the supplied scan roots and

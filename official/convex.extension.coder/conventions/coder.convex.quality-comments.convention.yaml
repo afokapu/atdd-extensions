@@ -27,7 +27,7 @@ terms:
     is 0.02 (2%). The raw fact, not a verdict — the ratchet baseline is downstream.'
 implementation:
   type: validator
-  ref: coder.convex.quality-comments
+  ref: convex_quality_metrics_detector
 content:
   summary: A "no comment debt in Convex server source" obligation, the Convex sibling of coder.refactor.quality-comments-typescript
     re-lensed from comment shortage to comment debt. The realization is a zero-dependency JS detector

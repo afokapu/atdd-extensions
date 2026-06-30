@@ -1,0 +1,8 @@
+{
+  "convex_schema_at_root": "coder.convex.schema-at-root",
+  "convex_http_router_at_root": "coder.convex.http-router-at-root",
+  "convex_api_no_underscore_dir": "coder.convex.api-no-underscore-dir",
+  "convex_layer_naming": "coder.convex.layer-naming",
+  "convex_domain_no_convex_import": "coder.convex.domain-no-convex-import",
+  "convex_feature_layout_promotion": "coder.convex.feature-layout-promotion"
+}

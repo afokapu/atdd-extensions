@@ -21,7 +21,7 @@ terms:
     layer by `coder.vite.presentation-gsap-layer`.
 implementation:
   type: validator
-  ref: coder.vite.presentation-gsap-commons
+  ref: vite_gsap_detector
 source:
   legacy_path: official/atdd.extension.coder/conventions/coder.presentation.gsap-commons.convention.yaml
   legacy_section: rules

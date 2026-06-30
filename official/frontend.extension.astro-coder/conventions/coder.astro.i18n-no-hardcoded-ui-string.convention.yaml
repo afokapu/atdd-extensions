@@ -17,7 +17,7 @@ terms:
     `{t(locale, key)}`.
 implementation:
   type: validator
-  ref: coder.astro.i18n-no-hardcoded-ui-string
+  ref: astro_hardcoded_literal_detector
 content:
   summary: A "no hardcoded user-facing copy in Astro markup" obligation. The realization is a zero-dependency
     JS detector that strips frontmatter, `<script>`/`<style>` bodies, HTML comments, and `{...}` expressions

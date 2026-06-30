@@ -20,7 +20,7 @@ terms:
     in app code, bypassing the design-system primitive; the construct this rule flags.
 implementation:
   type: validator
-  ref: coder.vite.design-primitives
+  ref: vite_design_system_detector
 content:
   summary: A "interactive UI is composed from design-system primitives" obligation, the Vite/React sibling
     of coder.design.primitives. The realization is a zero-dependency JS detector that flags every raw

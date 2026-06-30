@@ -24,7 +24,7 @@ terms:
     the obligation is to stay at or below it.
 implementation:
   type: validator
-  ref: coder.convex.complexity-cognitive
+  ref: convex_complexity_detector
 content:
   summary: A "no cognitively heavy Convex server function" obligation, the Convex sibling of coder.refactor.complexity-cognitive.
     The realization is a zero-dependency Node ESM detector (regex + brace tracking over source, no TS

@@ -24,7 +24,7 @@ terms:
     the object graph cannot be re-composed for testing or reuse.
 implementation:
   type: validator
-  ref: coder.convex.composition-root
+  ref: convex_composition_detector
 content:
   summary: An agnostic "wiring lives only in the composition root" obligation, the Convex sibling of coder.refactor.composition-root.
     The realization is a zero-dependency JS detector that flags any dependency-shaped class instantiation

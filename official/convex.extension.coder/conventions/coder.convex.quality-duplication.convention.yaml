@@ -27,7 +27,7 @@ terms:
     two files in the scanned layer — reported at the later location.
 implementation:
   type: validator
-  ref: coder.convex.quality-duplication
+  ref: convex_quality_metrics_detector
 content:
   summary: An agnostic "no copy-paste of meaningful logic" obligation, the Convex sibling of coder.refactor.quality-duplication.
     The realization is a zero-dependency JS detector that builds a sliding window of MIN_DUPLICATE_LINES

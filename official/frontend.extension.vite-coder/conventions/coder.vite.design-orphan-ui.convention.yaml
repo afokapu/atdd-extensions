@@ -20,7 +20,7 @@ terms:
     rule flags as an orphan.
 implementation:
   type: validator
-  ref: coder.vite.design-orphan-ui
+  ref: vite_design_system_detector
 content:
   summary: A "no UI component is left dead/disconnected" obligation, the Vite/React sibling of coder.design.orphan-ui.
     The realization is a zero-dependency JS detector that, in pass one, gathers every identifier any import

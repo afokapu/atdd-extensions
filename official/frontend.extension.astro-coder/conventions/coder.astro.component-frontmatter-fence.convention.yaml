@@ -16,7 +16,7 @@ terms:
     behavior (DOM wiring, event listeners), not build-time component logic.
 implementation:
   type: validator
-  ref: coder.astro.component-frontmatter-fence
+  ref: astro_structure_detector
 content:
   summary: A "component logic goes in the frontmatter fence, not a <script>" obligation. The realization
     is a zero-dependency JS detector that inspects each `<script>` block (after the frontmatter fence,
