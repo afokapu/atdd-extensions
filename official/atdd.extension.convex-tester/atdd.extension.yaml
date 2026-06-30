@@ -6,13 +6,14 @@ role: tester
 flow_wagon: validate-test-surface
 feature: convex-tester-conventions
 
-# Test-surface (tester) conventions for the Convex/Vitest stack. SKELETON: the
-# first node (Vitest + convex-test filename rendering of the acceptance URN) is
-# authored once its atdd.workspace.convex detector lands — see PORTING-PLAN.md.
-# Honest empty `conventions` for now: no obligation is declared without a detector
-# to realize it. This extension owns ZERO runtime.
+# Test-surface (tester) conventions for the Convex/Vitest stack. The first node
+# (Vitest + convex-test filename rendering of the acceptance URN) is realized by
+# its atdd.workspace.convex detector — see PORTING-PLAN.md. Each convention is the
+# stack-bound OBLIGATION; the detector that realizes it lives in the
+# atdd.workspace.convex provider (two-layer model). This extension owns ZERO runtime.
 owns:
-  conventions: []
+  conventions:
+    - conventions/tester.convex.filename-urn.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

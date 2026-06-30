@@ -40,7 +40,7 @@ backs it. Until then it is listed here as `planned` — no orphan obligations.
 
 | rule_id | Owner | Sev | Disp | Detector idea | Status |
 |---|---|---|---|---|---|
-| `tester.convex.filename-urn` | convex-tester | 2 | documentation-only | a `*.test.ts` under `convex/**` is named from its acceptance URN (`{wmbt}-{harness}-{nnn}[-slug].test.ts`) and is Vitest-collectable | planned |
+| `tester.convex.filename-urn` | convex-tester | 2 | documentation-only | a `*.test.ts` under `convex/**` is named from its acceptance URN (`{wmbt}-{harness}-{nnn}[-slug].test.ts`) and is Vitest-collectable | **active** |
 
 This is the Convex/Vitest sibling of the official `tester.filename.urn`
 (python-pytest renders `test_*.py`; convex renders `*.test.ts`). The IDENTITY-from-
