@@ -53,3 +53,16 @@ governed_by_conventions:
   - coach.runtime.one-persistent-pane-per-issue
   - coach.runtime.durable-feed-survives-restart
   - coach.runtime.agent-session-lifecycle
+
+# Cross-package linkage (#1268) — the substrate's single `realizes` relation.
+# This provider's agent-session (orchestration) + command-feed (transport)
+# capabilities CARRY the core two-way decision channel, so it MUST realize the
+# `dispatch-verifies-channel-live` obligation: it proves the mediation channel is
+# live before a worker is spawned, via the cmux readiness satisfier
+# (`adapter/readiness.py` → `DecisionChannelAdapter.readiness()`). Core states the
+# agnostic obligation; the provider declares + implements it here — no core import.
+# Without this edge, admission refuses the provider
+# (coach.substrate.transport-realizes-mediation).
+realizes:
+  - extension_node: atdd.workspace.cmux-claude.readiness
+    core_node: coach.execution.dispatch-verifies-channel-live
