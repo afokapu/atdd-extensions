@@ -7,7 +7,13 @@ schema_version: "1.0.0"
 # TrainRunner path (core afokapu/atdd#1251). Missing/unwired runtime infrastructure
 # is a hard defect, so this gate is CI/strict.
 gate_id: atdd.extension.train-interlocking-enforcement.infrastructure
-realizes_convention: coder.interlocking.runner-infrastructure   # authored by #25
+# The five granular coder.train.interlocking-* conventions authored by #25 all gate here (CI/strict).
+realizes_convention:
+  - coder.train.interlocking-runner-exists
+  - coder.train.interlocking-resolution-model-exists
+  - coder.train.station-master-interlocking-routing
+  - coder.train.interlocking-delegates-to-trainrunner
+  - coder.train.interlocking-does-not-carry-cargo
 implementation: implementations/interlocking-infrastructure
 scope: scopes/interlocking-targets.scope.yaml
 
