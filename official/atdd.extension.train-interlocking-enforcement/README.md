@@ -81,7 +81,7 @@ fill the convention + detector cells.
 |--------------------------------------------|-------|----------------------------------------|-------------------------------------------|-----------------------------------|
 | `coder.interlocking.runner-infrastructure` | #25   | `implementations/interlocking-infrastructure` | `gates/interlocking-infrastructure.gate.yaml` | afokapu/atdd#1251 |
 | `tester.interlocking.route-coverage`       | #26   | `implementations/interlocking-coverage`       | `gates/interlocking-coverage.gate.yaml`       | afokapu/atdd#1248, #1249 |
-| bilateral declaration↔runtime binding (TBD)| #27   | TBD                                    | TBD                                       | afokapu/atdd#1248 (entrypoint/action fields) |
+| `coder.train.interlocking-bilateral-binding` | #27 | `implementations/interlocking-binding` | `gates/interlocking-binding.gate.yaml` | afokapu/atdd#1248 (entrypoint.exposed/actions — CONSUMED), #1251 (runtime + trace) |
 
 ## Cross-repo references
 
@@ -109,10 +109,16 @@ This extension enforces design owned by core `atdd`:
   `tester.interlocking.route-coverage`, impl id
   `tester.interlocking.route-coverage.impl`, entrypoint
   `src/interlocking_coverage.py`, report `tests/test_interlocking_coverage.py`.
-- **#27 (bilateral binding)** may add bilateral declaration↔runtime conventions /
-  checks **only after** afokapu/atdd#1248 exposes the entrypoint/action fields (or
-  an equivalent metadata source is explicitly chosen). Convention id is TBD;
-  add its validator dir, scope selector, and gate following the same pattern.
+- **#27 (bilateral binding)** — LANDED. Convention id
+  `coder.train.interlocking-bilateral-binding`, impl id
+  `coder.train.interlocking-bilateral-binding.impl`, entrypoint
+  `src/interlocking_binding.py`, report `tests/test_interlocking_binding.py`, gate
+  `gates/interlocking-binding.gate.yaml`. One python-pytest detector emits the single
+  rule_id over FIVE binding directions (declaration_to_runtime, runtime_to_declaration,
+  station_to_declaration, declaration_to_station, trace_to_declaration) plus a
+  parallel-reachability schema-drift guard. It CONSUMES core afokapu/atdd#1248's
+  `entrypoint.exposed/actions` field for declaration_to_station reachability and defines
+  no parallel reachability field. Fixtures under `fixtures/pass/` + `fixtures/fail/`.
 
 When a build slice lands a real convention file it MUST also: add it to
 `owns.conventions` in `atdd.extension.yaml`, add its node + edges to

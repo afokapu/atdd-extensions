@@ -4,11 +4,11 @@
 are authored in this slice. This directory is the home for the convention nodes
 the build slices add:
 
-| Convention id (planned)                  | Owner | Realized by                          | Realizes (core design)        |
-|------------------------------------------|-------|--------------------------------------|-------------------------------|
-| `coder.interlocking.runner-infrastructure` | #25 | `implementations/interlocking-infrastructure` | afokapu/atdd#1251             |
-| `tester.interlocking.route-coverage`       | #26 | `implementations/interlocking-coverage`       | afokapu/atdd#1248, #1249      |
-| bilateral declaration<->runtime binding (id TBD) | #27 | TBD                              | afokapu/atdd#1248 (entrypoint/action fields) |
+| Convention id                              | Owner | Realized by                          | Realizes (core design)        |
+|--------------------------------------------|-------|--------------------------------------|-------------------------------|
+| `coder.interlocking.runner-infrastructure` (5 granular `coder.train.interlocking-*`) | #25 | `implementations/interlocking-infrastructure` | afokapu/atdd#1251 |
+| `tester.interlocking.route-coverage` (+3 sibling tester rules) | #26 | `implementations/interlocking-coverage` | afokapu/atdd#1248, #1249 |
+| `coder.train.interlocking-bilateral-binding` | #27 | `implementations/interlocking-binding` | afokapu/atdd#1248 (entrypoint.exposed/actions — CONSUMED), #1251 (runtime + trace) |
 
 Each convention node added here MUST follow the convention-node schema (see the
 existing `official/atdd.extension.{coder,tester,github}/conventions/*.convention.yaml`
