@@ -1,0 +1,96 @@
+schema_version: 1.1.0
+rule_id: coder.convex.layer-naming
+kind: rule
+status: active
+name: Convex feature modules are named after the architectural layer they implement
+statement: 'Every Convex feature module (a non-test, non-generated `*.ts`/`*.tsx`/`*.js`/`*.mjs` file
+  that carries a feature''s layer code) MUST be named after the architectural layer it implements — one
+  of `api.ts` (presentation), `application.ts`, `domain.ts`, or `integration.ts` — unless it is a recognized
+  structural file (wagon/feature wiring, public barrel, train manifest, or a Convex root module) or a
+  member of an already-promoted layer directory. A feature module named anything else (`helpers.ts`, `service.ts`,
+  `submitVote.ts`, ...) hides where it sits in the 4-layer architecture: a reader cannot tell presentation
+  from domain from integration, and dependency direction can no longer be read off the filename. This
+  is a NATIVE Convex obligation with no Core sibling — it renders the 4-layer feature discipline into
+  Convex''s flat, path-addressed module tree. The detector that enforces it — a basename scan that flags
+  any feature module outside the closed layer-name set (minus structural and promoted-layer-dir exemptions)
+  — is the atdd.workspace.convex implementation referenced below; the obligation is stack-bound, the detector
+  is Convex-specific.'
+terms:
+- term_id: convex_layer_file
+  text: a feature module whose basename names the architectural layer it implements — `api.ts` (presentation),
+    `application.ts`, `domain.ts`, or `integration.ts`. The unit this rule checks.
+- term_id: structural_module
+  text: a non-layer Convex file that is legitimately not named after a layer — wagon/feature wiring (`wagon.ts`,
+    `composition.ts`), the public barrel (`index.ts`), the train manifest (`trains.ts`), or a Convex root
+    module (`schema.ts`, `http.ts`).
+- term_id: promoted_layer_dir
+  text: a directory a single-file layer expands into when it outgrows one file (`domain/`, `application/`,
+    `integration/`, `api/`, `presentation/`); its members' naming is governed by `coder.convex.feature-layout-promotion`,
+    not by this rule.
+implementation:
+  type: validator
+  ref: coder.convex.layer-naming
+content:
+  summary: A NATIVE Convex "feature modules are named after their layer" obligation. The realization is
+    a zero-dependency JS detector that scans each `convex/**` module under the supplied scan roots and
+    flags any whose basename is neither a layer file (`api.ts`/`application.ts`/`domain.ts`/ `integration.ts`)
+    nor a recognized structural file (`wagon.ts`, `composition.ts`, `index.ts`, `trains.ts`, `schema.ts`,
+    `http.ts`), and that is not a member of an already-promoted layer directory (`api/`, `application/`,
+    `domain/`, `integration/`, `presentation/`). Generated code and test files are out of scope.
+  normative_text: 'The Convex stack mirrors the 4-layer feature architecture: presentation (Convex
+
+    queries/mutations/actions), application (use cases), domain (pure rules + types), and
+
+    integration (db readers/writers, external clients). Because Convex auto-discovers a flat module
+
+    tree, the ONLY place the layer is visible is the filename — so each layer a feature uses is
+
+    rendered as `api.ts` (presentation), `application.ts`, `domain.ts`, or `integration.ts`. A
+
+    feature module named outside that closed set is an un-layered module: its responsibility and its
+
+    allowed dependency direction are no longer legible from its name.
+
+
+    The obligation is "a feature module''s name states its layer"; HOW the offending names are found
+
+    is delegated to the per-stack detector. For Convex the detector scans each `convex/**` module
+
+    and flags every basename outside the layer set, with two carve-outs that are NOT layer modules:
+
+    (1) structural files — wagon/feature wiring (`wagon.ts`, `composition.ts`), the public barrel
+
+    (`index.ts`), the train manifest (`trains.ts`), and the Convex root modules (`schema.ts`,
+
+    `http.ts`); and (2) members of an already-promoted layer DIRECTORY (a file directly inside
+
+    `domain/`, `application/`, etc.), whose naming is governed by `coder.convex.feature-layout-
+
+    promotion`, not by this rule.
+
+    '
+  fix_hint: "Rename the module to the layer it implements, or fold its code into the right existing layer\n\
+    file:\n  * pure rules / value objects / types        -> `domain.ts`\n  * use-case orchestration  \
+    \                   -> `application.ts`\n  * Convex query/mutation/action handlers      -> `api.ts`\n\
+    \  * db readers/writers, external clients       -> `integration.ts`\nIf the file is genuinely feature\
+    \ wiring or a public barrel, name it `composition.ts` or\n`index.ts` (recognized structural files).\
+    \ If a single layer has grown past one file, promote it\nto a layer DIRECTORY (`domain/` with `domain/index.ts`\
+    \ + `domain/<entity>.ts`) per\n`coder.convex.feature-layout-promotion` — members of that directory\
+    \ are then exempt here. This\nrule's disposition is `suppress-and-clean`: the detector emits the RAW\
+    \ mis-named-module list;\nwhether a pre-existing name is held flat by a baseline ratchet is a downstream\
+    \ consumer/coach\nconcern, never the detector's.\n"
+  exceptions:
+  - Structural files are exempt — `wagon.ts`, `composition.ts`, `index.ts`, `trains.ts`, and the Convex
+    root modules `schema.ts` / `http.ts` are not feature layer modules.
+  - A member of an already-promoted layer directory (a file directly inside `api/`, `application/`, `domain/`,
+    `integration/`, or `presentation/`) is governed by `coder.convex.feature-layout- promotion`, not by
+    this rule.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope — their naming is owned by `tester.convex.filename-urn`.
+  - Generated code under `convex/_generated/` and vendored/build dirs (`node_modules`, `dist`, `build`,
+    `.next`) are skipped during traversal.
+metadata:
+  aliases:
+  - CONVEX-LAYER-NAMING-001
+  severity: 2
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0

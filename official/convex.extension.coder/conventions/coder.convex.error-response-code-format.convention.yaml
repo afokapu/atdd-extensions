@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: coder.convex.error-response-code-format
+kind: rule
+status: active
+name: ConvexError codes must be canonical SCREAMING_SNAKE/dotted identifiers
+statement: 'When a Convex server module (`*.ts`/`*.tsx`/`*.js`/`*.mjs` under the `convex/` function tree,
+  excluding `_generated/` codegen and test files) emits a `code` value in a `ConvexError` payload, that
+  value MUST be a canonical enum-style identifier — SCREAMING_SNAKE matching `^[A-Z][A-Z0-9_]*$`, optionally
+  dotted-namespaced into SCREAMING_SNAKE segments (`^[A-Z][A-Z0-9_]*(\.[A-Z][A-Z0-9_]*)*$`, e.g. `AUTH.TOKEN_MISSING`)
+  — NOT a lowercase, kebab-case, or camelCase string. This is the Convex-stack realization of the agnostic
+  "error codes are stable enum identifiers" obligation owned by the coder extension (the python-pytest
+  sibling is `coder.error-response.code-format`, which checks `"error_code": "<value>"`), and the sibling
+  of `coder.convex.error-response-bare-string`. The obligation is stack-bound; the detector that enforces
+  it — a scan of `ConvexError({ code: "<value>" })` literals over Convex source — is the atdd.workspace.convex
+  implementation referenced below.'
+terms:
+- term_id: error_code
+  text: the stable, machine-readable classification field of a `ConvexError` payload that clients branch
+    on (e.g. `INVALID_INPUT`, `RESOURCE_NOT_FOUND`, `AUTH.TOKEN_MISSING`).
+- term_id: canonical_code_format
+  text: an identifier matching `^[A-Z][A-Z0-9_]*(\.[A-Z][A-Z0-9_]*)*$` — SCREAMING_SNAKE, optionally dotted-namespaced
+    into SCREAMING_SNAKE segments; the required shape for an enum-style code.
+- term_id: convex_error_payload
+  text: 'the object argument of `new ConvexError({ … })`; the rule reads its `code` string literal to
+    decide conformance, mirroring the python sibling''s read of `"error_code": "…"`.'
+implementation:
+  type: validator
+  ref: coder.convex.error-response-code-format
+content:
+  summary: 'A Convex-stack "ConvexError code is a machine-stable canonical identifier" obligation, the
+    sibling of coder.error-response.code-format. The realization is a zero-dependency JS detector (regex
+    over source, no TS runtime) that locates each `ConvexError(` call, brace/paren matches its argument
+    span, reads each `code: "<value>"` string literal inside, and flags any value that fails `^[A-Z][A-Z0-9_]*(\.[A-Z][A-Z0-9_]*)*$`
+    (e.g. `not-found`, `wrongPhase`, `bad request`).'
+  normative_text: 'Error codes are the stable, machine-readable classification clients branch on; kebab-case
+
+    (`not-found`), camelCase (`wrongPhase`), lowercase (`bad_request`), or freeform prose break that
+
+    contract and cannot be matched reliably across releases. The obligation is "every `code` emitted
+
+    in a `ConvexError` payload matches the canonical SCREAMING_SNAKE (optionally dotted-namespaced)
+
+    pattern". WHICH construct emits the code and HOW it is detected is delegated to the per-stack
+
+    detector. For Convex the detector scans `convex/**` modules supplied as scan roots: it matches
+
+    `ConvexError(`, balances parentheses to isolate the argument, and inspects each
+
+    `code: "<value>"` string literal within it; a value failing the canonical pattern is a
+
+    violation. Only string-literal `code` values are reachable by this textual scan; dynamically
+
+    built codes are out of scope. Generated code under `_generated/` and test files are out of scope.
+
+    '
+  fix_hint: "Rewrite the code value as a canonical SCREAMING_SNAKE (optionally dotted-namespaced) constant:\n\
+    \  throw new ConvexError({ code: \"not-found\", message: \"…\" });   // ❌ kebab-case\n  throw new\
+    \ ConvexError({ code: \"wrongPhase\", message: \"…\" });  // ❌ camelCase\n  ->\n  throw new ConvexError({\
+    \ code: \"RESOURCE_NOT_FOUND\", message: \"…\" });\n  throw new ConvexError({ code: \"CART.ALREADY_LOCKED\"\
+    , message: \"…\" });\nPrefer namespacing codes by feature/wagon (e.g. `AUTH.TOKEN_MISSING`, `TIMEBANK_EXPIRED`)\
+    \ and\ndefining them as constants per domain module. This rule's disposition is `strict`: a new\n\
+    non-conforming code fails the gate and is not suppressible by default.\n"
+  exceptions:
+  - Only string-literal `code` values inside a `ConvexError(…)` call are matched; a code built dynamically
+    (from a variable or expression) is outside this textual scan's reach.
+  - A `code` value already matching `^[A-Z][A-Z0-9_]*(\.[A-Z][A-Z0-9_]*)*$` (the correct form) is never
+    flagged.
+  - Any `code:` key written inside comments or string contents is masked before matching and is not flagged.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are never scanned;
+    vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped.
+metadata:
+  aliases:
+  - CONVEX-ERROR-CODE-FORMAT-001
+  - ERROR-CODE-FORMAT-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0

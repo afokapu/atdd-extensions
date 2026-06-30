@@ -14,6 +14,7 @@ feature: convex-tester-conventions
 owns:
   conventions:
     - conventions/tester.convex.filename-urn.convention.yaml
+    - conventions/tester.convex.migration-naming.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

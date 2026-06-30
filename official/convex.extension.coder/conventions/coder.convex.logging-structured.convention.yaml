@@ -1,0 +1,83 @@
+schema_version: 1.1.0
+rule_id: coder.convex.logging-structured
+kind: rule
+status: active
+name: Server log calls must carry a structured payload, not a bare interpolated string
+statement: 'When a Convex server module (a `*.ts`/`*.tsx`/`*.js`/`*.mjs` file under the `convex/` function
+  tree, excluding `_generated/` codegen and test files) emits an observability event through the backend
+  log channel (`console.*`, or a project `logger`/`log` wrapper), the call MUST attach a machine-readable
+  structured payload object (a `{ key: value }` of correlation ids, request scope, resource keys) alongside
+  a static event name — rather than logging a bare interpolated message string. This is the Convex-stack
+  realization of the agnostic "log with structured context, not a bare string" obligation (the python-pytest
+  sibling is `coder.logging.structured`, which forbids `logger.info("msg")` without `extra={...}`). The
+  detector that enforces it — a zero-dependency regex/paren scan that flags any server log call whose
+  argument is an interpolated string (template `${...}` or string concatenation) carrying no object payload
+  — is the atdd.workspace.convex implementation referenced below; the obligation is stack-bound, the detector
+  is JS-specific.'
+terms:
+- term_id: convex_server_module
+  text: a non-test, non-generated source file under the `convex/` function tree that Convex auto-discovers
+    and runs on its backend (a query/mutation/action/http handler or a module they import).
+- term_id: server_log_call
+  text: a call on a known log receiver (`console`/`logger`/`log`/`this.logger`) whose method is a log
+    level (`log`/`info`/`warn`/`error`/`debug`/`trace`) — Convex's backend observability channel.
+- term_id: structured_payload
+  text: 'an object-literal argument `{ key: value, ... }` carrying correlation ids, request scope, and
+    resource keys so the event is queryable and redactable — the structured channel on Convex.'
+- term_id: bare_interpolated_message
+  text: a log message built by interpolation — a template literal containing `${...}` or a `+` string
+    concatenation — with no structured payload object, producing an opaque, unqueryable log line.
+implementation:
+  type: validator
+  ref: coder.convex.logging-structured
+content:
+  summary: A "log with a structured payload, not a bare interpolated string" obligation, the Convex sibling
+    of coder.logging.structured. The realization is a zero-dependency JS detector (regex + paren matching
+    over source, no TS runtime) that finds each server log call (`console`/`logger`/`log`/`this.logger`
+    `.log/.info/.warn/.error/.debug/.trace`) and flags it when its argument is an interpolated message
+    (template literal with `${...}`, or a `+` string concatenation) and no object-literal payload is passed.
+    Generated code and `*.test.ts`/`*.spec.ts` files are out of scope.
+  normative_text: 'A logging call in shippable Convex server code must carry machine-readable context
+    alongside its
+
+    message so the event is queryable, correlatable, and redactable in production function logs. A bare
+
+    interpolated string — `console.log(`charging ${userId} ${amount}`)` — bakes the identifiers into an
+
+    opaque line that cannot be filtered by request/correlation scope. The obligation is "server log calls
+
+    carry a structured payload"; on Convex that payload is an object literal argument (the structured
+
+    channel) and a STATIC event name is the message. WHICH receivers count and HOW the call is detected
+    is
+
+    delegated to the per-stack detector: it recognizes `console`/`logger`/`log`/`this.logger` receivers,
+
+    treats a template literal with `${...}` or a string concatenation as the bare-interpolation smell,
+    and
+
+    treats an object-literal argument as the structured payload that clears it.
+
+    '
+  fix_hint: "Promote the interpolated identifiers into a structured payload object and keep the message\
+    \ static:\n  console.log(`charging ${userId} ${amount}`)\nbecomes\n  console.log(\"charge.started\"\
+    , { userId, amount })\nNow the event name is filterable and the ids are queryable fields. If a pre-existing\
+    \ bare call cannot\nbe cleaned immediately, this rule's disposition is `suppress-and-clean`: stamp\
+    \ the offending line with\nan inline marker `// atdd:suppress(coder.convex.logging-structured) UNTIL=<YYYY-MM-DD>`\
+    \ to absorb it\non a deadline while the backlog is burned down (the marker is honored by the coach/consumer\
+    \ layer, NOT\nby the detector — the detector emits the RAW violation regardless). New bare calls are\
+    \ not suppressible\nby default and fail.\n"
+  exceptions:
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope — tests may log interpolated strings freely.
+  - Generated code under `convex/_generated/` is never scanned (codegen, never edited).
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - A log call that already passes an object-literal payload is NOT flagged, even if the message itself
+    is interpolated (the structured channel is present).
+  - Pre-existing bare calls carrying a valid inline `// atdd:suppress(coder.convex.logging-structured)`
+    marker are absorbed by the `suppress-and-clean` disposition (consumer/coach layer, not the detector).
+metadata:
+  aliases:
+  - CONVEX-LOG-STRUCTURED-001
+  severity: 2
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0

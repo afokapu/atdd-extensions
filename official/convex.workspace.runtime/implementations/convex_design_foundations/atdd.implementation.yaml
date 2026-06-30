@@ -1,0 +1,29 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.convex.design-foundations
+targets_workspace: convex.workspace.runtime
+contract_version: "1.1.0"
+
+# Back-reference to the agnostic obligation this detector realizes. The convention
+# node is authored in atdd.extension.convex-coder; this implementation is the
+# convex-workspace realization of it (two-layer model). The Core source it is
+# adapted from is coder.design.foundations.
+realizes_convention: coder.convex.design-foundations
+
+# Single rule_id (disposition strict). The detector emits RAW violations; the
+# strict verdict is a downstream consumer concern.
+emits_rule_ids:
+  - coder.convex.design-foundations   # disposition: strict
+
+# The detector module. It walks the scanned tree and, for each FEATURE directory
+# (one directly holding an api.ts/application.ts/integration.ts layer file or a
+# promoted api/application/integration layer dir), asserts the domain foundation
+# (domain.ts or a domain/ dir) is present directly under it. It writes the RAW
+# {rule_id,file,line,col,evidence,source_line} report to ATDD_VIOLATIONS_REPORT
+# (v1.1 channel). No disposition.
+entrypoint: detect.mjs
+
+# The runnable v1.1 report-emitting unit the provider command executes. In Phase 0
+# this is the same .mjs the provider runs with `node`; in Phase 0.5 it becomes the
+# vitest spec. Declared (not hardcoded) so the provider CLI runs THIS detector.
+report: detect.mjs

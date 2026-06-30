@@ -1,0 +1,70 @@
+schema_version: 1.1.0
+rule_id: coder.convex.quality-mi
+kind: rule
+status: active
+name: Convex modules meet a minimum maintainability index
+statement: Every Convex server module of non-trivial size (>= 10 non-blank lines; a `*.ts`/`*.tsx`/`*.js`/`*.mjs`
+  file under the `convex/` function tree, excluding `_generated/` codegen and test files) MUST have an
+  approximate maintainability index (MI) at or above the "maintainable" threshold of 20 on radon's normalized
+  0-100 scale, so that backend code stays readable and changeable during the REFACTOR phase. This is the
+  Convex-stack realization of Core's `coder.refactor.quality-mi-typescript`. The stack-specific detector
+  computes the SEI MI formula with a REGEX-approximated Halstead volume — no radon, no tree-sitter, no
+  AST — then normalizes to radon's 0-100 reporting scale; the obligation is stack-bound, the detector
+  is JS-specific.
+terms:
+- term_id: approximate_mi
+  text: the SEI maintainability-index formula computed for the JS runtime with a regex-estimated Halstead
+    volume and cyclomatic-complexity proxy (no AST/radon), normalized to radon's 0-100 scale via `clamp(MI_raw
+    * 100 / 171, 0, 100)` and thresholded at 20; directionally correct and comparable within a codebase.
+- term_id: regex_halstead_volume
+  text: an estimate of Halstead volume `V = (N1+N2)*log2(n1+n2)` from regex operator/operand token counts
+    over comment-stripped source, standing in for the AST-based volume the Python rule gets from radon.
+- term_id: cyclomatic_proxy
+  text: '`CC = (1 + decisionKeywordCount) / estimatedFunctionCount` — the average decision density per
+    function, a regex stand-in for an AST cyclomatic count, fed into the MI formula.'
+implementation:
+  type: validator
+  ref: coder.convex.quality-mi
+content:
+  summary: The Convex realization of the "modules stay maintainable" obligation. Because there is no AST/radon
+    dependency for the JS runtime, the MI is approximated with the SEI formula over a regex-estimated
+    Halstead volume, a regex cyclomatic-complexity proxy, LOC, and comment ratio, then normalized to radon's
+    0-100 scale; modules of >= 10 non-blank lines scoring below 20 are flagged. Skips `_generated/` and
+    `*.test.ts`/`*.spec.ts`.
+  normative_text: "Same threshold as Core (MI >= 20, the radon rank-A / \"maintainable\" cutoff on the\n\
+    normalized 0-100 scale). The detector has no AST parser, so it APPROXIMATES the SEI\nformula and normalizes\
+    \ it exactly as radon does:\n\n  MI_raw = 171 - 5.2*ln(V) - 0.23*CC - 16.2*ln(LOC) + 50*sin(sqrt(2.4*CM))\n\
+    \  MI     = clamp(MI_raw * 100 / 171, 0, 100)\n\nwith the inputs estimated by regex over comment-stripped\
+    \ source:\n  * V (Halstead volume proxy) = (N1 + N2) * log2(n1 + n2), where n1/n2 are the counts\n\
+    \    of DISTINCT operators/operands and N1/N2 the TOTAL operator/operand token counts.\n  * CC (cyclomatic\
+    \ proxy) = (1 + decisionKeywordCount) / estimatedFunctionCount, where\n    decision keywords are `if`/`for`/`while`/`case`/`catch`/`&&`/`||`/`??`/`?`\
+    \ and the\n    function count estimates `function`, `=>`, and Convex builder calls\n    (`query`/`mutation`/`action`/`httpAction`/`internal*`).\n\
+    \  * LOC = non-blank, comment-stripped line count.\n  * CM (comment ratio) = comment lines / non-blank\
+    \ lines.\n\nThe result is directionally correct and comparable across files in one codebase —\nsufficient\
+    \ for the threshold check. Files under 10 non-blank lines are not measured.\nThis is a pure-regex,\
+    \ pure-stdlib computation (unlike the radon-backed Python MI rule\nit parallels). DISPOSITION BOUNDARY\
+    \ (PROVIDER-CONTRACT-v1.1 §1): the detector emits only\nthe RAW fact \"module X has MI = Y (< 20)\"\
+    ; the strict verdict is a downstream concern.\n"
+  fix_hint: 'Raise the module''s approximate MI above 20: split large/branchy handlers and helpers
+
+    into smaller Convex functions, reduce operator/operand density per unit, and add
+
+    explanatory comments/JSDoc (the comment-ratio term lifts MI). A single oversized,
+
+    heavily-branching handler is the usual cause. This rule is `strict`: a module below the
+
+    MI threshold is not suppressible and fails.
+
+    '
+  exceptions:
+  - Very small files (< 10 non-blank lines) are not measured.
+  - Test files (`*.test.*` / `*.spec.*`), generated code under `convex/_generated/`, and vendored/build
+    dirs are out of scope.
+  - The MI is an approximation (no AST) — it is calibrated for relative comparison within a codebase on
+    radon's normalized 0-100 scale, not as an absolute cross-tool MI.
+metadata:
+  aliases:
+  - CONVEX-QUALITY-MI-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

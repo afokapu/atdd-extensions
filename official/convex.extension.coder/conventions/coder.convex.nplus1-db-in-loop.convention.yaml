@@ -1,0 +1,79 @@
+schema_version: 1.1.0
+rule_id: coder.convex.nplus1-db-in-loop
+kind: rule
+status: active
+name: No Convex document reads or queries inside loop bodies or callbacks
+statement: 'A Convex server module (a `*.ts`/`*.tsx`/`*.js`/`*.mjs` file under the `convex/` function
+  tree, excluding `_generated/` codegen and test files) MUST NOT issue a Convex document read or query
+  — `ctx.db.get(...)` or `ctx.db.query(...)` — inside a loop body (`for`/`while`) or an iteration callback
+  (`.map(...)`/`.forEach(...)`). This is the classic N+1 pattern: one document round trip per element
+  turns O(1) into O(N). This is the Convex-stack realization of the agnostic "do not query inside a loop"
+  obligation (the python-pytest sibling is `coder.refactor.nplus1`). The detector that enforces it — a
+  zero-dependency regex/brace scan over source that flags each `ctx.db.get`/`ctx.db.query` call lexically
+  inside an iteration construct — is the atdd.workspace.convex implementation referenced below; the obligation
+  is stack-bound, the detector is JS-specific.'
+terms:
+- term_id: convex_server_module
+  text: a non-test, non-generated source file under the `convex/` function tree that Convex auto-discovers
+    and runs on its backend (a query/mutation/action/http handler or a module they import). The unit this
+    rule scans.
+- term_id: convex_document_read
+  text: a `ctx.db.get(...)` (fetch one document by id) or `ctx.db.query(...)` (open a query over a table)
+    call — a per-document/per-table round trip against the Convex datastore.
+- term_id: iteration_construct
+  text: a `for`/`while` statement (its brace block or brace-less single-statement body) or the callback
+    argument list of `.map(...)`/`.forEach(...)` — any construct whose body executes per element.
+- term_id: n_plus_one
+  text: a Convex document read/query executed once per item of an enclosing iteration construct, issuing
+    O(N) round trips where one batched read (O(1)) would suffice.
+implementation:
+  type: validator
+  ref: coder.convex.nplus1-db-in-loop
+content:
+  summary: A "no `ctx.db.get`/`ctx.db.query` inside a loop" obligation, the Convex sibling of coder.refactor.nplus1.
+    The realization is a zero-dependency JS detector (regex + brace/paren matching over source, no TS
+    runtime) that computes the body span of every `for`/`while` loop and `.map(`/`.forEach(` callback,
+    then flags each Convex document read/query call inside one. Generated code under `_generated/` and
+    `*.test.ts`/`*.spec.ts` files are out of scope.
+  normative_text: 'Issuing a Convex document read or query once per item instead of one batched read is
+    the N+1
+
+    anti-pattern: it scales function latency and database load linearly with collection size and is a
+    top
+
+    production performance regression. The threshold is zero — ANY `ctx.db.get(...)` or `ctx.db.query(...)`
+
+    inside an iteration construct is flagged. Iteration constructs are `for`/`while` statements (their
+
+    brace block, or a brace-less single-statement body) and the callback argument list of `.map(...)`
+    /
+
+    `.forEach(...)`. The obligation is "no document read/query inside a loop"; HOW the call sites and
+    loop
+
+    spans are found is delegated to the per-stack detector. For Convex the detector resolves call sites
+    by
+
+    scanning `convex/**` modules supplied as scan roots.
+
+    '
+  fix_hint: "Batch the reads out of the loop. Instead of one `ctx.db.get` per id:\n  for (const match\
+    \ of matches) {\n    const player = await ctx.db.get(match.winnerId);   // N+1 — one read per item\n\
+    \    ...\n  }\ncollect the ids and fetch once (a single indexed `.collect()` + an in-memory map, or\
+    \ `getAll`):\n  const players = await ctx.db\n    .query(\"players\")\n    .withIndex(\"by_id\", (q)\
+    \ => /* batched */)\n    .collect();\nUse an indexed batch query, a join in memory, or a dataloader\
+    \ pattern so cost is O(1) round trips.\nThis rule's disposition is `strict`: there is no inline-suppression\
+    \ marker. Pre-existing in-loop reads\nin a consumer repo are held flat by a downstream ratchet baseline\
+    \ (a consumer/coach concern), not by\nthe detector — the detector always emits the RAW call-site list.\n"
+  exceptions:
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope — tests may read per-item freely.
+  - Generated code under `convex/_generated/` is never scanned (codegen, never edited).
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - Migration directories may be supplied as a consumer exclude (`ATDD_SCAN_EXCLUDES`) — one-shot backfills
+    legitimately walk-and-read row by row.
+metadata:
+  aliases:
+  - CONVEX-NPLUS1-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

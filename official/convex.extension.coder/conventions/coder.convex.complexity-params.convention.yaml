@@ -1,0 +1,69 @@
+schema_version: 1.1.0
+rule_id: coder.convex.complexity-params
+kind: rule
+status: active
+name: Convex server functions must declare fewer than 6 parameters
+statement: Every Convex server function (a function declaration or block-bodied arrow in a `*.ts`/`*.tsx`/`*.js`/`*.mjs`
+  module under the `convex/` function tree, excluding `_generated/` codegen and test files) MUST declare
+  fewer than 6 parameters (default limit 5) so that a function with too many parameters — a sign of poor
+  abstraction or a function doing too much — is surfaced. This is the Convex-stack realization of the
+  language-neutral `coder.refactor.complexity-params` obligation owned by the Core coder extension (default
+  < 6). The detector that enforces it — a zero-dependency regex scan parsing each function signature (no
+  AST/tree-sitter) — is the atdd.workspace.convex implementation referenced below; the obligation is stack-bound,
+  the detector is JS-specific.
+terms:
+- term_id: parameter_count_convex
+  text: the number of declared parameters in a Convex function signature, counted as top-level comma-separated
+    entries (a destructuring/array pattern or default-value group is one entry).
+- term_id: parameter_limit
+  text: the configured maximum parameter count a Convex function may have (default 5; the count must stay
+    below 6, parity with Core's default); the obligation is to stay at or below the limit.
+implementation:
+  type: validator
+  ref: coder.convex.complexity-params
+content:
+  summary: A "no over-parameterized Convex server function" obligation, the Convex sibling of coder.refactor.complexity-params.
+    The realization is a zero-dependency Node ESM detector (regex + brace/paren matching over source,
+    no TS runtime) that slices each function's parameter list and counts its top-level comma-separated
+    parameters, flagging any function that declares 6 or more (the obligation is fewer than 6).
+  normative_text: 'Too many parameters indicate a function doing too much, a missing abstraction (the
+    arguments want
+
+    to be an object), and a function that is hard to call and test. The obligation: each Convex
+
+    function''s parameter count stays below the configured threshold (default < 6, i.e. at most 5).
+
+    HOW parameters are counted is delegated to the per-stack detector; for the Convex/TS stack it
+
+    masks strings/comments, locates the signature''s parenthesized parameter list, and counts the
+
+    commas at the top nesting level plus one — so a destructuring group (`{ a, b }`), array pattern
+
+    (`[a, b]`), or default-value expression counts as a single parameter. A single-identifier arrow
+
+    parameter (`x => …`) counts as one. This realization needs no TypeScript runtime; it runs under
+
+    the atdd.workspace.convex provider (`node` over the detector `.mjs`). The detector emits one RAW
+
+    violation per offending function, located at the function''s header line. (Convex handlers take
+
+    `(ctx, args)` — two parameters — so this rule primarily surfaces over-parameterized helpers.)
+
+    '
+  fix_hint: "Reduce the flagged Convex function's parameter count:\n  * group related parameters into\
+    \ a single parameter object (mirroring Convex's `args` object),\n  * split the function so each variant\
+    \ takes fewer arguments,\n  * push optional configuration into a settings object.\nThis rule's disposition\
+    \ is `strict`: a function over the parameter limit is not suppressible and\nfails. Pre-existing counts\
+    \ in a consumer repo are held flat by a downstream ratchet baseline (a\nconsumer/coach concern), not\
+    \ the workspace detector — the detector always emits the RAW\nover-limit function list.\n"
+  exceptions:
+  - A destructuring group, array pattern, or default-value expression counts as one parameter.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - The limit (default 5; the count must stay below 6) is configurable.
+metadata:
+  aliases:
+  - CONVEX-COMPLEXITY-PARAMS-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

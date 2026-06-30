@@ -1,0 +1,86 @@
+schema_version: 1.1.0
+rule_id: coder.convex.composition-consumer
+kind: rule
+status: active
+name: Convex consumers receive dependencies by injection
+statement: A consumer layer — presentation (`api.ts`) or application (`application.ts`) — MUST RECEIVE
+  its collaborators (repositories, clients, services, adapters, gateways, ...) by injection (as a parameter,
+  or pre-wired by the composition root) rather than CONSTRUCT them itself. A consumer that does `new XxxRepository(...)`/`new
+  XxxClient(...)` in its own code hard-wires the concrete dependency, so it can no longer be given a fake
+  in a test or a different implementation at composition time. This is the consumer-side facet of the
+  Convex composition obligation (the python-pytest sibling is `coder.refactor.composition-consumer`);
+  its strict sibling `coder.convex.composition-root` looks at the same fault from the root's side (wiring
+  that escaped the composition root). The detector that enforces it — a scan of consumer-layer modules
+  for dependency-shaped `new Xxx(` instantiations — is the atdd.workspace.convex implementation referenced
+  below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: consumer_layer
+  text: a layer that uses collaborators to do its work — presentation (`api.ts`) or application (`application.ts`)
+    — and therefore must receive those collaborators by injection rather than construct them.
+- term_id: injection
+  text: handing a consumer its collaborator from outside — as a function parameter typed against a domain
+    port, or pre-wired by the composition root — so the concrete implementation can be swapped at composition
+    time.
+- term_id: self_constructed_dependency
+  text: a `new <Dependency>(` inside a consumer module; the consumer builds its own concrete collaborator
+    instead of receiving it, coupling itself to that implementation.
+implementation:
+  type: validator
+  ref: coder.convex.composition-consumer
+content:
+  summary: An agnostic "consumers receive deps by injection, not by constructing them" obligation, the
+    Convex sibling of coder.refactor.composition-consumer. The realization is a zero-dependency JS detector
+    that, for each CONSUMER-layer module (presentation `api.ts` and `application.ts`, or files under `api/`/`application/`
+    dirs), flags a dependency-shaped class instantiation (`new XxxRepository(`/`new XxxClient(`/`new XxxService(`/`new
+    XxxAdapter(`/`new XxxGateway(`/`new XxxStore(`/`new XxxManager(`/`new XxxProvider(`/`new XxxFactory(`),
+    skipping comments, `_generated/`, test files, and vendored dirs.
+  normative_text: 'A consumer is a layer that USES collaborators to do its work: presentation adapts the
+
+    Convex runtime and calls a use case; application orchestrates the use case over its
+
+    ports. Both should be HANDED their collaborators — by a function parameter, or by the
+
+    composition root that pre-wired them — so the same consumer can run against a real
+
+    repository in production and a fake in a test. When a consumer constructs its own
+
+    dependency with `new XxxRepository(...)`, it couples itself to that one concrete
+
+    implementation and defeats the seam the layering exists to provide. The obligation:
+
+    consumers receive collaborators by injection. WHICH constructions count is delegated to
+
+    the per-stack detector; for Convex it matches `new <PascalName>(` where the class name
+
+    ends in a dependency suffix (`Repository`/`Repo`/`Client`/`Service`/`Adapter`/`Gateway`/
+
+    `Store`/`Manager`/`Provider`/`Factory`) inside a consumer-layer module — so building a
+
+    value object, a `Map`, or a `Date` is not flagged. The integration layer (which legitimately
+
+    constructs db/client primitives) and the composition roots are out of scope here; the
+
+    root-side confinement is enforced by `coder.convex.composition-root`.
+
+    '
+  fix_hint: "Accept the dependency instead of constructing it, and let the composition root supply it:\n\
+    \  convex/.../application.ts:\n    export function makePayoutUseCase(ctx) {            // builds its\
+    \ own dep  -> FORBIDDEN\n      const ledger = new LedgerRepository(ctx)\n      ...\n    }\n  ->\n\
+    \    export function makePayoutUseCase(ledger: LedgerPort) {   // receives it     -> allowed\n   \
+    \   ...\n    }\nPass the collaborator in as a parameter (typed against a domain port) and wire the\n\
+    concrete instance in `composition.ts`/`wagon.ts`. This rule is `strict`: a consumer that\nconstructs\
+    \ its own dependency is not suppressible and fails.\n"
+  exceptions:
+  - Only consumer layers (presentation `api.ts` / application `application.ts`, or files under `api/`/`application/`)
+    are checked — the integration layer may construct db/ client primitives, and the composition roots
+    may wire freely.
+  - Only dependency-suffixed class instantiations are matched; constructing value objects, `Map`/`Set`/`Date`,
+    or other non-collaborator classes is allowed.
+  - '`new Xxx(` mentioned inside a comment is not a match (comments are stripped first).'
+  - Test files (`*.test.*` / `*.spec.*`), `_generated/`, and vendored/build dirs are out of scope.
+metadata:
+  aliases:
+  - CONVEX-COMPOSITION-CONSUMER-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

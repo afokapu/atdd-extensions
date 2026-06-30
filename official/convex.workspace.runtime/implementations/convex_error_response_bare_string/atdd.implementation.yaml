@@ -1,0 +1,18 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.convex.error-response-bare-string
+targets_workspace: convex.workspace.runtime
+contract_version: "1.1.0"
+
+# Back-reference to the agnostic obligation this detector realizes. The convention
+# node is authored in atdd.extension.convex-coder; this implementation is the
+# convex-workspace realization of it (two-layer model).
+realizes_convention: coder.convex.error-response-bare-string
+
+emits_rule_ids:
+  - coder.convex.error-response-bare-string   # disposition: strict
+
+# Scans ATDD_SCAN_ROOTS for bare-string throws / `new Error(...)` throws and writes
+# the RAW {rule_id,file,line,col,evidence,source_line} report to ATDD_VIOLATIONS_REPORT.
+entrypoint: detect.mjs
+report: detect.mjs

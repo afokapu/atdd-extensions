@@ -1,0 +1,16 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.convex.quality-naming
+targets_workspace: convex.workspace.runtime
+contract_version: "1.1.0"
+
+# Convex-workspace realization of coder.convex.quality-naming, adapted from Core's
+# coder.refactor.quality-naming and re-expressed in TS/Convex naming conventions
+# (camelCase functions, PascalCase types/interfaces, SCREAMING_SNAKE module consts).
+realizes_convention: coder.convex.quality-naming
+
+emits_rule_ids:
+  - coder.convex.quality-naming   # disposition: strict
+
+entrypoint: detect.mjs
+report: detect.mjs

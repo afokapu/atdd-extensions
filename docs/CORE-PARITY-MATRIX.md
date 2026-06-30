@@ -1,5 +1,10 @@
 # Convex ↔ Core Convention Parity Matrix (full, atomic — no grouping)
 
+> **STATUS: BUILT (2026-07-01).** All 34 nodes (30 MIRROR/NATIVE/tester + 4 prior)
+> are authored — convention nodes generated via `atdd author` (normalized to schema
+> 1.1.0), validators hand-built. 132 conformance tests pass; both extensions + the
+> workspace pass `atdd validate package` (schema + no-orphan graph + composition).
+
 **Goal:** mirror every Core `atdd.extension.coder` (48) + `atdd.extension.tester` (2)
 convention into the Convex TS use case at **the same atomic granularity and node
 detail as Core** — full decomposition, atomization, graph relationships, and

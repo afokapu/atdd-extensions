@@ -1,0 +1,89 @@
+schema_version: 1.1.0
+rule_id: coder.convex.security-missing-auth
+kind: rule
+status: active
+name: Convex db-touching server functions must check the caller's identity
+statement: Every exported Convex server function (`export const <name> = query|mutation|action({...})`
+  under the `convex/` function tree, excluding `_generated/` codegen and test files) whose handler reads
+  or writes the database via `ctx.db` MUST also consult the caller's identity — `ctx.auth.getUserIdentity()`
+  (or a `getUserIdentity` helper) — so that no data-touching entry point is silently reachable without
+  authentication. This is the Convex-stack realization of the agnostic "no unauthenticated entry point"
+  obligation owned by the coder extension (the python-pytest sibling is `coder.security.missing-auth`,
+  which checks FastAPI routes for a `Depends(<auth_fn>)` parameter). The obligation is stack-bound; the
+  detector that enforces it — a regex/heuristic scan over Convex server source that, per exported `query`/`mutation`/`action`,
+  pairs the presence of `ctx.db` access against the presence of an identity reference — is the atdd.workspace.convex
+  implementation referenced below.
+terms:
+- term_id: convex_server_function
+  text: a non-test, non-generated source file's `export const <name> = query|mutation|action({...})` registration
+    under the `convex/` function tree — the network-reachable entry point Convex auto-discovers and exposes
+    on the deployment API. The unit this rule checks.
+- term_id: db_access
+  text: a reference to `ctx.db` (or a `db` destructured from `ctx` and then used, e.g. `db.get`/`db.query`/`db.insert`/`db.patch`/`db.delete`)
+    inside a server function's handler — the database read/write this rule requires to be authenticated.
+- term_id: identity_check
+  text: a reference to `ctx.auth`, a `getUserIdentity` call, or an `auth` destructured from `ctx`, by
+    which the handler resolves the authenticated caller before acting on data.
+implementation:
+  type: validator
+  ref: coder.convex.security-missing-auth
+content:
+  summary: A Convex-stack "no unauthenticated data access" obligation, the sibling of coder.security.missing-auth.
+    The realization is a zero-dependency JS detector (regex over source, no TS runtime) that finds each
+    exported `query`/`mutation`/`action`, extracts its registration-call body by brace/paren matching,
+    and flags it when the body touches `ctx.db` (or a `db` destructured from `ctx`) but contains no `ctx.auth`
+    / `getUserIdentity` reference. Internal functions (`internalQuery`/`internalMutation`/`internalAction`)
+    are not part of the public API surface and are out of scope.
+  normative_text: 'A Convex query/mutation/action is a network-reachable entry point: any client holding
+    the
+
+    deployment''s API can invoke an exported one. A handler that reads or writes `ctx.db` without
+
+    first resolving `ctx.auth.getUserIdentity()` exposes (or mutates) that data with no
+
+    authentication — security must be wired at the function boundary, not assumed by the caller.
+
+    The obligation is "every db-touching exported server function references the auth identity".
+
+    WHICH wrappers mark a server function and HOW the identity check is recognized is delegated to
+
+    the per-stack detector. For Convex the detector scans `convex/**` modules supplied as scan
+
+    roots: it matches `export const <name> = (query|mutation|action)(`, balances parentheses to
+
+    isolate the registration body, treats `ctx.db` (or a `db` destructured from `ctx` and then
+
+    used) as database access, and treats `ctx.auth`, `getUserIdentity`, or an `auth` destructured
+
+    from `ctx` as an identity check. A body with the former and not the latter is a violation;
+
+    generated client code under `_generated/` and test files are out of scope.
+
+    '
+  fix_hint: "Resolve the caller's identity before touching the database, and reject unauthenticated callers:\n\
+    \  export const listAll = query({\n    handler: async (ctx) => {                          // ❌ reads\
+    \ ctx.db, no auth\n      return await ctx.db.query(\"notes\").collect();\n    },\n  });\n  export\
+    \ const listMine = query({\n    handler: async (ctx) => {                          // ✅ authenticated\n\
+    \      const identity = await ctx.auth.getUserIdentity();\n      if (!identity) return [];\n     \
+    \ return await ctx.db\n        .query(\"notes\")\n        .filter((q) => q.eq(q.field(\"owner\"),\
+    \ identity.subject))\n        .collect();\n    },\n  });\nCentralize the check in a `requireUser(ctx)`\
+    \ helper if many functions share it — the detector\nrecognizes any `getUserIdentity` reference reachable\
+    \ in the handler body. Genuinely public,\nread-only endpoints are removed by the consumer's exclusion\
+    \ globs, not by the detector. This\nrule's disposition is `strict`: a newly added db-touching function\
+    \ with no identity check is\nnot suppressible and fails.\n"
+  exceptions:
+  - Internal functions (`internalQuery` / `internalMutation` / `internalAction`) are not part of the public
+    API surface and are not matched.
+  - A handler that never touches `ctx.db` (pure compute, or one that only calls `ctx.runQuery` / `ctx.runMutation`)
+    is not checked — there is no data access to gate.
+  - Intentionally public, unauthenticated endpoints are removed by the consumer's exclusion globs, not
+    by the detector.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are never scanned;
+    vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped.
+metadata:
+  aliases:
+  - CONVEX-MISSING-AUTH-001
+  - SECURITY-MISSING-AUTH-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0

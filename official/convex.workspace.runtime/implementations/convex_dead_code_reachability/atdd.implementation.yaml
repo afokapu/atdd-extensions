@@ -1,0 +1,29 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.convex.dead-code-reachability
+targets_workspace: convex.workspace.runtime
+contract_version: "1.1.0"
+
+# Back-reference to the agnostic obligation this detector realizes. The convention
+# node is authored in atdd.extension.convex-coder; this implementation is the
+# convex-workspace realization of it (two-layer model). The Core source it is
+# adapted from is coder.dead-code.reachability-typescript.
+realizes_convention: coder.convex.dead-code-reachability
+
+# Single rule_id (disposition strict). The detector emits RAW violations; the
+# strict verdict is a downstream consumer concern.
+emits_rule_ids:
+  - coder.convex.dead-code-reachability   # disposition: strict
+
+# The detector module. It builds a file-level import graph over the scanned
+# convex/ modules (regex over import/export/require/dynamic-import specifiers,
+# resolving relative ./ ../ paths), BFS-walks it from the graph roots
+# (schema.ts/http.ts/index barrel/exported Convex fn/test) and reports each *.ts
+# no root reaches. It writes the RAW {rule_id,file,line,col,evidence,source_line}
+# report to ATDD_VIOLATIONS_REPORT (v1.1 channel). No disposition.
+entrypoint: detect.mjs
+
+# The runnable v1.1 report-emitting unit the provider command executes. In Phase 0
+# this is the same .mjs the provider runs with `node`; in Phase 0.5 it becomes the
+# vitest spec. Declared (not hardcoded) so the provider CLI runs THIS detector.
+report: detect.mjs

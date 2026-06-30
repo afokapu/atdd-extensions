@@ -1,0 +1,62 @@
+schema_version: 1.1.0
+rule_id: coder.convex.complexity-length
+kind: rule
+status: active
+name: Convex server functions must keep body length at or below 50 lines of code
+statement: Every Convex server function (a function declaration or block-bodied arrow in a `*.ts`/`*.tsx`/`*.js`/`*.mjs`
+  module under the `convex/` function tree, excluding `_generated/` codegen and test files) MUST keep
+  its lines of code at or below the threshold (default 50 LOC, excluding blank and comment lines) so that
+  a single function does not grow long enough to violate the single-responsibility principle. This is
+  the Convex-stack realization of the language-neutral `coder.refactor.complexity-length` obligation owned
+  by the Core coder extension (TypeScript sibling `coder.refactor.complexity-length-typescript`, threshold
+  50). The detector that enforces it — a zero-dependency regex scan counting code lines per function body
+  (no AST/tree-sitter) — is the atdd.workspace.convex implementation referenced below; the obligation
+  is stack-bound, the detector is JS-specific.
+terms:
+- term_id: function_length_convex
+  text: the count of lines of code in a Convex server function body, excluding blank lines and `//` or
+    `/* */` comment lines (measured strictly between the body's opening and closing brace).
+- term_id: length_threshold
+  text: the configured maximum lines of code a Convex function may have (default 50, parity with Core's
+    TypeScript rule); the obligation is to stay at or below it.
+implementation:
+  type: validator
+  ref: coder.convex.complexity-length
+content:
+  summary: A "no over-long Convex server function" obligation, the Convex sibling of coder.refactor.complexity-length-typescript.
+    The realization is a zero-dependency Node ESM detector (regex + brace matching over source, no TS
+    runtime) that extracts each function body and counts its lines of code (excluding blank lines and
+    `//` or `/* */` comment lines), flagging any function longer than 50 LOC.
+  normative_text: 'Long functions violate the single-responsibility principle and are hard to test; the
+    Convex
+
+    obligation mirrors Core''s (default threshold <= 50 LOC). HOW lines are counted is delegated to
+
+    the per-stack detector; for the Convex/TS stack it masks comments and string/template text to
+
+    blanks, then counts every remaining non-blank line of the extracted function body that lies
+
+    strictly between the opening and closing brace. This realization needs no TypeScript runtime; it
+
+    runs under the atdd.workspace.convex provider (`node` over the detector `.mjs`). The detector
+
+    emits one RAW violation per offending function, located at the function''s header line.
+
+    '
+  fix_hint: "Shorten the flagged Convex function by decomposition:\n  * extract cohesive blocks into well-named\
+    \ helper functions or a `lib/`/`shared/` module,\n  * move distinct responsibilities into separate\
+    \ queries / mutations / actions,\n  * remove dead or duplicated lines.\nThis rule's disposition is\
+    \ `strict`: a function over the length threshold is not suppressible and\nfails. Pre-existing length\
+    \ in a consumer repo is held flat by a downstream ratchet baseline (a\nconsumer/coach concern), not\
+    \ the workspace detector — the detector always emits the RAW\nover-threshold function list.\n"
+  exceptions:
+  - Blank lines and `//` or `/* */` comment lines are not counted toward the length.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - The threshold (default 50) is configurable; the obligation is "at or below the configured threshold".
+metadata:
+  aliases:
+  - CONVEX-COMPLEXITY-LENGTH-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

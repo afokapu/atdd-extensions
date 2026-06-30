@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: coder.convex.quality-comments
+kind: rule
+status: active
+name: Convex server modules must not accumulate comment debt
+statement: 'Every Convex server module (a `*.ts`/`*.tsx`/`*.js`/`*.mjs` file under the `convex/` function
+  tree, excluding `_generated/` codegen and test files) MUST NOT accumulate comment DEBT: it must contain
+  no commented-out code block (a run of >= 3 consecutive `//` lines whose stripped body reads as source
+  code), and — for files of >= 20 non-blank lines — its debt-marker density (`TODO`/`FIXME`/`HACK`/`XXX`
+  per non-blank line) MUST stay at or below 2%. This is the Convex-stack realization of the agnostic "code
+  stays explainable during REFACTOR" comment obligation. Core''s TypeScript sibling (`coder.refactor.quality-comments-typescript`)
+  measures the same concern from the opposite side — a SHORTAGE of comments (ratio < 10%); the Convex
+  backend realization re-lenses it to the failure mode that actually accrues in a function tree (dead
+  commented-out code and debt-marker sprawl). The detector — a zero-dependency regex-over-source scan
+  reporting each offending block / over-threshold file — is the atdd.workspace.convex implementation referenced
+  below; the obligation is stack-bound, the detector is JS-specific.'
+terms:
+- term_id: commented_out_code_block
+  text: a run of >= 3 consecutive `//` comment lines whose stripped body matches the detector's code-like
+    heuristic (trailing `;`/`{`/`}`, a statement keyword, `=>`, a `ctx.*` access, or a leading call) —
+    dead source kept as a comment, flagged at the run's first line.
+- term_id: debt_marker
+  text: a comment containing `TODO`, `FIXME`, `HACK`, or `XXX` — a deferred-work signal. Their density
+    (markers / non-blank lines) over a file of >= 20 non-blank lines must stay <= 2%.
+- term_id: debt_comment_density
+  text: '`debtCount / nonBlankLines` for a file of >= 20 non-blank lines; the rule''s density ceiling
+    is 0.02 (2%). The raw fact, not a verdict — the ratchet baseline is downstream.'
+implementation:
+  type: validator
+  ref: coder.convex.quality-comments
+content:
+  summary: A "no comment debt in Convex server source" obligation, the Convex sibling of coder.refactor.quality-comments-typescript
+    re-lensed from comment shortage to comment debt. The realization is a zero-dependency JS detector
+    (regex over source, no TS runtime) emitting one RAW violation per commented-out code block and one
+    per file whose debt-marker density exceeds 2%, skipping `_generated/` and `*.test.ts`/`*.spec.ts`.
+  normative_text: "Two RAW signals, each emitted as its own call-site violation:\n  (A) COMMENTED-OUT\
+    \ CODE BLOCK — a run of `MIN_COMMENTED_CODE_RUN` (= 3) or more\n      consecutive single-line (`//`)\
+    \ comments whose stripped body matches the\n      code-like heuristic (a trailing `;`/`{`/`}`, a `const`/`let`/`var`/`return`/\n\
+    \      `if`/`else`/`for`/`while`/`switch`/`case`/`function`/`await`/`async`/`import`/\n      `export`/`throw`\
+    \ keyword, an `=>`, a `ctx.db|auth|scheduler|storage` access, or a\n      leading call expression).\
+    \ One violation at the run's first line. Commented-out\n      code is dead weight that drifts out\
+    \ of sync with the live code beside it.\n  (B) DEBT-COMMENT DENSITY — for a file of at least `MIN_LINES_FOR_DENSITY`\
+    \ (= 20)\n      non-blank lines, the debt-marker density `debtCount / nonBlankLines` MUST be\n   \
+    \   <= `DEBT_DENSITY_THRESHOLD` (= 0.02, i.e. 2%); a debt marker is a comment\n      containing `TODO`,\
+    \ `FIXME`, `HACK`, or `XXX`. One violation at the first marker.\nDISPOSITION BOUNDARY (PROVIDER-CONTRACT-v1.1\
+    \ §1): the detector emits only the RAW facts\n(each block, each over-threshold file); the strict verdict\
+    \ and any ratchet baseline are\na downstream consumer concern. WHICH constructs read as \"code-like\"\
+    \ and HOW markers are\ncounted is delegated to the per-stack detector.\n"
+  fix_hint: 'Delete commented-out code — version control already remembers it; a commented block is
+
+    dead weight that silently rots. Resolve or extract debt markers: convert a `TODO`/
+
+    `FIXME`/`HACK`/`XXX` into a tracked issue and remove the inline marker, or actually do
+
+    the work. This rule''s disposition is `strict`: there is no inline-suppression marker.
+
+    Pre-existing comment debt in a consumer repo is held flat by a downstream ratchet
+
+    baseline (a consumer/coach concern), not by the detector — the detector always emits the
+
+    RAW block / density list.
+
+    '
+  exceptions:
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope — scratch comments there are fine.
+  - Generated code under `convex/_generated/` is never scanned (codegen, never edited).
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - Files under 20 non-blank lines are not density-measured (a single TODO in a tiny file is not "sprawl");
+    the commented-out-code-block check still applies at any file size.
+  - A run of fewer than 3 code-like comment lines is below the block threshold and is not flagged — a
+    single commented line (e.g. an inline example) is allowed.
+metadata:
+  aliases:
+  - CONVEX-QUALITY-COMMENTS-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

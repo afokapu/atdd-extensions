@@ -1,0 +1,93 @@
+schema_version: 1.1.0
+rule_id: coder.convex.domain-no-convex-import
+kind: rule
+status: active
+name: Convex domain modules must not import the Convex runtime or touch ctx
+statement: 'A Convex domain module — `domain.ts` (the single-file domain layer) or any non-test, non-generated
+  module under a `domain/` directory — MUST NOT import the Convex runtime (`convex`, `convex/values`,
+  `convex/server`, ...), MUST NOT import generated client code (`./_generated`, `../_generated/...`),
+  and MUST NOT reference the Convex request context (`ctx`). The domain layer is the innermost, infrastructure-free
+  layer: it holds pure business rules and types. Any of these dependencies pulls persistence/transport
+  concerns inward and inverts the architecture''s dependency direction (presentation -> application ->
+  domain, with domain depending on nothing upward or outward). This is a NATIVE Convex obligation — it
+  is the Convex-specific realization of inward dependency direction (the agnostic "domain depends on nothing
+  infrastructural" rule), expressed against the concrete Convex runtime surface (`convex/*`, `_generated`,
+  `ctx`). The detector that enforces it — a regex-over-source scan of each domain module for a Convex-runtime
+  import, a generated-code import, or a `ctx` reference — is the atdd.workspace.convex implementation
+  referenced below; the obligation is stack-bound, the detector is Convex-specific.'
+terms:
+- term_id: domain_module
+  text: a Convex domain-layer source file — `domain.ts` (the single-file layer) or any non-test, non-generated
+    module beneath a `domain/` directory. The unit this rule checks for Convex infrastructure dependencies.
+- term_id: convex_infrastructure
+  text: the Convex runtime surface a domain module must not depend on — the `convex`/`convex/*` packages,
+    generated code under `_generated/`, and the per-request context object `ctx` (`ctx.db`, `ctx.auth`,
+    `ctx.scheduler`, ...).
+implementation:
+  type: validator
+  ref: coder.convex.domain-no-convex-import
+content:
+  summary: A NATIVE Convex "the domain layer stays free of Convex infrastructure" obligation. The realization
+    is a zero-dependency JS detector (regex over source, no TS runtime) that, for each domain module (`domain.ts`
+    or a file under a `domain/` directory) under the supplied scan roots, flags every line that imports
+    a `convex/*` runtime package, imports `_generated` client code, or references the Convex request context
+    `ctx`. Generated code and test files are out of scope.
+  normative_text: 'The 4-layer architecture places the domain at the centre: it expresses business rules
+    and types
+
+    in plain TypeScript and depends on nothing outward. In Convex the infrastructure surface a domain
+
+    module must not reach is concrete: the Convex runtime packages (`convex`, `convex/values`,
+
+    `convex/server`), the generated client/types under `_generated/`, and the per-request context
+
+    object `ctx` (which carries `ctx.db`, `ctx.auth`, `ctx.scheduler`, ...). A domain module that
+
+    imports any of these has put persistence or transport inside the domain — application and
+
+    presentation can no longer be the only layers that know about Convex, and the domain can no
+
+    longer be unit-tested without the runtime.
+
+
+    The obligation is "the domain layer depends on no Convex infrastructure"; HOW the offending
+
+    lines are found is delegated to the per-stack detector. For Convex the detector identifies a
+
+    domain module by name/location (`domain.ts`, or any module beneath a `domain/` directory) and
+
+    reports each line that (a) imports a `convex`-prefixed module specifier, (b) imports a specifier
+
+    containing `_generated`, or (c) references the identifier `ctx`. This node is the Convex
+
+    realization of the broader inward-dependency-direction rule
+
+    (`coder.convex.design-hierarchy-import`); that node owns the general direction across all layers,
+
+    this one owns the domain''s hard prohibition on the Convex runtime specifically.
+
+    '
+  fix_hint: "Move every Convex-runtime touch out of the domain and into the layers that own it:\n  * `ctx.db`\
+    \ reads/writes and external clients      -> the integration layer (`integration.ts`)\n  * use-case\
+    \ orchestration that calls integration    -> the application layer (`application.ts`)\n  * Convex\
+    \ query/mutation/action handlers            -> the presentation layer (`api.ts`)\nKeep `domain.ts`\
+    \ pure: it should import only other domain types/functions (and plain TS\nlibraries), take primitives/domain\
+    \ objects as arguments, and return domain results. If you need a\nvalidator shape, define a plain\
+    \ TS type in the domain and convert to/from `convex/values` `v` in\nthe application or presentation\
+    \ layer — not in the domain. This rule's disposition is `strict`:\nthere is no inline-suppression\
+    \ marker. The detector always emits the RAW line list; any baseline\nratchet over pre-existing state\
+    \ is a downstream consumer/coach concern, not the detector's.\n"
+  exceptions:
+  - Non-domain modules (`api.ts`, `application.ts`, `integration.ts`, and any file not named `domain.ts`
+    and not under a `domain/` directory) are out of scope — they may use the Convex runtime freely.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Generated code under `convex/_generated/` and vendored/build dirs (`node_modules`, `dist`, `build`,
+    `.next`) are skipped during traversal.
+  - The check is lexical (regex over source); a `ctx` token inside a string literal or comment is reported
+    the same as a real reference — keep domain source free of the token entirely.
+metadata:
+  aliases:
+  - CONVEX-DOMAIN-PURE-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

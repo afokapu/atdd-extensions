@@ -1,18 +1,125 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for convex.extension.coder.
-#
-# IMPORTANT (boundary spec §6.2): core↔extension edges are NOT authored here. The
-# agnostic core node a convention realizes (e.g. coder.logging.print is the
-# python-pytest sibling of coder.convex.no-server-console-log) is declared
-# narratively in each node's body, never as a graph edge. Only extension-internal
-# edges live here. As more Convex coder nodes are ported from the atdd-js draft
-# (see PORTING-PLAN.md), their intra-extension links are added here.
+# Extension-LOCAL relationship graph for convex.extension.coder. Every owned node carries
+# >=1 edge (no orphans). Core<->extension edges are narrative, not graph edges.
 graph_id: convex.extension.coder.relationships
 
 nodes:
-  - coder.convex.no-server-console-log
-  - coder.convex.schema-at-root
+  - coder.convex.api-no-underscore-dir
+  - coder.convex.complexity-cognitive
+  - coder.convex.complexity-cyclomatic
+  - coder.convex.complexity-length
+  - coder.convex.complexity-nesting
+  - coder.convex.complexity-params
+  - coder.convex.composition-consumer
+  - coder.convex.composition-root
+  - coder.convex.dead-code-reachability
+  - coder.convex.design-foundations
+  - coder.convex.design-hierarchy-import
+  - coder.convex.design-orphan-export
+  - coder.convex.domain-no-convex-import
+  - coder.convex.duplication-no-intra-layer
+  - coder.convex.error-response-bare-string
+  - coder.convex.error-response-code-format
+  - coder.convex.feature-layout-promotion
   - coder.convex.http-router-at-root
+  - coder.convex.layer-naming
+  - coder.convex.logging-silent-swallow
+  - coder.convex.logging-structured
+  - coder.convex.no-server-console-log
+  - coder.convex.nplus1-db-in-loop
+  - coder.convex.performance-perf
+  - coder.convex.quality-comments
+  - coder.convex.quality-duplication
+  - coder.convex.quality-file-length
+  - coder.convex.quality-mi
+  - coder.convex.quality-naming
+  - coder.convex.schema-at-root
+  - coder.convex.security-hardcoded-secret
+  - coder.convex.security-missing-auth
 
-edges: []
+edges:
+  - source_ref: coder.convex.security-missing-auth
+    target_ref: coder.convex.security-hardcoded-secret
+    type: relates-to
+    reason: 'Two facets of server-surface security hardening.'
+  - source_ref: coder.convex.error-response-bare-string
+    target_ref: coder.convex.error-response-code-format
+    type: relates-to
+    reason: 'Both govern structured, coded error responses.'
+  - source_ref: coder.convex.no-server-console-log
+    target_ref: coder.convex.logging-structured
+    type: relates-to
+    reason: 'Console-free server code is the precondition for structured logging.'
+  - source_ref: coder.convex.logging-structured
+    target_ref: coder.convex.logging-silent-swallow
+    type: relates-to
+    reason: 'Both are logging-discipline facets (emit structured, never swallow).'
+  - source_ref: coder.convex.nplus1-db-in-loop
+    target_ref: coder.convex.performance-perf
+    type: relates-to
+    reason: 'N+1 over ctx.db is the headline case of the perf advisory.'
+  - source_ref: coder.convex.complexity-cyclomatic
+    target_ref: coder.convex.complexity-cognitive
+    type: relates-to
+    reason: 'Complexity-metric siblings.'
+  - source_ref: coder.convex.complexity-cognitive
+    target_ref: coder.convex.complexity-nesting
+    type: relates-to
+    reason: 'Complexity-metric siblings.'
+  - source_ref: coder.convex.complexity-nesting
+    target_ref: coder.convex.complexity-length
+    type: relates-to
+    reason: 'Complexity-metric siblings.'
+  - source_ref: coder.convex.complexity-length
+    target_ref: coder.convex.complexity-params
+    type: relates-to
+    reason: 'Complexity-metric siblings.'
+  - source_ref: coder.convex.quality-comments
+    target_ref: coder.convex.quality-naming
+    type: relates-to
+    reason: 'Quality-metric siblings.'
+  - source_ref: coder.convex.quality-naming
+    target_ref: coder.convex.quality-mi
+    type: relates-to
+    reason: 'Quality-metric siblings.'
+  - source_ref: coder.convex.quality-mi
+    target_ref: coder.convex.quality-file-length
+    type: relates-to
+    reason: 'Quality-metric siblings.'
+  - source_ref: coder.convex.quality-file-length
+    target_ref: coder.convex.quality-duplication
+    type: relates-to
+    reason: 'Quality-metric siblings.'
+  - source_ref: coder.convex.quality-duplication
+    target_ref: coder.convex.duplication-no-intra-layer
+    type: relates-to
+    reason: 'Intra-file vs intra-layer duplication facets.'
+  - source_ref: coder.convex.dead-code-reachability
+    target_ref: coder.convex.design-orphan-export
+    type: relates-to
+    reason: 'Reachability vs export-orphan: two dead-code facets.'
+  - source_ref: coder.convex.design-foundations
+    target_ref: coder.convex.design-hierarchy-import
+    type: relates-to
+    reason: 'Layer foundations and the inward import direction over them.'
+  - source_ref: coder.convex.design-hierarchy-import
+    target_ref: coder.convex.domain-no-convex-import
+    type: relates-to
+    reason: 'domain-no-convex-import is the Convex realization of inward dependency direction.'
+  - source_ref: coder.convex.composition-root
+    target_ref: coder.convex.composition-consumer
+    type: relates-to
+    reason: 'Composition root vs consumer: the two halves of DI discipline.'
+  - source_ref: coder.convex.schema-at-root
+    target_ref: coder.convex.http-router-at-root
+    type: relates-to
+    reason: 'Both are mandatory Convex root-file placement rules.'
+  - source_ref: coder.convex.api-no-underscore-dir
+    target_ref: coder.convex.layer-naming
+    type: relates-to
+    reason: 'Both shape the discoverable Convex API surface by path.'
+  - source_ref: coder.convex.layer-naming
+    target_ref: coder.convex.feature-layout-promotion
+    type: relates-to
+    reason: 'Layer naming and when a single-file layer is promoted to a dir.'

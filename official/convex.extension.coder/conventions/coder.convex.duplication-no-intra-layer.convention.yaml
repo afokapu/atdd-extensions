@@ -1,0 +1,83 @@
+schema_version: 1.1.0
+rule_id: coder.convex.duplication-no-intra-layer
+kind: rule
+status: active
+name: No intra-layer structural code duplication in Convex modules
+statement: When two Convex modules are classified to the SAME architectural layer (domain / application
+  / presentation / integration), that layer MUST NOT contain a structurally identical code fragment of
+  meaningful size duplicated across DIFFERENT sibling files. A copy-pasted helper in one layer is a maintenance
+  hazard — a fix must be applied to every copy. This is the Convex-stack realization of the agnostic "no
+  copy-paste within a layer" obligation (the python-pytest sibling is `coder.duplication.no-intra-layer-code-typescript`).
+  The detector that enforces it — a regex-based structural-normalization scan that strips comments/strings/numbers/
+  identifiers, slides a window of >= 6 non-trivial normalized lines, and reports same-layer cross-file
+  collisions — is the atdd.workspace.convex implementation referenced below; the obligation is stack-bound,
+  the detection algorithm is not.
+terms:
+- term_id: architectural_layer
+  text: the role a Convex module plays — domain, application, presentation, or integration — inferred
+    from its basename (`api.ts` -> presentation, `application.ts`, `domain.ts`, `integration.ts`) or a
+    path segment; files with no recognizable layer classify as unknown and are excluded.
+- term_id: structural_normalization
+  text: a regex pipeline that reduces a source line to its structural shape — comments removed, string/number
+    literals replaced with sentinels, non-keyword identifiers replaced with `ID`, whitespace collapsed
+    — so renamed or re-valued copies still collide.
+- term_id: non_trivial_line
+  text: a normalized line that is not empty and not a pure structural token (`{`, `}`, `};`, `);`, `]`,
+    etc.); only non-trivial lines are windowed for the duplication fingerprint.
+implementation:
+  type: validator
+  ref: coder.convex.duplication-no-intra-layer
+content:
+  summary: An agnostic "do not copy-paste structurally identical logic within one architectural layer"
+    obligation, the Convex sibling of coder.duplication.no-intra-layer-code-typescript. Because there
+    is no tree-sitter dependency, the fingerprint is regex-based structural normalization (comments removed;
+    string/number/identifier tokens replaced) hashed over a sliding window of >= 6 non-trivial lines;
+    fragments that recur across different files of the same layer are flagged (one violation per file-pair).
+    Layer is inferred from the file's basename (`api.ts` -> presentation, `application.ts`/`domain.ts`/`integration.ts`)
+    or a path segment; unclassifiable files are excluded.
+  normative_text: 'Copy-pasted logic within a single architectural layer is a maintenance hazard
+
+    regardless of language. The obligation is "no structurally identical fragment is
+
+    duplicated across different files of the same layer". For the Convex realization the
+
+    fingerprint is a SHA-256 over a sliding window of >= 6 consecutive NON-TRIVIAL
+
+    normalized lines, where normalization removes single- and multi-line comments, replaces
+
+    string literals (single/double/backtick) with a sentinel, replaces numbers with `0`,
+
+    and replaces non-keyword identifiers with `ID` while preserving structural keywords;
+
+    trivial lines (bare braces, `});`, etc.) are dropped before windowing. A collision of
+
+    the same hash across two different files in the same layer is a violation. Because
+
+    identifiers are normalized away, a copy that only renames its variables/parameters
+
+    still collides. Same-file repetition is out of scope; cross-feature siblings in the
+
+    same layer ARE compared (the duplication lives in the layer, not in one feature).
+
+    '
+  fix_hint: "Extract the duplicated fragment into a shared module within the layer and import it\nfrom\
+    \ both sites instead of copy-pasting:\n  convex/feature-a/domain.ts  +  convex/feature-b/domain.ts\
+    \  share `clampScore`  ->\n  move it to convex/shared/domain/clamp.ts and import it from both.\nDeclaration\
+    \ files (`*.d.ts`), test/spec files, and barrel `index.ts` re-exports are out\nof scope. This rule's\
+    \ disposition is `strict`: new structurally-identical fragments\nfail the gate and are not suppressible\
+    \ by default.\n"
+  exceptions:
+  - Test/spec code is out of scope — `*.test.ts(x)`, `*.spec.ts(x)` are excluded.
+  - Type declaration files (`*.d.ts`), barrel re-exports (`index.ts`), and `_generated/` are excluded
+    from the scan.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`, `.nuxt`, `coverage`) are skipped
+    during the walk.
+  - Files with no recognizable layer (no `api`/`application`/`domain`/`integration` basename or path segment)
+    classify as unknown and are not compared.
+  - Same-file fragment repetition is not flagged; only cross-file collisions within a layer are.
+metadata:
+  aliases:
+  - CONVEX-DUPLICATION-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

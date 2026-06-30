@@ -1,0 +1,91 @@
+schema_version: 1.1.0
+rule_id: coder.convex.quality-duplication
+kind: rule
+status: active
+name: Convex source has no significant code duplication
+statement: Convex server source MUST NOT contain a duplicated token-window block — a run of >= 5 consecutive
+  SIGNIFICANT lines (logic-bearing lines, after stripping comments, blank/structural-only lines, and module-header
+  imports) whose normalized form (string/number literals replaced with placeholders, whitespace collapsed)
+  recurs at a second location, within a file OR across two files in the scanned layer — so that copy-pasted
+  logic is extracted into shared helpers during the REFACTOR phase. This is the Convex-stack realization
+  of the agnostic "no copy-paste of meaningful logic" obligation owned by Core (`coder.refactor.quality-duplication`).
+  Core hashes a sliding window of >= 5 consecutive AST statements (names -> `VAR`, literals -> `0`/`""`)
+  and reports cross-file hash collisions; with no AST/TS runtime available the Convex detector approximates
+  this with a token-window over normalized source lines — the obligation is stack-bound, the detector
+  is JS-specific.
+terms:
+- term_id: significant_line
+  text: a logic-bearing source line — one that survives stripping of blank lines, pure comments, structural-only
+    (brace/bracket/punctuation) lines, and module-header import/`export {`/`export *` lines. The unit
+    a duplication window is built from.
+- term_id: token_window
+  text: a run of `MIN_DUPLICATE_LINES` (= 5) consecutive significant lines, each normalized (string ->
+    `S`, number -> `N`, whitespace collapsed) and hashed together; the unit whose recurrence is a duplication
+    violation.
+- term_id: window_collision
+  text: the same normalized token-window hash appearing at a second location — within one file or across
+    two files in the scanned layer — reported at the later location.
+implementation:
+  type: validator
+  ref: coder.convex.quality-duplication
+content:
+  summary: An agnostic "no copy-paste of meaningful logic" obligation, the Convex sibling of coder.refactor.quality-duplication.
+    The realization is a zero-dependency JS detector that builds a sliding window of MIN_DUPLICATE_LINES
+    (= 5) consecutive significant lines per file, normalizes each (line comments stripped; string/number
+    literals -> `S`/`N`; whitespace collapsed), hashes the window, and emits a RAW violation at the SECOND
+    (and later) location any window hash recurs — intra-file or cross-file — skipping `_generated/` and
+    `*.test.ts`/`*.spec.ts`.
+  normative_text: 'Duplicate code should be extracted into functions or shared helpers. The obligation:
+
+    no window of `MIN_DUPLICATE_LINES` (= 5) consecutive SIGNIFICANT lines whose
+
+    normalized form recurs at a second location. A line is SIGNIFICANT unless it is blank,
+
+    a pure comment (`//` line or `/* */` body), a structural-only line (just braces /
+
+    brackets / punctuation), or a module-header `import` / `export {` / `export *` line —
+
+    those are stripped before windowing so shared boilerplate never registers as
+
+    duplication (parity with Core''s header strip, #960). Each significant line is
+
+    normalized: trailing line comment removed, string literals -> `S`, numeric literals ->
+
+    `N`, whitespace collapsed; windows are hashed (FNV-1a) and compared. Detection is
+
+    literal-insensitive (a renamed copy with the same structure still collides) and is NOT
+
+    restricted to a single file — any two locations in the scanned set are compared
+
+    ("within a file or layer"). Overlapping windows over a longer identical run each
+
+    report, so a 7-line clone surfaces as several adjacent violations.
+
+    DISPOSITION BOUNDARY (PROVIDER-CONTRACT-v1.1 §1): the detector emits only the RAW
+
+    collision facts; the strict verdict is a downstream consumer concern.
+
+    '
+  fix_hint: 'Extract the duplicated block into a shared function, helper module, or Convex
+
+    internal function and call it from both sites instead of copy-pasting. Because
+
+    detection normalizes literals, changing a string or number in one copy will NOT clear
+
+    the violation — the structure must actually be deduplicated. This rule is `strict`: a
+
+    new duplicate block is not suppressible and fails.
+
+    '
+  exceptions:
+  - Runs shorter than 5 consecutive significant lines are below the window size and are not compared.
+  - Blank lines, pure comments, structural-only lines, and module-header import/export-from lines are
+    stripped before windowing, so shared headers do not register as duplication.
+  - Test files (`*.test.*` / `*.spec.*`), generated code under `convex/_generated/`, and vendored/build
+    dirs are out of scope.
+metadata:
+  aliases:
+  - CONVEX-QUALITY-DUPLICATION-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

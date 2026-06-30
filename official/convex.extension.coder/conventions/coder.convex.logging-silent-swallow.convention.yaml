@@ -1,0 +1,80 @@
+schema_version: 1.1.0
+rule_id: coder.convex.logging-silent-swallow
+kind: rule
+status: active
+name: Exception handlers must observably react, never silently swallow
+statement: When a Convex server module (a `*.ts`/`*.tsx`/`*.js`/`*.mjs` file under the `convex/` function
+  tree, excluding `_generated/` codegen and test files) catches an exception, the `catch` handler MUST
+  observably react — emit an observability event through a logger (`console.*`/`logger`/`log`) OR rethrow
+  (`throw`) — rather than silently swallowing the failure by being empty or returning a fallback value.
+  This is the Convex-stack realization of the agnostic "an exception handler must observably react, never
+  silently swallow" obligation (the python-pytest sibling is `coder.logging.coach-silent-swallow`). The
+  detector that enforces it — a zero-dependency regex/brace scan that flags each `catch` whose body contains
+  no log call and no `throw`, and which is either empty or contains a `return` — is the atdd.workspace.convex
+  implementation referenced below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: convex_server_module
+  text: a non-test, non-generated source file under the `convex/` function tree that Convex auto-discovers
+    and runs on its backend (a query/mutation/action/http handler or a module they import).
+- term_id: silent_swallow
+  text: a `catch` handler whose body has no logging call and no `throw`, and which is either empty (or
+    comment-only) or contains a `return` — suppressing the failure with no observable signal.
+- term_id: observable_reaction
+  text: a logging-level call on a known logger receiver (`console`/`logger`/`log`/`logging`/`this.logger`)
+    or a `throw` statement in the handler body, making the caught failure visible in production logs.
+implementation:
+  type: validator
+  ref: coder.convex.logging-silent-swallow
+content:
+  summary: A "a catch handler must observably react, never silently swallow" obligation, the Convex sibling
+    of coder.logging.coach-silent-swallow. The realization is a zero-dependency JS detector (regex + brace
+    matching over source, no TS runtime) that resolves each `catch (...) { ... }` body span and flags
+    it when the body contains no log call (`console`/`logger`/`log`/`logging`/`this.logger` X) and no
+    `throw`, AND the body is either empty (or comment-only) or contains a `return`. Generated code and
+    `*.test.ts`/`*.spec.ts` files are out of scope.
+  normative_text: 'A caught exception in shippable Convex server code must turn into an observable signal:
+    a structured
+
+    log event, or a rethrow that lets the failure propagate. A handler that swallows the exception and
+
+    returns a (non-error) fallback — or does nothing at all (`catch (e) {}`) — converts a loud failure
+
+    into invisible data corruption. The obligation is "handlers observably react"; WHICH reaction (log
+    vs
+
+    rethrow) and HOW it is detected is delegated to the per-stack detector. For Convex the detector
+
+    resolves the `catch` body span by brace matching and checks it (over a string/comment-blanked copy)
+
+    for a logging call or a `throw`; absent both, a body that is empty or returns is the silent-swallow
+
+    incident. A handler that does other non-trivial work (an assignment or call) but neither returns nor
+
+    is empty is NOT flagged (core parity — the canonical incident shape is an empty or returning handler).
+
+    '
+  fix_hint: "Make the handler observably react — log with a structured payload, rethrow, or both:\n  try\
+    \ {\n    return await ctx.db.get(matchId);\n  } catch (e) {           // silent swallow — no log,\
+    \ no rethrow\n    return null;\n  }\nbecomes\n  try {\n    return await ctx.db.get(matchId);\n  }\
+    \ catch (e) {\n    console.error(\"match.lookup_failed\", { matchId, error: String(e) });\n    throw\
+    \ e;              // rethrow, OR log + a documented structured fallback\n  }\nIf a pre-existing swallow\
+    \ cannot be cleaned immediately, this rule's disposition is\n`suppress-and-clean`: stamp the offending\
+    \ `catch` line with an inline marker\n`// atdd:suppress(coder.convex.logging-silent-swallow) UNTIL=<YYYY-MM-DD>`\
+    \ to absorb it on a deadline\nwhile the backlog is burned down (honored by the coach/consumer layer,\
+    \ NOT the detector — the detector\nemits the RAW violation regardless). New silent swallows are not\
+    \ suppressible by default and fail.\n"
+  exceptions:
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope — tests legitimately suppress exceptions for
+    assertion patterns.
+  - Generated code under `convex/_generated/` is never scanned (codegen, never edited).
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - A handler that does non-trivial work (assignment/call) but neither returns nor is empty is NOT flagged
+    (core parity — the canonical incident is an empty or returning handler).
+  - Pre-existing handlers carrying a valid inline `// atdd:suppress(coder.convex.logging-silent-swallow)`
+    marker are absorbed by the `suppress-and-clean` disposition (consumer/coach layer, not the detector).
+metadata:
+  aliases:
+  - CONVEX-SILENT-SWALLOW-001
+  severity: 4
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0

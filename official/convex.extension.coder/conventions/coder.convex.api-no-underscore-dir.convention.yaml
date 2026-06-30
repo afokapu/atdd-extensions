@@ -1,0 +1,82 @@
+schema_version: 1.1.0
+rule_id: coder.convex.api-no-underscore-dir
+kind: rule
+status: active
+name: Convex API functions must not live under an underscore-prefixed directory
+statement: An exported Convex API function — a `query`, `mutation`, or `action` (and their `internalQuery`/`internalMutation`/`internalAction`
+  siblings) declared in a `*.ts`/`*.tsx`/ `*.js`/`*.mjs` module under the `convex/` function tree — MUST
+  NOT sit under a path that contains an underscore-prefixed directory segment (`_internal/`, `_lib/`,
+  ...). Convex builds each function's API path from its module path and, as a hard rule of that auto-discovery,
+  EXCLUDES every path containing an `_`-prefixed directory from the registered surface; a function there
+  is registered nowhere and can never be invoked as `api.*` / `internal.*`. This is a NATIVE Convex obligation
+  with no Core sibling — it falls out of Convex's path-to-API mapping, not from any language-agnostic
+  design rule. The detector that enforces it — a regex-over-source scan for an exported API constructor
+  in a module whose path carries an `_`-prefixed dir segment — is the atdd.workspace.convex implementation
+  referenced below; the obligation is stack-bound, the detector is Convex-specific.
+terms:
+- term_id: convex_api_function
+  text: an exported Convex server function created with a path-addressed constructor — `query`/`mutation`/`action`
+    or their `internalQuery`/`internalMutation`/`internalAction` siblings — whose API path Convex derives
+    from its module path. The unit this rule checks for a reachable (non-`_`-prefixed) location.
+- term_id: underscore_dir_carveout
+  text: Convex's hard rule that any module path containing a directory segment beginning with `_` (`_generated/`,
+    `_internal/`, `_lib/`, ...) is excluded from the registered API surface, so a function declared there
+    is never callable.
+implementation:
+  type: validator
+  ref: coder.convex.api-no-underscore-dir
+content:
+  summary: A NATIVE Convex "exported API functions must stay on the API surface" obligation. The realization
+    is a zero-dependency JS detector (regex over source, no TS runtime) that flags every `export const
+    x = query/mutation/action(...)` (or `internal*` variant) declared in a module whose path contains
+    an underscore-prefixed directory, skipping `_generated/` and `*.test.ts`/`*.spec.ts` files. `httpAction`
+    handlers are out of scope — they are mounted via the `http.ts` router, not by path.
+  normative_text: 'Convex derives a function''s API path from its module path: `convex/foo/bar.ts` exporting
+
+    `myQuery` is reachable as `api.foo.bar.myQuery`. Convex carves the underscore prefix out of
+
+    that mapping — ANY path segment that begins with `_` (the codegen folder `_generated/`, and by
+
+    the same rule `_internal/`, `_lib/`, ...) is excluded from the registered API surface. The
+
+    consequence: an exported `query`/`mutation`/`action` parked under such a directory compiles,
+
+    typechecks, and deploys, yet is registered nowhere — calling it as `api.*` or `internal.*` is
+
+    impossible. The obligation is "an exported API function lives on the API surface"; HOW the
+
+    offending exports are found is delegated to the per-stack detector. For Convex the detector
+
+    scans each `convex/**` module supplied as a scan root, and for any module whose path carries an
+
+    `_`-prefixed DIRECTORY segment it reports each exported API constructor it finds. The carve-out
+
+    is on DIRECTORIES only — an `_`-prefixed file basename (e.g. `_helpers.ts`) is a module name
+
+    Convex still registers, so it is not flagged.
+
+    '
+  fix_hint: "Move the function out of the underscore-prefixed directory onto the API surface, or — if\
+    \ the\ncode genuinely must be private to other Convex functions and never client-callable — make it\
+    \ a\nplain (non-`query`/`mutation`/`action`) helper module that other functions import, rather than\n\
+    an exported Convex API constructor:\n  * relocate `convex/_internal/ops.ts` -> `convex/internal_ops.ts`\
+    \ (no leading underscore), or\n  * relocate it under a normal feature path (`convex/<wagon>/<feature>/api.ts`),\
+    \ or\n  * if it is meant to be invoked server-to-server, keep it as `internalMutation`/etc. but OUT\
+    \ of\n    the `_`-prefixed dir so `internal.*` can still address it.\nThis rule's disposition is `strict`:\
+    \ there is no inline-suppression marker. The detector always\nemits the RAW call-site list; any baseline\
+    \ ratchet over pre-existing state is a downstream\nconsumer/coach concern, not the detector's.\n"
+  exceptions:
+  - Generated code under `convex/_generated/` is never scanned (it is codegen, and it is itself the canonical
+    example of an excluded `_`-prefixed dir).
+  - '`httpAction(...)` handlers are out of scope — they are registered on the `convex/http.ts` router,
+    not by module path, so the underscore-dir carve-out does not silence them.'
+  - An underscore-prefixed FILE basename (e.g. `convex/_helpers.ts`) is a module name Convex still registers;
+    only `_`-prefixed DIRECTORY segments exclude a path from the API surface.
+  - Test files (`*.test.*` / `*.spec.*`) and vendored/build dirs (`node_modules`, `dist`, `build`, `.next`)
+    are skipped during traversal.
+metadata:
+  aliases:
+  - CONVEX-RT-004
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

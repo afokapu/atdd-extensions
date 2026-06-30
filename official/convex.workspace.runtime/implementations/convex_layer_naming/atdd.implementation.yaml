@@ -1,0 +1,26 @@
+schema_version: "1.1.0"
+kind: implementation
+implementation_id: coder.convex.layer-naming
+targets_workspace: convex.workspace.runtime
+contract_version: "1.1.0"
+
+# Back-reference to the agnostic obligation this detector realizes. The convention
+# node is authored in atdd.extension.convex-coder; this implementation is the
+# convex-workspace realization of it (two-layer model). This is a NATIVE Convex
+# rule — there is no Core sibling; it encodes the per-feature layer file naming of
+# the Convex 4-layer architecture.
+realizes_convention: coder.convex.layer-naming
+
+# Single rule_id (disposition suppress-and-clean). The detector emits RAW
+# violations; the verdict is a downstream consumer concern.
+emits_rule_ids:
+  - coder.convex.layer-naming   # disposition: suppress-and-clean
+
+# The detector module. It scans ATDD_SCAN_ROOTS for Convex feature source and
+# writes the RAW {rule_id,file,line,col,evidence,source_line} report to
+# ATDD_VIOLATIONS_REPORT (v1.1 channel). No disposition.
+entrypoint: detect.mjs
+
+# The runnable v1.1 report-emitting unit the provider command executes. Declared
+# (not hardcoded) so the provider CLI runs THIS detector.
+report: detect.mjs

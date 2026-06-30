@@ -12,9 +12,38 @@ feature: convex-coder-conventions
 # implementations/). This extension owns ZERO runtime.
 owns:
   conventions:
-    - conventions/coder.convex.no-server-console-log.convention.yaml
-    - conventions/coder.convex.schema-at-root.convention.yaml
+    - conventions/coder.convex.api-no-underscore-dir.convention.yaml
+    - conventions/coder.convex.complexity-cognitive.convention.yaml
+    - conventions/coder.convex.complexity-cyclomatic.convention.yaml
+    - conventions/coder.convex.complexity-length.convention.yaml
+    - conventions/coder.convex.complexity-nesting.convention.yaml
+    - conventions/coder.convex.complexity-params.convention.yaml
+    - conventions/coder.convex.composition-consumer.convention.yaml
+    - conventions/coder.convex.composition-root.convention.yaml
+    - conventions/coder.convex.dead-code-reachability.convention.yaml
+    - conventions/coder.convex.design-foundations.convention.yaml
+    - conventions/coder.convex.design-hierarchy-import.convention.yaml
+    - conventions/coder.convex.design-orphan-export.convention.yaml
+    - conventions/coder.convex.domain-no-convex-import.convention.yaml
+    - conventions/coder.convex.duplication-no-intra-layer.convention.yaml
+    - conventions/coder.convex.error-response-bare-string.convention.yaml
+    - conventions/coder.convex.error-response-code-format.convention.yaml
+    - conventions/coder.convex.feature-layout-promotion.convention.yaml
     - conventions/coder.convex.http-router-at-root.convention.yaml
+    - conventions/coder.convex.layer-naming.convention.yaml
+    - conventions/coder.convex.logging-silent-swallow.convention.yaml
+    - conventions/coder.convex.logging-structured.convention.yaml
+    - conventions/coder.convex.no-server-console-log.convention.yaml
+    - conventions/coder.convex.nplus1-db-in-loop.convention.yaml
+    - conventions/coder.convex.performance-perf.convention.yaml
+    - conventions/coder.convex.quality-comments.convention.yaml
+    - conventions/coder.convex.quality-duplication.convention.yaml
+    - conventions/coder.convex.quality-file-length.convention.yaml
+    - conventions/coder.convex.quality-mi.convention.yaml
+    - conventions/coder.convex.quality-naming.convention.yaml
+    - conventions/coder.convex.schema-at-root.convention.yaml
+    - conventions/coder.convex.security-hardcoded-secret.convention.yaml
+    - conventions/coder.convex.security-missing-auth.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []
