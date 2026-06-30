@@ -1,0 +1,324 @@
+"""GitHub release worker — drains core's neutral ``version_decided`` signal.
+
+Realizes ``github.release.version-decided-drains-to-tag-and-publish`` — the
+consumer half of core #1172 step 5.
+
+Core (the ``atdd`` repo) decides the *number* and stops there: on a bump it
+enqueues a **provider-neutral** ``version_decided`` outbox message carrying only
+``{version, change_class}`` (see ``atdd.state.version.bump``). Core writes **no**
+git tag and **no** ``external_ref`` — by design (version-source-of-truth-design
+§2: "the git-tag external_ref + publish action live entirely in the extension").
+
+THIS module is that extension. It drains the signal, creates an annotated git
+tag ``vX.Y.Z``, publishes to PyPI (the side-effect), and writes the tag back as
+an ``external_ref`` (``provider=github, ref_kind=tag, ref_value=vX.Y.Z``) so the
+local store learns the provider-side identity of the release core decided.
+
+Separation discipline (the 4.0.0 full core/extension split). This module
+**never imports** ``atdd``:
+
+- It drains against a *duck-typed* store exposing core's already-shipped sync
+  API — ``store.sync.pending_outbox()/mark_sent()`` and
+  ``store.external_refs.resolve()/link()`` (see ``atdd.state.store``). At runtime
+  the real ``atdd.state.StateStore`` is injected; tests inject a real in-memory
+  sqlite mirror of core's schema.
+- :class:`GithubReleaseProvider` conforms *structurally* to core's
+  ``atdd.state.sync_engine.SyncProvider`` Protocol
+  (``name`` + ``push(operation, payload) -> PushOutcome``), so the side-effect
+  also composes with core's own ``push_outbox()`` engine — proven by shape, with
+  zero import coupling.
+
+Honesty: the real PyPI publish is the *only* genuinely external effect. It is
+double-gated — a ``dry_run`` / ``--no-publish`` flag **and** the
+``ATDD_RELEASE_ALLOW_PUBLISH`` env guard — so a test (or an accidental run) can
+never reach real PyPI. Tests inject a fake publisher; the real one is exercised
+only when an operator explicitly opts in.
+"""
+from __future__ import annotations
+
+import logging
+import os
+import subprocess
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+_log = logging.getLogger(__name__)
+
+# --------------------------------------------------------------------------- #
+# Contract constants — MUST mirror core (atdd.state.version / atdd.state.store).
+# Duplicated by value (not imported) to keep the extension import-decoupled from
+# core; the conformance tests pin these against core's published names.
+# --------------------------------------------------------------------------- #
+#: core's ``VERSION_DECIDED_OPERATION`` — the neutral decision signal we drain.
+VERSION_DECIDED_OPERATION = "version_decided"
+#: core's ``DEFAULT_PROVIDER`` — the outbox routing key this worker claims.
+DEFAULT_PROVIDER = "github"
+#: the singleton ``release`` object core seeds (migration v2); the tag ref hangs
+#: off it.
+RELEASE_OBJECT_UID = "release"
+#: ``external_ref.ref_kind`` for the published git tag.
+TAG_REF_KIND = "tag"
+#: env guard for the real publish side-effect; must equal ``"1"`` to arm it.
+PUBLISH_ENV_GUARD = "ATDD_RELEASE_ALLOW_PUBLISH"
+
+
+class ReleaseError(Exception):
+    """Base for release-worker failures."""
+
+
+class PublishError(ReleaseError):
+    """The publish/tag side-effect failed. Raising this leaves the outbox message
+    **pending** (undrained) so the next drain retries — never a silent green."""
+
+
+# --------------------------------------------------------------------------- #
+# Outcome — structurally identical to atdd.state.sync_engine.PushOutcome so core's
+# push_outbox() can consume what GithubReleaseProvider.push() returns.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class PushOutcome:
+    """An external ref for the drain engine to record (mirror of core's type)."""
+
+    object_uid: Optional[str] = None
+    ref_kind: Optional[str] = None
+    ref_value: Optional[str] = None
+    ref_data: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def records_ref(self) -> bool:
+        return bool(self.object_uid and self.ref_kind and self.ref_value)
+
+
+# A publisher takes (version, tag) and performs the ecosystem publish, raising
+# PublishError on failure. Injectable so tests never touch PyPI/network.
+Publisher = Callable[[str, str], None]
+#: A tag-existence probe (the idempotency oracle for the store-less provider).
+TagExists = Callable[[str], bool]
+
+
+# --------------------------------------------------------------------------- #
+# Tag naming / version validation (mirrors core's semver-core parse)
+# --------------------------------------------------------------------------- #
+def parse_semver(version: str) -> Tuple[int, int, int]:
+    """Parse the ``X.Y.Z`` core of a version, ignoring a PEP 440 local/pre suffix.
+
+    Mirrors ``atdd.state.version.parse`` so the tag we cut matches the number
+    core decided. Raises :class:`ReleaseError` on a non-semver value.
+    """
+    core = version.strip().split("+", 1)[0].split("-", 1)[0]
+    parts = core.split(".")
+    if len(parts) < 3:
+        raise ReleaseError(f"not a semver version: {version!r}")
+    try:
+        return int(parts[0]), int(parts[1]), int(parts[2])
+    except ValueError as exc:
+        raise ReleaseError(f"not a semver version: {version!r}") from exc
+
+
+def tag_name(version: str) -> str:
+    """The annotated-tag name ``vX.Y.Z`` for a decided version (validates semver)."""
+    parse_semver(version)  # raises on a malformed version
+    return f"v{version.strip()}"
+
+
+# --------------------------------------------------------------------------- #
+# Real side-effects — gated; NEVER run in tests.
+# --------------------------------------------------------------------------- #
+def git_tag_exists(tag: str, *, cwd: Optional[str] = None) -> bool:
+    """True if an annotated/lightweight tag ``tag`` already exists in the repo."""
+    proc = subprocess.run(
+        ["git", "tag", "--list", tag],
+        cwd=cwd, capture_output=True, text=True, check=False,
+    )
+    return tag in proc.stdout.split()
+
+
+def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None,
+                 cwd: Optional[str] = None) -> None:
+    """Create the annotated git tag and upload to PyPI. **Double-gated.**
+
+    Refuses to run unless ``ATDD_RELEASE_ALLOW_PUBLISH=1`` — so this can never be
+    reached from a test or an un-opted-in invocation. Ordering: publish to PyPI
+    *before* the caller records the ``external_ref`` (the ref is the durable
+    completion marker), so a failed upload leaves nothing recorded and the next
+    drain retries cleanly.
+    """
+    env = os.environ if env is None else env
+    if env.get(PUBLISH_ENV_GUARD) != "1":
+        raise PublishError(
+            f"real publish disabled; set {PUBLISH_ENV_GUARD}=1 to arm the side-effect "
+            f"(refusing to tag/publish {tag} without an explicit opt-in)"
+        )
+    try:
+        subprocess.run(
+            ["git", "tag", "-a", tag, "-m", f"Release {tag}"],
+            cwd=cwd, check=True, capture_output=True, text=True,
+        )
+        subprocess.run(
+            ["python", "-m", "build"],
+            cwd=cwd, check=True, capture_output=True, text=True,
+        )
+        subprocess.run(
+            ["python", "-m", "twine", "upload", "dist/*"],
+            cwd=cwd, check=True, capture_output=True, text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise PublishError(
+            f"publish of {tag} failed: {exc.cmd} exited {exc.returncode}: "
+            f"{(exc.stderr or '').strip()}"
+        ) from exc
+
+
+def _default_publisher(env: Optional[Dict[str, str]] = None,
+                       cwd: Optional[str] = None) -> Publisher:
+    return lambda version, tag: real_publish(version, tag, env=env, cwd=cwd)
+
+
+# --------------------------------------------------------------------------- #
+# (A) Store-aware drain — the primary standalone entry.
+# --------------------------------------------------------------------------- #
+@dataclass
+class DrainResult:
+    pending: int = 0          # version_decided messages for this provider seen
+    published: int = 0        # newly tagged+published (or dry-run recorded)
+    skipped_idempotent: int = 0   # already had the tag ref → no side-effect
+    failed: int = 0           # publish raised → left undrained
+    drained_ids: List[int] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+
+
+def drain_version_decided(
+    store: Any,
+    *,
+    provider: str = DEFAULT_PROVIDER,
+    dry_run: bool = False,
+    publisher: Optional[Publisher] = None,
+    env: Optional[Dict[str, str]] = None,
+    cwd: Optional[str] = None,
+) -> DrainResult:
+    """Drain pending ``version_decided`` outbox messages → tag + publish + ref.
+
+    Store-aware idempotency: the ``external_ref`` (provider, ``tag``, ``vX.Y.Z``)
+    is the durable completion marker, written **only after** a successful publish.
+    So:
+
+    - ref already present → no side-effect, just mark drained (re-drain no-op);
+    - publish raises :class:`PublishError` → message left **pending**, logged loud,
+      counted as ``failed`` (never marked drained / never a fake green);
+    - otherwise → publish, ``external_refs.link(...)``, ``sync.mark_sent(id)``.
+
+    Only messages whose ``operation == version_decided`` **and**
+    ``provider == provider`` are touched; anything else is left for its own worker.
+    """
+    publisher = publisher or _default_publisher(env=env, cwd=cwd)
+    result = DrainResult()
+
+    for msg in store.sync.pending_outbox():
+        if msg.operation != VERSION_DECIDED_OPERATION or msg.provider != provider:
+            continue
+        result.pending += 1
+        version = msg.payload.get("version")
+        if not version:
+            result.failed += 1
+            result.errors.append(f"outbox#{msg.id}: version_decided with no version")
+            _log.error("version_decided message carries no version",
+                       extra={"outbox_id": msg.id})
+            continue
+        try:
+            tag = tag_name(version)
+        except ReleaseError as exc:
+            result.failed += 1
+            result.errors.append(f"outbox#{msg.id}: {exc}")
+            _log.error("version_decided carries a non-semver version",
+                       extra={"outbox_id": msg.id, "error": str(exc)})
+            continue
+
+        existing = store.external_refs.resolve(provider, TAG_REF_KIND, tag)
+        if existing is not None:
+            # Idempotent: a prior drain already published + recorded this tag.
+            store.sync.mark_sent(msg.id)
+            result.skipped_idempotent += 1
+            result.drained_ids.append(msg.id)
+            result.tags.append(tag)
+            _log.info("version_decided already published; idempotent drain",
+                      extra={"outbox_id": msg.id, "tag": tag})
+            continue
+
+        try:
+            if not dry_run:
+                publisher(version, tag)  # raises PublishError → left pending below
+        except PublishError as exc:
+            result.failed += 1
+            result.errors.append(f"outbox#{msg.id} {tag}: {exc}")
+            _log.error("release publish failed; leaving outbox message pending",
+                       extra={"outbox_id": msg.id, "tag": tag, "error": str(exc)})
+            continue
+
+        store.external_refs.link(
+            RELEASE_OBJECT_UID, provider, TAG_REF_KIND, tag,
+            data={"version": version, "change_class": msg.payload.get("change_class"),
+                  "dry_run": dry_run},
+        )
+        store.sync.mark_sent(msg.id)
+        result.published += 1
+        result.drained_ids.append(msg.id)
+        result.tags.append(tag)
+        _log.info("release published; tag ref recorded and outbox drained",
+                  extra={"outbox_id": msg.id, "tag": tag, "dry_run": dry_run})
+
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# (B) SyncProvider wrapper — structural conformance to core's seam.
+# --------------------------------------------------------------------------- #
+class GithubReleaseProvider:
+    """The release side-effect as a core-compatible ``SyncProvider``.
+
+    Conforms *by shape* to ``atdd.state.sync_engine.SyncProvider`` (``name`` +
+    ``push(operation, payload) -> Optional[PushOutcome]``), so core's own
+    ``push_outbox()`` can drive it without this module importing ``atdd``. The
+    Protocol hands ``push`` no store, so idempotency here keys off a tag-existence
+    probe (default: ``git tag --list``) rather than the ``external_ref``; the
+    store-aware :func:`drain_version_decided` is the richer standalone entry.
+    """
+
+    def __init__(
+        self,
+        *,
+        provider: str = DEFAULT_PROVIDER,
+        dry_run: bool = False,
+        publisher: Optional[Publisher] = None,
+        tag_exists: Optional[TagExists] = None,
+        env: Optional[Dict[str, str]] = None,
+        cwd: Optional[str] = None,
+    ) -> None:
+        self.name = provider
+        self.dry_run = dry_run
+        self._publisher = publisher or _default_publisher(env=env, cwd=cwd)
+        self._tag_exists = tag_exists or (lambda tag: git_tag_exists(tag, cwd=cwd))
+
+    def push(self, operation: str, payload: Dict[str, Any]) -> Optional[PushOutcome]:
+        """One ``version_decided`` → tag + publish; returns the tag ref to record.
+
+        Returns ``None`` for any other operation (not ours — core leaves it
+        pending). Raises :class:`PublishError` on a publish failure so core's
+        engine leaves the message pending (no ``mark_sent``).
+        """
+        if operation != VERSION_DECIDED_OPERATION:
+            return None
+        version = payload.get("version")
+        if not version:
+            raise PublishError("version_decided payload carries no version")
+        tag = tag_name(version)
+        if self._tag_exists(tag):
+            _log.info("tag already exists; idempotent push no-op", extra={"tag": tag})
+            return PushOutcome(RELEASE_OBJECT_UID, TAG_REF_KIND, tag, {"idempotent": True})
+        if not self.dry_run:
+            self._publisher(version, tag)
+        return PushOutcome(
+            RELEASE_OBJECT_UID, TAG_REF_KIND, tag,
+            {"version": version, "change_class": payload.get("change_class"),
+             "dry_run": self.dry_run},
+        )
