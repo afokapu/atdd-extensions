@@ -47,7 +47,13 @@ feature: train-interlocking-enforcement
 # with atdd.implementation.yaml + src/tests/fixtures skeletons) so #25/#26 have a
 # concrete home; their decision modules are NotImplementedError stubs.
 owns:
-  conventions: []
+  # #26 lands the four tester interlocking convention nodes (additive — #25 adds
+  # its coder node separately; a union merge reconciles).
+  conventions:
+    - conventions/tester.interlocking.route-coverage.convention.yaml
+    - conventions/tester.interlocking.production-runner-used.convention.yaml
+    - conventions/tester.interlocking.smoke-coverage-for-station-master.convention.yaml
+    - conventions/tester.interlocking.trace-binds-declared-route.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
