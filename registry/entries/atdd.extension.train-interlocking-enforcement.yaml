@@ -1,0 +1,40 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.train-interlocking-enforcement
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.train-interlocking-enforcement
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# The runtime this extension's implementations target (declared in its manifest).
+# Both validators run inside the python-pytest provider: the infrastructure check
+# scans consumer runtime code (InterlockingRunner / Station Master), the coverage
+# check scans interlocking YAML + e2e tests.
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+
+categories:
+  - coder
+  - tester
+  - train-interlocking
+  - source-validator
+  - test-validator
+  - official
+
+description: >-
+  Official ATDD train-interlocking-enforcement extension — enforces the consumer-repo
+  realization of the core train-interlocking model (afokapu/atdd#1246, #1248, #1249,
+  #1251); that an InterlockingRunner route-control layer exists and is wired (Station
+  Master to InterlockingRunner to TrainRunner) and that every admissible interlocking
+  route has e2e coverage. SCAFFOLD slice (afokapu/atdd-extensions#24) — package/discovery
+  substrate; convention bodies + validator logic land in #25 (coder/infrastructure),
+  #26 (tester/coverage), #27 (bilateral binding).

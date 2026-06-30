@@ -12,4 +12,5 @@ entries:
   - entries/atdd.extension.github.yaml
   - entries/atdd.extension.coder.yaml
   - entries/atdd.extension.tester.yaml
+  - entries/atdd.extension.train-interlocking-enforcement.yaml
   - entries/acme.extension.component-header-validator.yaml

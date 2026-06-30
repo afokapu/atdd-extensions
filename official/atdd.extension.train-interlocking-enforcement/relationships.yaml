@@ -1,0 +1,44 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.train-interlocking-enforcement.
+#
+# SCAFFOLD (afokapu/atdd-extensions#24): convention bodies are not yet authored, so
+# this graph ships with empty nodes/edges and a header that PINS the edges the
+# build slices (#25/#26/#27) must author when they add their convention nodes.
+#
+# IMPORTANT (boundary spec §6.2): core<->extension edges are NOT authored here.
+# The core train-interlocking design nodes these conventions realize
+# (afokapu/atdd#1246/#1248/#1249/#1251) are declared NARRATIVELY — in
+# atdd.extension.yaml's header + depends_on, in this package's README mapping
+# table, and in each convention node's body — never as relationship-graph edges.
+# Likewise implementation -> workspace-provider-contract is declared in each
+# implementations/<name>/atdd.implementation.yaml (targets_workspace + contract_version),
+# not as a graph edge. Only extension-INTERNAL edges live here.
+graph_id: atdd.extension.train-interlocking-enforcement.relationships
+
+# Required coverage matrix (afokapu/atdd-extensions#24) — every convention a build
+# slice adds MUST be linked, machine-readably, to all of:
+#   convention -> implementation        (graph edge here, type: realized-by; or impl manifest realizes_convention)
+#   implementation -> workspace contract (impl manifest: targets_workspace + contract_version)
+#   convention -> scope                  (graph edge here, type: scoped-by -> scopes/*.scope.yaml selector)
+#   convention -> gate                   (graph edge here, type: gated-by   -> gates/*.gate.yaml)
+#   convention -> tests/fixtures         (the validator's tests/ + fixtures/clean|dirty)
+#   convention -> core design reference  (NARRATIVE: node body + manifest, per §6.2)
+#
+# Planned convention ids (agreed package contract for the build slices):
+#   #25 coder.interlocking.runner-infrastructure
+#       -> realized-by implementations/interlocking-infrastructure
+#       -> scoped-by   scopes/interlocking-targets.scope.yaml (python_runtime selector)
+#       -> gated-by    gates/interlocking-infrastructure.gate.yaml
+#       -> realizes (narrative) afokapu/atdd#1251 (InterlockingRunner runtime contract)
+#   #26 tester.interlocking.route-coverage
+#       -> realized-by implementations/interlocking-coverage
+#       -> scoped-by   scopes/interlocking-targets.scope.yaml (interlocking_yaml + e2e selectors)
+#       -> gated-by    gates/interlocking-coverage.gate.yaml
+#       -> realizes (narrative) afokapu/atdd#1248/#1249 (route space + projection)
+#   #27 bilateral declaration<->runtime binding — convention id TBD; blocked until
+#       afokapu/atdd#1248 exposes entrypoint/action fields or an equivalent metadata
+#       source is explicitly chosen (handoff contract).
+
+nodes: []
+edges: []

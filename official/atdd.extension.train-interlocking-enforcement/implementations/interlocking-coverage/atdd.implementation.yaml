@@ -1,0 +1,30 @@
+schema_version: "1.1.0"
+kind: implementation
+
+# SCAFFOLD (afokapu/atdd-extensions#24). Manifest + skeleton only; the detector
+# under src/ is a NotImplementedError stub that #26 fills. The implementation_id,
+# provider target, contract range, realized convention, and report channel are the
+# package contract #26 builds against — agreed here so #26 does not redesign them.
+implementation_id: tester.interlocking.route-coverage.impl
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.1.0"
+
+# Back-reference to the agnostic obligation this detector realizes. The convention
+# node is authored by #26 in ../../conventions/; this is its python-pytest
+# realization (two-layer model). Dangling until #26 lands the node.
+realizes_convention: tester.interlocking.route-coverage
+
+# Single rule_id. Severity (strict vs advisory) is decided by #26's convention
+# node disposition; the detector only emits RAW facts.
+emits_rule_ids:
+  - tester.interlocking.route-coverage   # disposition: TBD (#26)
+
+# The pure detector module (#26 implements). Proves every admissible route in an
+# interlocking (core afokapu/atdd#1248 route space) has an e2e test exercising it.
+# Scans the scope's interlocking_yaml + e2e_tests selectors.
+entrypoint: src/interlocking_coverage.py
+
+# The runnable v1.1 report-emitting pytest the provider CLI collects: scans
+# ATDD_SCAN_ROOTS and writes the RAW report to ATDD_VIOLATIONS_REPORT. #26
+# implements; stub for now.
+report: tests/test_interlocking_coverage.py
