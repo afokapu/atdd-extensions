@@ -1,17 +1,17 @@
-"""Runnable enforcement for coder.interlocking.runner-infrastructure under python-pytest.
+"""Runnable enforcement for the five coder.train.interlocking-* conventions under python-pytest.
 
 Two layers:
 
-  1. DETECTOR SELF-TESTS — pin the AST decision logic against the clean/dirty fixtures: the clean
-     interlocking-enabled consumer is silent; each dirty consumer flags the expected category; a pure
-     direct-train consumer carries no obligation. These prove the detector is healthy.
+  1. DETECTOR SELF-TESTS — pin the AST decision logic against the clean/dirty fixtures. The clean
+     interlocking-enabled consumer is silent; each isolation fixture trips exactly one of the five
+     rule_ids; the combined dirty fixture trips several; the union across fixtures covers all five.
+     These prove each rule_id fires independently.
 
   2. EMISSION (the v1.1 contract job, NOT a verdict) — scan ``ATDD_SCAN_ROOTS`` and write the RAW
      structured violations to ``ATDD_VIOLATIONS_REPORT`` for the provider CLI / run.py to read back.
 
-``coder.interlocking.runner-infrastructure`` is ``strict``; this test still only EMITS the RAW
-violation list. The strict verdict (any violation -> FAIL) is the downstream consumer's disposition
-decision, never the detector's. The emission test asserts run-health, not emptiness.
+All five rule_ids are ``strict``; this test still only EMITS the RAW violation list. The strict verdict
+(any violation -> FAIL) is the downstream consumer's disposition decision, never the detector's.
 
 No core (``atdd.*``) imports; the detector is imported by path.
 """
@@ -33,16 +33,26 @@ CONTRACT_VERSION = "1.1.0"
 ENV_SCAN_ROOTS = "ATDD_SCAN_ROOTS"
 ENV_REPORT = "ATDD_VIOLATIONS_REPORT"
 
+# Each isolation fixture must trip EXACTLY one rule_id — proving the five conventions are independently
+# enforced. ``dirty_no_resolve_train`` isolates runner-exists (missing method); ``dirty_missing_runner``
+# additionally exercises the missing-class path (runner-exists + the resulting station-routing defect).
+_ISOLATION = {
+    "dirty_no_resolve_train": {detector.RULE_RUNNER_EXISTS},
+    "dirty_bare_resolution": {detector.RULE_RESOLUTION_MODEL},
+    "dirty_station_unlinked": {detector.RULE_STATION_ROUTING},
+    "dirty_direct_wagon": {detector.RULE_DELEGATES},
+    "dirty_cargo": {detector.RULE_NO_CARGO},
+}
 
-def _categories(violations: list[dict]) -> set[str]:
-    """The category token each RAW violation's evidence is prefixed with."""
-    return {v["evidence"].split(":", 1)[0] for v in violations}
+
+def _rule_ids(violations: list[dict]) -> set[str]:
+    return {v["rule_id"] for v in violations}
 
 
 def _assert_v11_shape(violations: list[dict]) -> None:
     for v in violations:
         assert set(v) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
-        assert v["rule_id"] == detector.RULE_ID
+        assert v["rule_id"] in detector.ALL_RULE_IDS
         assert isinstance(v["line"], int) and isinstance(v["col"], int)
 
 
@@ -50,52 +60,45 @@ def _assert_v11_shape(violations: list[dict]) -> None:
 
 
 def test_clean_consumer_has_no_violations() -> None:
-    # A correctly wired interlocking-enabled consumer: runner exists with resolve_train + structured
-    # resolution model, Station Master routes through it and delegates to TrainRunner, no wagon
-    # execution / Cargo bleed, wagons stay clean.
     assert detector.scan_root(_FIXTURES / "clean") == []
 
 
-def test_dirty_consumer_flags_every_forbidden_pattern() -> None:
+def test_each_rule_id_fires_independently() -> None:
+    # The load-bearing control: one isolation fixture per convention, each tripping exactly its rule_id.
+    for fixture, expected in _ISOLATION.items():
+        violations = detector.scan_root(_FIXTURES / fixture)
+        _assert_v11_shape(violations)
+        assert violations, f"{fixture} produced no violations"
+        assert _rule_ids(violations) == expected, f"{fixture} -> {_rule_ids(violations)}"
+
+
+def test_all_five_rule_ids_are_covered() -> None:
+    covered: set[str] = set()
+    for fixture in [*_ISOLATION, "dirty", "dirty_missing_runner"]:
+        covered |= _rule_ids(detector.scan_root(_FIXTURES / fixture))
+    assert covered == detector.ALL_RULE_IDS
+
+
+def test_combined_dirty_fixture_trips_multiple_rules() -> None:
     violations = detector.scan_root(_FIXTURES / "dirty")
     _assert_v11_shape(violations)
-    cats = _categories(violations)
-    # The broken runner trips bare resolution, direct wagon execution, Cargo mutation; the Station
-    # Master is both unlinked and non-delegating; the wagon imports interlocking code.
-    assert detector.CAT_BARE_RESOLUTION in cats
-    assert detector.CAT_DIRECT_WAGON_EXEC in cats
-    assert detector.CAT_CARGO_MUTATION in cats
-    assert detector.CAT_STATION_UNLINKED in cats
-    assert detector.CAT_STATION_NO_DELEGATE in cats
-    assert detector.CAT_WAGON_IMPORTS_INTERLOCKING in cats
+    cats = _rule_ids(violations)
+    assert {
+        detector.RULE_RESOLUTION_MODEL,
+        detector.RULE_STATION_ROUTING,
+        detector.RULE_DELEGATES,
+        detector.RULE_NO_CARGO,
+    } <= cats
 
 
-def test_missing_runner_is_flagged() -> None:
-    violations = detector.scan_root(_FIXTURES / "dirty_missing_runner")
-    _assert_v11_shape(violations)
-    cats = _categories(violations)
-    assert detector.CAT_MISSING_RUNNER in cats
-    # No InterlockingRunner means no resolve_train / wagon-exec / cargo checks fire.
-    assert detector.CAT_DIRECT_WAGON_EXEC not in cats
-
-
-def test_missing_resolve_train_is_flagged_in_isolation() -> None:
-    violations = detector.scan_root(_FIXTURES / "dirty_no_resolve_train")
-    _assert_v11_shape(violations)
-    cats = _categories(violations)
-    # Cleanly wired except for the absent resolve_train entry point.
-    assert cats == {detector.CAT_MISSING_RESOLVE}
+def test_missing_class_flags_runner_exists() -> None:
+    cats = _rule_ids(detector.scan_root(_FIXTURES / "dirty_missing_runner"))
+    assert detector.RULE_RUNNER_EXISTS in cats
 
 
 def test_pure_direct_train_consumer_carries_no_obligation() -> None:
-    # No interlocking route in JOURNEY_MAP and no InterlockingRunner -> the rule does not bite.
-    assert detector.scan_root(_FIXTURES / "dirty_missing_runner" / "does-not-exist") == []
-
-
-def test_dirty_is_violating_and_clean_is_not() -> None:
-    # The load-bearing control: same detector, opposite verdicts purely on consumer wiring.
-    assert detector.scan_root(_FIXTURES / "clean") == []
-    assert len(detector.scan_root(_FIXTURES / "dirty")) >= 1
+    # A scan root with no interlocking route and no InterlockingRunner -> the rules do not bite.
+    assert detector.scan_root(_FIXTURES / "clean" / "does-not-exist") == []
 
 
 # ── 2. emission (writes the RAW report; does NOT decide disposition) ───────────
