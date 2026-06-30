@@ -1,0 +1,6 @@
+schema_version: "1.0.0"
+# Extension-LOCAL relationship graph for frontend.extension.astro-coder. Nodes + no-orphan edges wired at
+# assembly (workers are add-only). Core<->extension edges are narrative.
+graph_id: frontend.extension.astro-coder.relationships
+nodes: []
+edges: []
