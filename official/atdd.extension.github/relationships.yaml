@@ -25,6 +25,7 @@ nodes:
   - github.pr.mass-delete-guard
   - github.shim.gh-issue-create-blocked
   - github.command.forbidden-gh-patterns
+  - github.release.version-decided-drains-to-tag-and-publish
 
 edges:
   # --- label taxonomy underpins phase + auto-phase expression ---
@@ -89,3 +90,9 @@ edges:
     to: github.pr.merge-blocks-on-pre-smoke-close
     type: complements
     rationale: Blocking runtime artifacts in the PR diff complements the merge gate by keeping non-deliverable state out of a merging PR.
+
+  # --- post-merge provider side-effects core triggers via neutral signals ---
+  - from: github.release.version-decided-drains-to-tag-and-publish
+    to: github.issue.auto-phase-on-merge
+    type: complements
+    rationale: Both are post-merge GitHub side-effects that drain a provider-neutral core signal — auto-phase swaps the atdd:{PHASE} label, the release worker drains version_decided into a tag + publish — keeping core decision-only and the GitHub effect in the extension.

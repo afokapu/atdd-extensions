@@ -39,6 +39,7 @@ owns:
     - conventions/github.pr.mass-delete-guard.convention.yaml
     - conventions/github.shim.gh-issue-create-blocked.convention.yaml
     - conventions/github.command.forbidden-gh-patterns.convention.yaml
+    - conventions/github.release.version-decided-drains-to-tag-and-publish.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
@@ -48,6 +49,7 @@ owns:
     - implementations/pr_base_branch_validator
     - implementations/pr_mass_delete_guard
     - implementations/forbidden_command_policy
+    - implementations/release_worker
   schemas: []
   gates: []
   scopes:
