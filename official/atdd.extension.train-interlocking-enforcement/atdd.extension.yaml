@@ -47,7 +47,9 @@ feature: train-interlocking-enforcement
 # with atdd.implementation.yaml + src/tests/fixtures skeletons) so #25/#26 have a
 # concrete home; their decision modules are NotImplementedError stubs.
 owns:
-  conventions: []
+  conventions:
+    # #25 coder runtime-infrastructure convention (sibling #26/#27 add theirs; union-merged).
+    - conventions/coder.interlocking.runner-infrastructure.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
