@@ -1,23 +1,22 @@
-"""Runnable enforcement for tester.interlocking.route-coverage (python-pytest).
+"""Runnable enforcement for the four interlocking tester rules (python-pytest).
 
 Two layers, the same shape as the python-pytest fleet detectors
 (pytest_test_filename, security_patterns):
 
-  1. DETECTOR SELF-TESTS — pin the decision logic (route parsing from the
-     interlocking YAML, coverage detection against e2e text, the clean fixture
-     emits nothing, the dirty fixture flags exactly the uncovered route with the
-     v1.1 shape and the route's category_digit surfaced in the evidence). Always
-     green: they prove the detector is healthy.
+  1. DETECTOR SELF-TESTS — pin the decision logic for ALL FOUR rule_ids
+     (route-coverage, production-runner-used, smoke-coverage-for-station-master,
+     trace-binds-declared-route): the clean fixture emits nothing across every
+     rule, and each isolated dirty fixture fires EXACTLY its own rule and no
+     other (proving the four checks are independent). Always green.
 
   2. EMISSION (the v1.1 contract job, NOT a verdict) — scan ``ATDD_SCAN_ROOTS``
      and write the RAW structured violations to ``ATDD_VIOLATIONS_REPORT`` for
      ``adapter/run.py`` to read back.
 
-CRITICAL — this enforcement does NOT ``assert violations == []`` in the emission
-layer. The detector emits RAW facts; ``tester.interlocking.route-coverage`` is
-``strict``, but applying that disposition (blocking) is the GATE's job
-(``gates/interlocking-coverage.gate.yaml``), never the detector's. The emission
-test passes once it emits.
+CRITICAL — the emission layer does NOT ``assert violations == []``. The detector
+emits RAW facts; all four rules are ``strict``, but applying that disposition
+(blocking) is the GATE's job (``gates/interlocking-coverage.gate.yaml``), never the
+detector's. The emission test passes once it emits.
 
 No core (``atdd.coach.*``) imports; the detector is imported by path.
 """
@@ -42,12 +41,20 @@ ENV_SCAN_ROOTS = "ATDD_SCAN_ROOTS"
 ENV_REPORT = "ATDD_VIOLATIONS_REPORT"
 
 
-# ── 1. detector self-tests ────────────────────────────────────────────────────
+def _rule_ids(violations: list[dict]) -> set[str]:
+    return {v["rule_id"] for v in violations}
+
+
+# ── 1a. parsing + shared helpers ──────────────────────────────────────────────
 
 
 _INTERLOCKING_YAML = """\
 schema_version: 1.0.0
 interlocking_id: interlocking:match-resolution
+entrypoint:
+  exposed: true
+  actions:
+    - resolve_match
 routes:
   - route_id: nominal-all-voted
     category: nominal
@@ -60,67 +67,96 @@ routes:
 """
 
 
-def test_parse_routes_extracts_route_space() -> None:
-    interlocking_id, routes = detector.parse_routes(_INTERLOCKING_YAML)
-    assert interlocking_id == "interlocking:match-resolution"
-    assert [r["route_id"] for r in routes] == ["nominal-all-voted", "alternate-timeout"]
-    nominal = routes[0]
-    assert nominal["train_id"] == "3007-match-resolution-standard"
-    assert nominal["category_digit"] == "0"
-    # Line number is anchored at the route's declaration line (text scan).
-    assert nominal["line"] >= 1
-    assert "route_id: nominal-all-voted" in nominal["source_line"]
+def test_parse_interlocking_extracts_routes_and_entrypoint() -> None:
+    rec = detector.parse_interlocking(_INTERLOCKING_YAML)
+    assert rec is not None
+    assert rec["interlocking_id"] == "interlocking:match-resolution"
+    assert [r["route_id"] for r in rec["routes"]] == ["nominal-all-voted", "alternate-timeout"]
+    assert rec["exposed"] is True
+    assert rec["actions"] == ["resolve_match"]
+    assert rec["routes"][0]["category_digit"] == "0"
 
 
-def test_parse_routes_ignores_documents_without_route_space() -> None:
-    # The _interlockings.yaml index / generated projections carry no `routes:`.
-    index = "schema_version: 1.0.0\ninterlockings:\n  - ref: interlocking:match-resolution\n"
+def test_parse_ignores_documents_without_route_space() -> None:
+    index = "schema_version: 1.0.0\ninterlockings:\n  - ref: interlocking:x\n"
+    assert detector.parse_interlocking(index) is None
     assert detector.parse_routes(index) == (None, [])
-    coverage = "schema_version: 1.0.0\ngenerated: true\ncovered_routes: []\n"
-    assert detector.parse_routes(coverage) == (None, [])
 
 
 def test_route_covered_by_route_id_or_train_id() -> None:
     _, routes = detector.parse_routes(_INTERLOCKING_YAML)
     nominal, alternate = routes
-    # Referenced by route_id ...
-    assert detector.is_route_covered(nominal, ["calls nominal-all-voted route"]) is True
-    # ... or by the train_id it resolves to.
+    assert detector.is_route_covered(nominal, ["hits nominal-all-voted"]) is True
     assert detector.is_route_covered(alternate, ["runs 3207-match-resolution-timeout"]) is True
-    # Not referenced anywhere -> uncovered.
-    assert detector.is_route_covered(alternate, ["only nominal-all-voted here"]) is False
-
-
-def test_token_match_is_identifier_bounded() -> None:
-    _, routes = detector.parse_routes(_INTERLOCKING_YAML)
-    nominal = routes[0]
-    # A longer slug that merely CONTAINS the route_id must not count as coverage.
+    assert detector.is_route_covered(alternate, ["only nominal-all-voted"]) is False
+    # identifier-bounded: a longer slug containing the id is not coverage.
     assert detector.is_route_covered(nominal, ["nominal-all-voted-extra"]) is False
 
 
-def test_clean_fixture_has_no_violations() -> None:
+def test_missing_trace_fields_distinguishes_category_from_digit() -> None:
+    # A source asserting only route_category_digit is still missing route_category.
+    src = 'trace["route_category_digit"]'
+    missing = detector.missing_trace_fields(src)
+    assert "route_category" in missing
+    assert "route_category_digit" not in missing
+
+
+# ── 1b. clean fixture: every rule passes ──────────────────────────────────────
+
+
+def test_clean_fixture_has_no_violations_across_all_rules() -> None:
     assert detector.scan_root(_FIXTURES / "clean") == []
 
 
-def test_dirty_fixture_flags_the_uncovered_route_with_v11_shape() -> None:
+# ── 1c. each dirty fixture fires EXACTLY its own rule (independence) ───────────
+
+
+def test_dirty_route_missing_fires_only_route_coverage() -> None:
     v = detector.scan_root(_FIXTURES / "dirty")
-    assert len(v) == 1, f"expected exactly the uncovered route, got {len(v)}"
+    assert _rule_ids(v) == {detector.RULE_ROUTE_COVERAGE}
+    assert len(v) == 1
     item = v[0]
-    assert item["rule_id"] == detector.RULE_ROUTE_COVERAGE
-    assert set(item) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
-    assert isinstance(item["source_line"], str)
-    assert item["line"] >= 1 and item["col"] >= 0
-    # It is the alternate-timeout route, anchored in the source interlocking YAML.
     assert "alternate-timeout" in item["evidence"]
     assert item["file"].endswith("match-resolution.yaml")
     assert "route_id: alternate-timeout" in item["source_line"]
-    # The route's category_digit is surfaced in the resolution metadata (evidence).
     assert "digit '2'" in item["evidence"]
+    assert set(item) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
 
 
-def test_dirty_fixture_does_not_flag_the_covered_route() -> None:
-    v = detector.scan_root(_FIXTURES / "dirty")
-    assert all("nominal-all-voted" not in item["evidence"] for item in v)
+def test_dirty_mock_runner_fires_only_production_runner() -> None:
+    v = detector.scan_root(_FIXTURES / "dirty_mock_runner")
+    assert _rule_ids(v) == {detector.RULE_PRODUCTION_RUNNER}
+    assert any("patch" in item["evidence"].lower() for item in v)
+    for item in v:
+        assert item["file"].endswith(".py")
+        assert set(item) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
+
+
+def test_dirty_smoke_missing_fires_only_smoke() -> None:
+    v = detector.scan_root(_FIXTURES / "dirty_smoke_missing")
+    assert _rule_ids(v) == {detector.RULE_SMOKE}
+    assert len(v) == 1
+    item = v[0]
+    assert "resolve_match" in item["evidence"]
+    assert item["file"].endswith("match-resolution.yaml")
+
+
+def test_dirty_trace_missing_fires_only_trace() -> None:
+    v = detector.scan_root(_FIXTURES / "dirty_trace_missing")
+    assert _rule_ids(v) == {detector.RULE_TRACE}
+    assert len(v) == 1
+    item = v[0]
+    # The omitted binding fields are named in the evidence.
+    assert "guard_id" in item["evidence"]
+    assert "resolution_reason" in item["evidence"]
+    assert item["file"].endswith(".py")
+
+
+def test_every_rule_id_is_proven_by_some_dirty_fixture() -> None:
+    seen: set[str] = set()
+    for name in ("dirty", "dirty_mock_runner", "dirty_smoke_missing", "dirty_trace_missing"):
+        seen |= _rule_ids(detector.scan_root(_FIXTURES / name))
+    assert seen == set(detector.ALL_RULE_IDS)
 
 
 # ── 2. emission (writes the RAW report; does NOT decide disposition) ───────────
@@ -142,7 +178,7 @@ def _scan_roots() -> list[Path]:
     return roots
 
 
-def test_emit_raw_route_coverage_report() -> None:
+def test_emit_raw_interlocking_report() -> None:
     """Scan the supplied roots and emit the RAW violation report (NOT a verdict)."""
     roots = _scan_roots()
     violations = detector.scan_roots(roots)
