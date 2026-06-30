@@ -40,5 +40,36 @@ graph_id: atdd.extension.train-interlocking-enforcement.relationships
 #       afokapu/atdd#1248 exposes entrypoint/action fields or an equivalent metadata
 #       source is explicitly chosen (handoff contract).
 
-nodes: []
-edges: []
+# --- #26 tester.interlocking.route-coverage (build slice) -----------------------
+# Only the #26 node + its coverage-matrix edges are added here. #25 adds its own
+# (coder.interlocking.runner-infrastructure) node + edges in parallel; a union
+# merge reconciles the two minimal additions. core<->extension + implementation->
+# provider-contract references stay NARRATIVE (§6.2) — not authored as edges.
+nodes:
+  - tester.interlocking.route-coverage
+edges:
+  # convention -> implementation (the python-pytest detector that realizes it).
+  - source_ref: tester.interlocking.route-coverage
+    target_ref: implementations/interlocking-coverage
+    type: realized-by
+    reason: >-
+      The python-pytest detector (implementation_id tester.interlocking.route-coverage.impl)
+      that scans the interlocking route space against e2e tests and emits RAW v1.1
+      violations for uncovered admissible routes. The impl manifest carries the
+      reciprocal realizes_convention + targets_workspace/contract_version.
+  # convention -> scope (the consumer selectors it inspects).
+  - source_ref: tester.interlocking.route-coverage
+    target_ref: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    reason: >-
+      Enforcement is bound to the interlocking_yaml selector (the guarded route
+      space, core afokapu/atdd#1248) and the e2e_tests selector (the e2e/**/*.py
+      tests that must exercise each admissible route).
+  # convention -> gate (when/where the check runs + its strict stage).
+  - source_ref: tester.interlocking.route-coverage
+    target_ref: gates/interlocking-coverage.gate.yaml
+    type: gated-by
+    reason: >-
+      The gate runs the coverage check at mode: strict on CI, matching the node's
+      disposition: an admissible route with no e2e test is a blocking silent-green
+      route-control gap.
