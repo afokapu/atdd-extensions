@@ -1,0 +1,21 @@
+schema_version: "1.0.0"
+
+# Gate: WHEN the interlocking route-coverage check runs (afokapu/atdd-extensions#26).
+#
+# The coverage validator proves every admissible route in an interlocking has
+# production / e2e test coverage. Final severity (strict vs advisory) is a
+# property of the convention node #26 authors (metadata.disposition); this gate
+# records the runtime stage. Default is CI/strict; flip the stage mode to
+# advisory here iff #26's convention lands as documentation-only/advisory.
+gate_id: atdd.extension.train-interlocking-enforcement.coverage
+realizes_convention: tester.interlocking.route-coverage   # authored by #26
+implementation: validators/interlocking-coverage
+scope: scopes/interlocking-targets.scope.yaml
+
+stages:
+  - id: ci
+    mode: strict
+    description: >-
+      Block on CI when an interlocking route has no e2e test exercising it.
+      Downgrade this stage to mode: advisory if #26's route-coverage convention
+      ships at advisory/documentation-only severity.
