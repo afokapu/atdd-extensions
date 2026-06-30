@@ -53,3 +53,20 @@ governed_by_conventions:
   - coach.runtime.one-persistent-pane-per-issue
   - coach.runtime.durable-feed-survives-restart
   - coach.runtime.agent-session-lifecycle
+
+# Convention node OWNED by this provider: the readiness-satisfier declaration that
+# binds the shipped probe adapter/readiness.py::cmux_channel_readiness (its file
+# existence is checked at admission).
+owns:
+  conventions:
+    - conventions/atdd.workspace.cmux-claude.readiness-satisfier.convention.yaml
+
+# REALIZES (forcing rule coach.substrate.transport-realizes-mediation, core #1268):
+# this provider declares decision-mediation/agent-session-transport capabilities
+# (orchestration.agent-session + transport.command-feed), so it MUST realize core's
+# `coach.execution.dispatch-verifies-channel-live` obligation or admission refuses it.
+# The readiness-satisfier node (cmux_channel_readiness) is the extension-side node;
+# core supplies the obligation node it realizes.
+realizes:
+  - extension_node: atdd.workspace.cmux-claude.readiness-satisfier
+    core_node: coach.execution.dispatch-verifies-channel-live
