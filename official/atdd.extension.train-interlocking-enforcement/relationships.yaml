@@ -52,6 +52,8 @@ nodes:
   - tester.interlocking.production-runner-used
   - tester.interlocking.smoke-coverage-for-station-master
   - tester.interlocking.trace-binds-declared-route
+  # --- #27 bilateral declaration<->runtime<->station<->trace binding (systemic closure) ---
+  - coder.train.interlocking-bilateral-binding
 
 edges:
   # --- #25 coverage matrix: each convention -> implementation / scope / gate.
@@ -231,3 +233,48 @@ edges:
       The smoke test captures the trace; trace-binds-declared-route governs that the
       captured trace asserts every field binding it back to the declared route.
       Co-emitted; the smoke chain's final step is exactly the trace this rule checks.
+  # === #27 bilateral binding (declaration<->runtime<->station<->trace closure) =
+  - source_ref: coder.train.interlocking-bilateral-binding
+    target_ref: implementations/interlocking-binding
+    type: realized-by
+    reason: >-
+      The python-pytest detector (implementation_id
+      coder.train.interlocking-bilateral-binding.impl) walks the consumer tree's
+      interlocking YAML route space, Station Master JOURNEY_MAP, InterlockingRunner
+      runtime, and e2e trace tests and emits RAW v1.1 violations under this rule_id
+      for any broken binding direction. The impl manifest carries the reciprocal
+      realizes_convention + targets_workspace/contract_version.
+  - source_ref: coder.train.interlocking-bilateral-binding
+    target_ref: scopes/interlocking-targets.scope.yaml
+    type: scoped-by
+    reason: >-
+      Bound to ALL interlocking selectors — interlocking_yaml + train_yaml
+      (declaration, core afokapu/atdd#1248), station_master + python_runtime
+      (Station Master JOURNEY_MAP + InterlockingRunner, core afokapu/atdd#1251),
+      and e2e_tests (the trace tests) — because bilateral binding is a closure
+      across every interlocking surface.
+  - source_ref: coder.train.interlocking-bilateral-binding
+    target_ref: gates/interlocking-binding.gate.yaml
+    type: gated-by
+    reason: >-
+      Runs at mode: strict on CI; a broken binding direction (unresolvable declared
+      route, hidden runtime route, dangling Station Master mapping, unreachable
+      exposed interlocking, or a trace that does not resolve to its declaration) is
+      a blocking silent-drift defect.
+  # --- extension-internal links to the surfaces this binding closes over -------
+  - source_ref: coder.train.interlocking-bilateral-binding
+    target_ref: coder.train.station-master-interlocking-routing
+    type: relates-to
+    reason: >-
+      station-master-interlocking-routing proves the Station Master is WIRED for
+      interlocking; bilateral-binding additionally proves the wiring CLOSES — the
+      exposed interlocking is reachable via a declared entrypoint.action and the
+      mapping resolves to a real YAML. Complementary, not narrowing.
+  - source_ref: coder.train.interlocking-bilateral-binding
+    target_ref: tester.interlocking.trace-binds-declared-route
+    type: relates-to
+    reason: >-
+      trace-binds-declared-route (tester) proves a trace test asserts every required
+      field; bilateral-binding's trace_to_declaration direction additionally proves
+      the asserted interlocking_id/route_id VALUES resolve back to a declared route
+      in the YAML. Co-equal facets of trace<->declaration integrity.
