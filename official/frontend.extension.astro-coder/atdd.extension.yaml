@@ -12,8 +12,10 @@ owns:
     - conventions/coder.astro.client-directive-explicit.convention.yaml
     - conventions/coder.astro.component-frontmatter-fence.convention.yaml
     - conventions/coder.astro.i18n-no-hardcoded-ui-string.convention.yaml
+    - conventions/coder.astro.logging-silent-swallow.convention.yaml
     - conventions/coder.astro.no-hardcoded-color.convention.yaml
     - conventions/coder.astro.no-secret-in-frontmatter.convention.yaml
+    - conventions/coder.astro.security-xss.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

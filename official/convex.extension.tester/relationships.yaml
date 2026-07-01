@@ -1,15 +1,110 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for convex.extension.tester. Every owned node carries
-# >=1 edge (no orphans). Core<->extension edges are narrative, not graph edges.
+# Extension-LOCAL relationship graph for convex.extension.tester. Sorted-adjacent sibling chain
+# (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
 graph_id: convex.extension.tester.relationships
 
 nodes:
   - tester.convex.filename-urn
+  - tester.convex.interlocking-production-runner-used
+  - tester.convex.interlocking-route-coverage
+  - tester.convex.interlocking-smoke-coverage-for-station-master
+  - tester.convex.interlocking-trace-binds-declared-route
+  - tester.convex.journey-layer-assembly
+  - tester.convex.journey-no-acceptance-marker
+  - tester.convex.journey-train-header
+  - tester.convex.journey-urn-format
+  - tester.convex.live-smoke-no-self-skip
   - tester.convex.migration-naming
+  - tester.convex.red-fails-first
+  - tester.convex.routing-path
+  - tester.convex.security-auth
+  - tester.convex.security-input
+  - tester.convex.smoke-no-collaborator-substitution
+  - tester.convex.smoke-observable-assertion
+  - tester.convex.smoke-presentation-coverage
+  - tester.convex.telemetry-emit
+  - tester.convex.test-isolation-no-polluting-patterns
+  - tester.convex.train-coverage
 
 edges:
-  - source_ref: tester.convex.migration-naming
-    target_ref: tester.convex.filename-urn
+  - source_ref: tester.convex.filename-urn
+    target_ref: tester.convex.interlocking-production-runner-used
     type: relates-to
-    reason: "Both derive an artifact's name deterministically from its identity."
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.interlocking-production-runner-used
+    target_ref: tester.convex.interlocking-route-coverage
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.interlocking-route-coverage
+    target_ref: tester.convex.interlocking-smoke-coverage-for-station-master
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.interlocking-smoke-coverage-for-station-master
+    target_ref: tester.convex.interlocking-trace-binds-declared-route
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.interlocking-trace-binds-declared-route
+    target_ref: tester.convex.journey-layer-assembly
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.journey-layer-assembly
+    target_ref: tester.convex.journey-no-acceptance-marker
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.journey-no-acceptance-marker
+    target_ref: tester.convex.journey-train-header
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.journey-train-header
+    target_ref: tester.convex.journey-urn-format
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.journey-urn-format
+    target_ref: tester.convex.live-smoke-no-self-skip
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.live-smoke-no-self-skip
+    target_ref: tester.convex.migration-naming
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.migration-naming
+    target_ref: tester.convex.red-fails-first
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.red-fails-first
+    target_ref: tester.convex.routing-path
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.routing-path
+    target_ref: tester.convex.security-auth
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.security-auth
+    target_ref: tester.convex.security-input
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.security-input
+    target_ref: tester.convex.smoke-no-collaborator-substitution
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.smoke-no-collaborator-substitution
+    target_ref: tester.convex.smoke-observable-assertion
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.smoke-observable-assertion
+    target_ref: tester.convex.smoke-presentation-coverage
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.smoke-presentation-coverage
+    target_ref: tester.convex.telemetry-emit
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.telemetry-emit
+    target_ref: tester.convex.test-isolation-no-polluting-patterns
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.test-isolation-no-polluting-patterns
+    target_ref: tester.convex.train-coverage
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'

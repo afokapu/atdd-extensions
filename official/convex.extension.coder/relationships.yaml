@@ -1,11 +1,17 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for convex.extension.coder. Every owned node carries
-# >=1 edge (no orphans). Core<->extension edges are narrative, not graph edges.
+# Extension-LOCAL relationship graph for convex.extension.coder. Sorted-adjacent sibling chain
+# (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
 graph_id: convex.extension.coder.relationships
 
 nodes:
   - coder.convex.api-no-underscore-dir
+  - coder.convex.backend-dependency-edges
+  - coder.convex.backend-layer-catalog
+  - coder.convex.backend-suffix-matches
+  - coder.convex.commons-application-no-integration
+  - coder.convex.commons-cross-feature-imports-in
+  - coder.convex.commons-domain-no-outbound
   - coder.convex.complexity-cognitive
   - coder.convex.complexity-cyclomatic
   - coder.convex.complexity-length
@@ -18,11 +24,30 @@ nodes:
   - coder.convex.design-hierarchy-import
   - coder.convex.design-orphan-export
   - coder.convex.domain-no-convex-import
+  - coder.convex.dto-mapper
+  - coder.convex.dto-placement
+  - coder.convex.dto-purity
   - coder.convex.duplication-no-intra-layer
   - coder.convex.error-response-bare-string
   - coder.convex.error-response-code-format
   - coder.convex.feature-layout-promotion
+  - coder.convex.green-header-order
+  - coder.convex.green-header-purpose
+  - coder.convex.green-header-runtime
+  - coder.convex.green-header-tested-by
+  - coder.convex.green-no-globals
+  - coder.convex.green-urn-layer
+  - coder.convex.green-urn-marker
+  - coder.convex.green-urn-name-matches
+  - coder.convex.green-urn-pattern
+  - coder.convex.green-urn-side
+  - coder.convex.green-urn-wagon-feature
   - coder.convex.http-router-at-root
+  - coder.convex.interlocking-bilateral-binding
+  - coder.convex.interlocking-delegates-to-trainrunner
+  - coder.convex.interlocking-does-not-carry-cargo
+  - coder.convex.interlocking-resolution-model-exists
+  - coder.convex.interlocking-runner-exists
   - coder.convex.layer-naming
   - coder.convex.logging-silent-swallow
   - coder.convex.logging-structured
@@ -37,89 +62,254 @@ nodes:
   - coder.convex.schema-at-root
   - coder.convex.security-hardcoded-secret
   - coder.convex.security-missing-auth
+  - coder.convex.security-sql-injection
+  - coder.convex.station-master-interlocking-routing
+  - coder.convex.train-is-a-production
+  - coder.convex.train-wagons-communicate-via-cargo
+  - coder.convex.train-yaml-source-of-truth
 
 edges:
-  - source_ref: coder.convex.security-missing-auth
-    target_ref: coder.convex.security-hardcoded-secret
+  - source_ref: coder.convex.api-no-underscore-dir
+    target_ref: coder.convex.backend-dependency-edges
     type: relates-to
-    reason: 'Two facets of server-surface security hardening.'
-  - source_ref: coder.convex.error-response-bare-string
-    target_ref: coder.convex.error-response-code-format
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.backend-dependency-edges
+    target_ref: coder.convex.backend-layer-catalog
     type: relates-to
-    reason: 'Both govern structured, coded error responses.'
-  - source_ref: coder.convex.no-server-console-log
-    target_ref: coder.convex.logging-structured
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.backend-layer-catalog
+    target_ref: coder.convex.backend-suffix-matches
     type: relates-to
-    reason: 'Console-free server code is the precondition for structured logging.'
-  - source_ref: coder.convex.logging-structured
-    target_ref: coder.convex.logging-silent-swallow
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.backend-suffix-matches
+    target_ref: coder.convex.commons-application-no-integration
     type: relates-to
-    reason: 'Both are logging-discipline facets (emit structured, never swallow).'
-  - source_ref: coder.convex.nplus1-db-in-loop
-    target_ref: coder.convex.performance-perf
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.commons-application-no-integration
+    target_ref: coder.convex.commons-cross-feature-imports-in
     type: relates-to
-    reason: 'N+1 over ctx.db is the headline case of the perf advisory.'
-  - source_ref: coder.convex.complexity-cyclomatic
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.commons-cross-feature-imports-in
+    target_ref: coder.convex.commons-domain-no-outbound
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.commons-domain-no-outbound
     target_ref: coder.convex.complexity-cognitive
     type: relates-to
-    reason: 'Complexity-metric siblings.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.convex.complexity-cognitive
-    target_ref: coder.convex.complexity-nesting
+    target_ref: coder.convex.complexity-cyclomatic
     type: relates-to
-    reason: 'Complexity-metric siblings.'
-  - source_ref: coder.convex.complexity-nesting
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.complexity-cyclomatic
     target_ref: coder.convex.complexity-length
     type: relates-to
-    reason: 'Complexity-metric siblings.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.convex.complexity-length
+    target_ref: coder.convex.complexity-nesting
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.complexity-nesting
     target_ref: coder.convex.complexity-params
     type: relates-to
-    reason: 'Complexity-metric siblings.'
-  - source_ref: coder.convex.quality-comments
-    target_ref: coder.convex.quality-naming
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.complexity-params
+    target_ref: coder.convex.composition-consumer
     type: relates-to
-    reason: 'Quality-metric siblings.'
-  - source_ref: coder.convex.quality-naming
-    target_ref: coder.convex.quality-mi
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.composition-consumer
+    target_ref: coder.convex.composition-root
     type: relates-to
-    reason: 'Quality-metric siblings.'
-  - source_ref: coder.convex.quality-mi
-    target_ref: coder.convex.quality-file-length
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.composition-root
+    target_ref: coder.convex.dead-code-reachability
     type: relates-to
-    reason: 'Quality-metric siblings.'
-  - source_ref: coder.convex.quality-file-length
-    target_ref: coder.convex.quality-duplication
-    type: relates-to
-    reason: 'Quality-metric siblings.'
-  - source_ref: coder.convex.quality-duplication
-    target_ref: coder.convex.duplication-no-intra-layer
-    type: relates-to
-    reason: 'Intra-file vs intra-layer duplication facets.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.convex.dead-code-reachability
-    target_ref: coder.convex.design-orphan-export
+    target_ref: coder.convex.design-foundations
     type: relates-to
-    reason: 'Reachability vs export-orphan: two dead-code facets.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.convex.design-foundations
     target_ref: coder.convex.design-hierarchy-import
     type: relates-to
-    reason: 'Layer foundations and the inward import direction over them.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.convex.design-hierarchy-import
+    target_ref: coder.convex.design-orphan-export
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.design-orphan-export
     target_ref: coder.convex.domain-no-convex-import
     type: relates-to
-    reason: 'domain-no-convex-import is the Convex realization of inward dependency direction.'
-  - source_ref: coder.convex.composition-root
-    target_ref: coder.convex.composition-consumer
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.domain-no-convex-import
+    target_ref: coder.convex.dto-mapper
     type: relates-to
-    reason: 'Composition root vs consumer: the two halves of DI discipline.'
-  - source_ref: coder.convex.schema-at-root
-    target_ref: coder.convex.http-router-at-root
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.dto-mapper
+    target_ref: coder.convex.dto-placement
     type: relates-to
-    reason: 'Both are mandatory Convex root-file placement rules.'
-  - source_ref: coder.convex.api-no-underscore-dir
-    target_ref: coder.convex.layer-naming
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.dto-placement
+    target_ref: coder.convex.dto-purity
     type: relates-to
-    reason: 'Both shape the discoverable Convex API surface by path.'
-  - source_ref: coder.convex.layer-naming
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.dto-purity
+    target_ref: coder.convex.duplication-no-intra-layer
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.duplication-no-intra-layer
+    target_ref: coder.convex.error-response-bare-string
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.error-response-bare-string
+    target_ref: coder.convex.error-response-code-format
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.error-response-code-format
     target_ref: coder.convex.feature-layout-promotion
     type: relates-to
-    reason: 'Layer naming and when a single-file layer is promoted to a dir.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.feature-layout-promotion
+    target_ref: coder.convex.green-header-order
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-header-order
+    target_ref: coder.convex.green-header-purpose
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-header-purpose
+    target_ref: coder.convex.green-header-runtime
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-header-runtime
+    target_ref: coder.convex.green-header-tested-by
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-header-tested-by
+    target_ref: coder.convex.green-no-globals
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-no-globals
+    target_ref: coder.convex.green-urn-layer
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-urn-layer
+    target_ref: coder.convex.green-urn-marker
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-urn-marker
+    target_ref: coder.convex.green-urn-name-matches
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-urn-name-matches
+    target_ref: coder.convex.green-urn-pattern
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-urn-pattern
+    target_ref: coder.convex.green-urn-side
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-urn-side
+    target_ref: coder.convex.green-urn-wagon-feature
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.green-urn-wagon-feature
+    target_ref: coder.convex.http-router-at-root
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.http-router-at-root
+    target_ref: coder.convex.interlocking-bilateral-binding
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.interlocking-bilateral-binding
+    target_ref: coder.convex.interlocking-delegates-to-trainrunner
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.interlocking-delegates-to-trainrunner
+    target_ref: coder.convex.interlocking-does-not-carry-cargo
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.interlocking-does-not-carry-cargo
+    target_ref: coder.convex.interlocking-resolution-model-exists
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.interlocking-resolution-model-exists
+    target_ref: coder.convex.interlocking-runner-exists
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.interlocking-runner-exists
+    target_ref: coder.convex.layer-naming
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.layer-naming
+    target_ref: coder.convex.logging-silent-swallow
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.logging-silent-swallow
+    target_ref: coder.convex.logging-structured
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.logging-structured
+    target_ref: coder.convex.no-server-console-log
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.no-server-console-log
+    target_ref: coder.convex.nplus1-db-in-loop
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.nplus1-db-in-loop
+    target_ref: coder.convex.performance-perf
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.performance-perf
+    target_ref: coder.convex.quality-comments
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.quality-comments
+    target_ref: coder.convex.quality-duplication
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.quality-duplication
+    target_ref: coder.convex.quality-file-length
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.quality-file-length
+    target_ref: coder.convex.quality-mi
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.quality-mi
+    target_ref: coder.convex.quality-naming
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.quality-naming
+    target_ref: coder.convex.schema-at-root
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.schema-at-root
+    target_ref: coder.convex.security-hardcoded-secret
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.security-hardcoded-secret
+    target_ref: coder.convex.security-missing-auth
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.security-missing-auth
+    target_ref: coder.convex.security-sql-injection
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.security-sql-injection
+    target_ref: coder.convex.station-master-interlocking-routing
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.station-master-interlocking-routing
+    target_ref: coder.convex.train-is-a-production
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.train-is-a-production
+    target_ref: coder.convex.train-wagons-communicate-via-cargo
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.train-wagons-communicate-via-cargo
+    target_ref: coder.convex.train-yaml-source-of-truth
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'

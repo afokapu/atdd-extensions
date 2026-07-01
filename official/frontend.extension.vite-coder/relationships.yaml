@@ -1,46 +1,210 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for frontend.extension.vite-coder (no orphans).
+# Extension-LOCAL relationship graph for frontend.extension.vite-coder. Sorted-adjacent sibling chain
+# (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
 graph_id: frontend.extension.vite-coder.relationships
 
 nodes:
+  - coder.vite.boundaries-fe-imports
+  - coder.vite.boundaries-fe-layers
   - coder.vite.boundaries-http-client
+  - coder.vite.commons-application-no-integration
+  - coder.vite.commons-cross-feature-imports-in
+  - coder.vite.commons-domain-no-framework-import
+  - coder.vite.commons-domain-no-outbound
+  - coder.vite.design-dependency-flow
   - coder.vite.design-orphan-ui
   - coder.vite.design-primitives
   - coder.vite.design-token-color
   - coder.vite.design-token-hardcoded
+  - coder.vite.design-tokens-pure
+  - coder.vite.design-wagons-import
+  - coder.vite.green-header-order
+  - coder.vite.green-header-purpose
+  - coder.vite.green-header-runtime
+  - coder.vite.green-header-tested-by
+  - coder.vite.green-urn-layer
+  - coder.vite.green-urn-marker
+  - coder.vite.green-urn-name-matches
+  - coder.vite.green-urn-pattern
+  - coder.vite.green-urn-side
+  - coder.vite.green-urn-wagon-feature
+  - coder.vite.logging-silent-swallow
   - coder.vite.presentation-gsap-commons
   - coder.vite.presentation-gsap-layer
   - coder.vite.presentation-i18n-config
   - coder.vite.presentation-i18n-switcher
+  - coder.vite.presentation-nostub-allowlist-migration
+  - coder.vite.presentation-nostub-arrow-literal
+  - coder.vite.presentation-nostub-empty-element
+  - coder.vite.presentation-nostub-empty-fragment
+  - coder.vite.presentation-nostub-fn-return
+  - coder.vite.presentation-nostub-guarded-negative
+  - coder.vite.presentation-nostub-unconditional
   - coder.vite.refactor-coach-ratchet-pres
+  - coder.vite.route-resolved-train-lists-wagon
+  - coder.vite.route-trainid-expression-not-static
+  - coder.vite.route-trainid-not-registered
+  - coder.vite.security-xss
 
 edges:
-  - source_ref: coder.vite.design-token-color
-    target_ref: coder.vite.design-token-hardcoded
+  - source_ref: coder.vite.boundaries-fe-imports
+    target_ref: coder.vite.boundaries-fe-layers
     type: relates-to
-    reason: 'Token-value vs hardcoded-literal facets of the same color-token rule.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.boundaries-fe-layers
+    target_ref: coder.vite.boundaries-http-client
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.boundaries-http-client
+    target_ref: coder.vite.commons-application-no-integration
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.commons-application-no-integration
+    target_ref: coder.vite.commons-cross-feature-imports-in
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.commons-cross-feature-imports-in
+    target_ref: coder.vite.commons-domain-no-framework-import
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.commons-domain-no-framework-import
+    target_ref: coder.vite.commons-domain-no-outbound
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.commons-domain-no-outbound
+    target_ref: coder.vite.design-dependency-flow
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.design-dependency-flow
+    target_ref: coder.vite.design-orphan-ui
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.vite.design-orphan-ui
     target_ref: coder.vite.design-primitives
     type: relates-to
-    reason: 'Design-system hygiene: unused components vs primitive usage.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.vite.design-primitives
     target_ref: coder.vite.design-token-color
     type: relates-to
-    reason: 'Primitives consume design tokens.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.design-token-color
+    target_ref: coder.vite.design-token-hardcoded
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.design-token-hardcoded
+    target_ref: coder.vite.design-tokens-pure
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.design-tokens-pure
+    target_ref: coder.vite.design-wagons-import
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.design-wagons-import
+    target_ref: coder.vite.green-header-order
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-header-order
+    target_ref: coder.vite.green-header-purpose
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-header-purpose
+    target_ref: coder.vite.green-header-runtime
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-header-runtime
+    target_ref: coder.vite.green-header-tested-by
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-header-tested-by
+    target_ref: coder.vite.green-urn-layer
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-urn-layer
+    target_ref: coder.vite.green-urn-marker
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-urn-marker
+    target_ref: coder.vite.green-urn-name-matches
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-urn-name-matches
+    target_ref: coder.vite.green-urn-pattern
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-urn-pattern
+    target_ref: coder.vite.green-urn-side
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-urn-side
+    target_ref: coder.vite.green-urn-wagon-feature
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.green-urn-wagon-feature
+    target_ref: coder.vite.logging-silent-swallow
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.logging-silent-swallow
+    target_ref: coder.vite.presentation-gsap-commons
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.vite.presentation-gsap-commons
     target_ref: coder.vite.presentation-gsap-layer
     type: relates-to
-    reason: 'Where GSAP lives (commons) and which layer may animate.'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-gsap-layer
+    target_ref: coder.vite.presentation-i18n-config
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.vite.presentation-i18n-config
     target_ref: coder.vite.presentation-i18n-switcher
     type: relates-to
-    reason: 'i18n config and the switcher that drives it.'
-  - source_ref: coder.vite.presentation-gsap-layer
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-i18n-switcher
+    target_ref: coder.vite.presentation-nostub-allowlist-migration
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-allowlist-migration
+    target_ref: coder.vite.presentation-nostub-arrow-literal
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-arrow-literal
+    target_ref: coder.vite.presentation-nostub-empty-element
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-empty-element
+    target_ref: coder.vite.presentation-nostub-empty-fragment
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-empty-fragment
+    target_ref: coder.vite.presentation-nostub-fn-return
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-fn-return
+    target_ref: coder.vite.presentation-nostub-guarded-negative
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-guarded-negative
+    target_ref: coder.vite.presentation-nostub-unconditional
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.presentation-nostub-unconditional
     target_ref: coder.vite.refactor-coach-ratchet-pres
     type: relates-to
-    reason: 'Both are presentation-layer discipline rules.'
-  - source_ref: coder.vite.boundaries-http-client
-    target_ref: coder.vite.presentation-i18n-config
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.refactor-coach-ratchet-pres
+    target_ref: coder.vite.route-resolved-train-lists-wagon
     type: relates-to
-    reason: 'Both govern how presentation reaches a runtime service (network client / i18n runtime).'
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.route-resolved-train-lists-wagon
+    target_ref: coder.vite.route-trainid-expression-not-static
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.route-trainid-expression-not-static
+    target_ref: coder.vite.route-trainid-not-registered
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.vite.route-trainid-not-registered
+    target_ref: coder.vite.security-xss
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'

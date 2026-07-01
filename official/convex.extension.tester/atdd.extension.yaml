@@ -14,7 +14,26 @@ feature: convex-tester-conventions
 owns:
   conventions:
     - conventions/tester.convex.filename-urn.convention.yaml
+    - conventions/tester.convex.interlocking-production-runner-used.convention.yaml
+    - conventions/tester.convex.interlocking-route-coverage.convention.yaml
+    - conventions/tester.convex.interlocking-smoke-coverage-for-station-master.convention.yaml
+    - conventions/tester.convex.interlocking-trace-binds-declared-route.convention.yaml
+    - conventions/tester.convex.journey-layer-assembly.convention.yaml
+    - conventions/tester.convex.journey-no-acceptance-marker.convention.yaml
+    - conventions/tester.convex.journey-train-header.convention.yaml
+    - conventions/tester.convex.journey-urn-format.convention.yaml
+    - conventions/tester.convex.live-smoke-no-self-skip.convention.yaml
     - conventions/tester.convex.migration-naming.convention.yaml
+    - conventions/tester.convex.red-fails-first.convention.yaml
+    - conventions/tester.convex.routing-path.convention.yaml
+    - conventions/tester.convex.security-auth.convention.yaml
+    - conventions/tester.convex.security-input.convention.yaml
+    - conventions/tester.convex.smoke-no-collaborator-substitution.convention.yaml
+    - conventions/tester.convex.smoke-observable-assertion.convention.yaml
+    - conventions/tester.convex.smoke-presentation-coverage.convention.yaml
+    - conventions/tester.convex.telemetry-emit.convention.yaml
+    - conventions/tester.convex.test-isolation-no-polluting-patterns.convention.yaml
+    - conventions/tester.convex.train-coverage.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []
