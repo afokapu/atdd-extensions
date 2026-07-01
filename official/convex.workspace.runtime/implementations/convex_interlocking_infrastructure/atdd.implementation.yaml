@@ -1,0 +1,15 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_interlocking_infrastructure
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.convex.interlocking-runner-exists
+emits_rule_ids:
+- coder.convex.interlocking-runner-exists
+- coder.convex.interlocking-resolution-model-exists
+- coder.convex.station-master-interlocking-routing
+- coder.convex.interlocking-delegates-to-trainrunner
+- coder.convex.interlocking-does-not-carry-cargo
+entrypoint: detect.mjs
+report: detect.mjs
