@@ -1,0 +1,62 @@
+schema_version: 1.1.0
+rule_id: coder.convex.dto-placement
+kind: rule
+status: active
+name: Convex DTOs live in the neutral contracts module
+statement: >-
+  A Convex `*DTO` type MUST be declared inside a `contracts/` module, not inside a wagon's internal
+  layer. This is the Convex-stack realization of the agnostic core obligation "DTOs live in
+  contract_dto modules and are derived from contracts" (`coder.dto.placement`, alias
+  DTO-PLACEMENT-001). The TypeScript variant of the DTO convention fixes the location as
+  `ts/contracts/{theme}/{domain}/{resource}.ts` with naming `{Resource}DTO`, and its enforcement
+  section demands DTOs "live in neutral contracts/ namespace". A `*DTO` declared inside a wagon's
+  `domain/`, `application/`, or `presentation/` layer is a cross-boundary data type buried in
+  wagon-internal code, where it can drift from the contract and be reached only by importing wagon
+  internals. The detector that enforces it — scanning for `interface|type <Name>DTO` declarations
+  outside a `contracts/` path — is the convex.workspace.runtime family implementation referenced
+  below; the obligation is stack-bound, the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: convex_dto_detector
+content:
+  summary: >-
+    A "DTOs live in the neutral contracts module" obligation, the Convex sibling of
+    coder.dto.placement. The realization is a zero-dependency Node ESM detector (regex over source,
+    no TS runtime) that flags every `interface|type <Name>DTO` declaration whose file path contains
+    no `contracts` segment.
+  normative_text: |
+    DTOs are the code-side mirror of contract JSON schemas — the ONLY data type allowed to cross a
+    wagon boundary. For that to hold they must live in the shared, neutral `contracts/` surface that
+    every wagon may import without reaching into another wagon's internals. A `*DTO` type declared
+    in a wagon's own layer directory is mis-placed: it looks like an internal model, other wagons
+    cannot depend on it without a forbidden cross-wagon import, and it is no longer visibly derived
+    from a contract schema. The obligation: every `{Resource}DTO` declaration sits under a
+    `contracts/` module. HOW DTO declarations are found is delegated to the per-stack detector; for
+    Convex it matches `interface`/`type` declarations whose name ends in `DTO` and reports any whose
+    path has no `contracts` segment.
+  fix_hint: |
+    Move the DTO type into the shared contracts module and import it from there:
+      * `orders/domain/order-dto.ts`  ->  `shared/contracts/orders/order.ts` (declaring `OrderDTO`),
+      * then import `OrderDTO` from `@shared/contracts/orders/order` in the wagon's mapper.
+    Keep the DTO derived from its contract schema (`contracts/{theme}/{domain}/{resource}.schema.json`).
+  exceptions:
+    - Types not named `*DTO` (plain domain entities, value objects, contract structs like `MatchRound`) are out of scope — this rule targets the DTO naming convention.
+    - Declarations already under a `contracts/` path are correctly placed and never flagged.
+    - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - DTO-PLACEMENT-001
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+terms:
+  - term_id: dto_type
+    text: >-
+      a TypeScript `interface` or `type` whose name follows the `{Resource}DTO` convention — the
+      code-side mirror of a contract schema and the only data type permitted to cross a wagon
+      boundary.
+  - term_id: contracts_module
+    text: >-
+      the neutral `contracts/` namespace (e.g. `shared/contracts/…`) that every wagon may import;
+      the required home for DTO declarations, kept separate from any wagon's internal layers.
