@@ -1,0 +1,12 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: vite_a11y_visual_harness
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.vite.a11y-harness
+emits_rule_ids:
+- tester.vite.a11y-harness
+- tester.vite.visual-harness
+entrypoint: detect.mjs
+report: detect.mjs

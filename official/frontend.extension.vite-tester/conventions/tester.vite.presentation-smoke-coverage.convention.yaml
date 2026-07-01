@@ -1,0 +1,66 @@
+schema_version: 1.1.0
+rule_id: tester.vite.presentation-smoke-coverage
+kind: rule
+status: active
+name: Every presentation component has a smoke spec covering its wagon
+statement: >-
+  Every presentation component in a Vite/React app (a `.tsx` file under a `presentation/` path
+  segment) MUST be covered by at least one smoke spec — a file whose basename contains `smoke`
+  and ends `.spec.ts`/`.test.ts`(x) — whose path references the component's wagon (the path
+  segment immediately before `presentation`) as a word-boundary token. A presentation component
+  with no smoke spec is a silent steady-state coverage gap: structural tests can stay green
+  while the rendered feature is blank. This is the Vite/Playwright realization of the CORE
+  tester rule `tester.smoke.pres` (TESTER-SMOKE-PRES-001, `test_presentation_smoke_coverage.py`):
+  "Every web/src/*/presentation/*.tsx must have a matching e2e/*smoke*.spec.ts". It is the
+  frontend-native sibling of `tester.convex.smoke-presentation-coverage`. The detector is the
+  frontend.workspace.runtime singleton below.
+implementation:
+  type: validator
+  ref: vite_presentation_smoke_coverage
+content:
+  summary: >-
+    A "presentation components have smoke coverage" obligation, the Vite/Playwright rendering of
+    CORE `tester.smoke.pres`. A zero-dependency JS detector pairs each presentation `.tsx` with
+    a smoke spec whose path carries its wagon token, flagging any uncovered component.
+  normative_text: |
+    Structural tests (file exists, import present) can pass while the rendered feature is blank
+    — the motivating incident: "63/63 structural tests passed while the match page rendered
+    blank; features had been removed during ratchet trim." Steady-state coverage closes that gap
+    by requiring a smoke spec per presentation component. Over the supplied scan roots the
+    detector:
+      1. collects every presentation component — a `.tsx` under a `presentation/` path segment;
+      2. collects every smoke spec — a file whose basename contains `smoke` and ends
+         `.spec.ts`/`.test.ts`(x);
+      3. treats a component as COVERED iff some smoke spec's PATH (slashes/underscores
+         normalized to dashes) contains the component's wagon token — the segment immediately
+         before `presentation` — at a word boundary.
+    Uncovered components are flagged at line 1. Whether a mounted component actually renders
+    non-empty content is a distinct RUNTIME concern (a render harness), not this static
+    coverage detector's job.
+  fix_hint: |
+    Add a smoke spec for the flagged component's wagon, e.g. for
+    `leaderboard/presentation/LeaderboardPage.tsx` add
+    `e2e/leaderboard.smoke.spec.ts` (a Playwright spec that navigates to the page and asserts
+    it renders visible content). The spec's PATH must contain the wagon token so the pairing
+    succeeds. Disposition is `documentation-only`: the detector surfaces the gap so critical
+    user-facing wagons can be covered first.
+  exceptions:
+    - Non-presentation files (`.ts` logic, `.tsx` outside a `presentation/` segment) are out of scope.
+    - Smoke spec files are never themselves treated as uncovered presentation components.
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-SMOKE-PRES-001
+    - TESTER-SMOKE-PRES-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: presentation_component
+    text: >-
+      a `.tsx` file located under a `presentation/` path segment — the frontend view layer a
+      smoke spec must cover.
+  - term_id: wagon_token
+    text: >-
+      the path segment immediately before `presentation`; a smoke spec covers a component iff
+      the spec's path contains this token at a word boundary (kebab/snake/word-boundary).

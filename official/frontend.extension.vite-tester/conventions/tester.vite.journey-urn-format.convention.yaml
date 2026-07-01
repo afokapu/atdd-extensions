@@ -1,0 +1,61 @@
+schema_version: 1.1.0
+rule_id: tester.vite.journey-urn-format
+kind: rule
+status: active
+name: Vite journey/E2E specs carry a well-formed journey URN
+statement: >-
+  A Vite/Playwright journey spec MUST carry at least one journey test URN of the form
+  `test:train:{train_id}:{HARNESS}-{NNN}-{slug}` — matching
+  `test:train:\d{4}-[a-z0-9-]+:(E2E|A11Y|VIS|SMOKE)-\d{3}-[a-z0-9][a-z0-9-]*` — where the
+  `train_id` segment agrees with the spec's `// Train:` header. A journey spec whose header
+  or body declares a `test:train:` URN that does not match this grammar (or a journey spec
+  that carries no `test:train:` URN at all) is untraceable at the test-instance level. This is
+  the Vite/Playwright realization of the core journey URN grammar
+  `pattern: "test:train:{train_id}:{HARNESS}-{NNN}-{slug}"` in
+  `tester/conventions/train.convention.yaml` and the `header_template.journey` block shared by
+  `e2e/a11y/visual.tmpl.json`. The detector is the frontend.workspace.runtime family below.
+implementation:
+  type: validator
+  ref: vite_journey_test_detector
+content:
+  summary: >-
+    A "journey specs carry a well-formed `test:train:` URN" obligation, the Vite/Playwright
+    sibling of the core journey URN grammar (and of `tester.convex.journey-urn-format`). The
+    realization is a member of the `vite_journey_test_detector` FAMILY that flags a journey
+    spec whose `test:train:` URN is malformed, or that carries none.
+  normative_text: |
+    The journey URN `test:train:{train_id}:{HARNESS}-{NNN}-{slug}` links a specific test
+    instance to its train and harness. `HARNESS` is one of `E2E`, `A11Y`, `VIS`, `SMOKE`
+    (the frontend harness codes shipped by the tmpl schemas); `NNN` is a three-digit ordinal;
+    `slug` is a kebab identifier. A journey spec that names a train (via header or filename
+    prefix) but carries a `test:train:` URN not matching the grammar — or no such URN at all —
+    cannot be resolved to a train test instance. The `train_id` in the URN MUST equal the one
+    in the `// Train:` header. WHICH files are journey specs is delegated to the shared
+    detector's identification; validating the URN grammar is this member's job.
+  fix_hint: |
+    Add or correct the per-test URN comment, e.g.:
+      `// URN: test:train:3001-host-a-match:E2E-001-shell-connects`
+    HARNESS ∈ {E2E, A11Y, VIS, SMOKE}; the `train_id` MUST match the `// Train:` header.
+    Disposition is `documentation-only`: the detector emits the RAW malformed/missing-URN list.
+  exceptions:
+    - Non-journey specs (no `{train_id}.` prefix, no `test:train:` URN, no `Train:` marker)
+      are out of scope.
+    - A `test:feature:`/`test:{wagon}:` acceptance URN is not a journey URN; a spec carrying
+      only those is an acceptance test, out of scope here (its train-orphan status is reported
+      by `tester.vite.e2e-names-valid-train`).
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-JOURNEY-URN-FORMAT-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: journey_urn
+    text: >-
+      a test-instance reference `test:train:{train_id}:{HARNESS}-{NNN}-{slug}` with
+      `HARNESS ∈ {E2E, A11Y, VIS, SMOKE}`, binding one journey test to its train and harness.
+  - term_id: harness_code
+    text: >-
+      the `{HARNESS}` segment of a journey URN — the frontend harness that runs the test:
+      `E2E` (browser), `A11Y` (axe), `VIS` (visual/screenshot), or `SMOKE` (deployed-infra).

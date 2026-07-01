@@ -1,0 +1,50 @@
+schema_version: 1.1.0
+rule_id: tester.vite.journey-layer-assembly
+kind: rule
+status: active
+name: Vite journey/E2E specs declare Layer assembly
+statement: >-
+  A Vite/Playwright journey spec MUST carry a `// Layer: assembly` header line. Journey
+  (E2E) tests exercise a whole train workflow — the assembly layer — as opposed to
+  presentation/application/domain/integration unit tests. A journey spec with a missing
+  `Layer:` header, or one whose `Layer` is anything other than `assembly`, is mislabelled and
+  will be routed to the wrong layer bucket. This is the Vite/Playwright realization of the core
+  journey rule "Layer MUST be 'assembly' for journey tests" in
+  `tester/conventions/train.convention.yaml` (and the `Layer: assembly` line in the
+  `header_template.journey` of `e2e/a11y/visual.tmpl.json`). The detector is the
+  frontend.workspace.runtime family below.
+implementation:
+  type: validator
+  ref: vite_journey_test_detector
+content:
+  summary: >-
+    A "journey specs declare Layer: assembly" obligation, the Vite/Playwright sibling of the
+    core journey layer rule (and of `tester.convex.journey-layer-assembly`). A member of the
+    `vite_journey_test_detector` FAMILY flags a journey spec whose `Layer` header is missing
+    or not `assembly`.
+  normative_text: |
+    The `// Layer:` header routes a test to an architectural layer. Journey/E2E tests are, by
+    definition, assembly-layer tests: they drive an end-to-end train through the real
+    composition of its wagons. A journey spec that omits `Layer:` — or declares
+    `presentation`/`application`/`domain`/`integration` — either is not really a journey test
+    or is mislabelled; either way it must be `assembly`. WHICH files are journey specs is
+    delegated to the shared detector's identification; asserting `Layer: assembly` is this
+    member's job.
+  fix_hint: |
+    Add or correct the header line to:
+      `// Layer: assembly`
+    Disposition is `documentation-only`: the detector emits the RAW missing/wrong-Layer list.
+  exceptions:
+    - Non-journey specs are out of scope (their layer is governed by the routing convention).
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-JOURNEY-LAYER-ASSEMBLY-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: assembly_layer
+    text: >-
+      the architectural layer of end-to-end journey tests — the whole-train composition — as
+      opposed to presentation/application/domain/integration unit layers.

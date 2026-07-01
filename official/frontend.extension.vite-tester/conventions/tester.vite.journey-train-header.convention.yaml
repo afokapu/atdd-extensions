@@ -1,0 +1,63 @@
+schema_version: 1.1.0
+rule_id: tester.vite.journey-train-header
+kind: rule
+status: active
+name: Vite journey/E2E specs declare a valid Train header
+statement: >-
+  A Vite/Playwright journey (E2E/assembly) spec — a `*.spec.ts`/`*.test.ts` file identified
+  as a journey test by any of: a `{train_id}.` filename prefix (`train:\d{4}-[a-z0-9-]+`), a
+  `test:train:` URN in its header, or a `// Train:` marker — MUST include a `// Train:` header
+  line referencing a valid train URN matching `train:\d{4}-[a-z0-9][a-z0-9-]*` (e.g.
+  `// Train: train:3001-host-a-match`). A journey spec with a missing or malformed `Train:`
+  header is untraceable to the train plan it exercises. This is the Vite/Playwright realization
+  of the agnostic journey-test header obligation (`required_header`: "Train: header MUST
+  reference a valid train URN") in `tester/conventions/train.convention.yaml`, whose harness
+  templates (`e2e/a11y/visual.tmpl.json`) ship the identical `// Train: train:{train_id}`
+  journey header. The detector is the frontend.workspace.runtime family implementation below.
+implementation:
+  type: validator
+  ref: vite_journey_test_detector
+content:
+  summary: >-
+    A "journey specs carry a valid Train: header" obligation, the Vite/Playwright sibling of
+    the core journey-test header contract (and of `tester.convex.journey-train-header`). The
+    realization is a zero-dependency JS detector (a member of the `vite_journey_test_detector`
+    FAMILY) that, for any spec identifiable as a journey test, flags a missing or
+    pattern-invalid `// Train:` line.
+  normative_text: |
+    Journey (E2E/assembly) specs validate a whole train workflow, so each one must name the
+    train it drives. The `// Train:` header carries that binding and MUST match
+    `train:{NNNN}-{kebab-case}` (four-digit train number, kebab slug). A journey spec with no
+    `Train:` line, or one whose value is not a valid train URN, cannot be linked back to a
+    train plan and silently drifts from the orchestration it claims to cover. WHICH files are
+    journey specs is decided by a `{train_id}.` filename prefix, a `test:train:` URN, or a
+    `Train:` marker; validating the `Train:` line is delegated to the per-stack detector.
+    frg-app's real specs (`apps/game/tests/e2e/{train_id}.smoke.spec.ts`) are the ground truth
+    this renders.
+  fix_hint: |
+    Add (or correct) the header line so it references a valid train URN, e.g.:
+      `// Train: train:3001-host-a-match`
+    The value MUST match `train:\d{4}-[a-z0-9][a-z0-9-]*`. This rule's disposition is
+    `documentation-only`: the detector emits the RAW missing/invalid-header list; whether it
+    blocks is the downstream consumer's decision.
+  exceptions:
+    - Non-test files, and test files that are not journey specs (no `{train_id}.` prefix, no
+      `test:train:` URN, no `Train:` marker — i.e. acceptance/unit specs) are out of scope.
+    - Generated code under `_generated/` is never scanned.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - TESTER-VITE-JOURNEY-TRAIN-HEADER-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: journey_spec
+    text: >-
+      a Playwright/Vitest `*.spec.ts`/`*.test.ts` file identified as a journey (assembly) test
+      by a `{train_id}.` filename prefix, a `test:train:` URN, or a `// Train:` marker — as
+      opposed to an acceptance or unit test.
+  - term_id: train_urn
+    text: >-
+      the reference `train:{NNNN}-{kebab-case}` (e.g. `train:3001-host-a-match`) that a journey
+      spec's `Train:` header MUST carry to bind the spec to its train plan.

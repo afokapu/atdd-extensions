@@ -1,0 +1,58 @@
+schema_version: 1.1.0
+rule_id: tester.vite.a11y-harness
+kind: rule
+status: active
+name: A11y specs use an axe builder and assert on violations
+statement: >-
+  An accessibility (a11y) spec — a `*.spec.ts`/`*.test.ts` identified as a11y by an `a11y`
+  token in its basename or an `A11Y` journey-URN harness code (`test:train:...:A11Y-...`) —
+  MUST import/construct an axe builder (`AxeBuilder` from `@axe-core/playwright`), call
+  `.analyze()`, and assert on the returned violations. An a11y spec that navigates a page but
+  never runs axe (or never asserts on the result) is an empty accessibility check that passes
+  regardless of the page's real a11y state. This is the Vite/Playwright realization of the CORE
+  a11y harness template (`a11y.tmpl.json`: `import AxeBuilder from '@axe-core/playwright'` …
+  `.analyze()` … assert `critical.length <= {max_critical}`). The detector is the
+  frontend.workspace.runtime family below.
+implementation:
+  type: validator
+  ref: vite_a11y_visual_harness
+content:
+  summary: >-
+    An "a11y specs actually run axe and assert" obligation, the Vite/Playwright rendering of the
+    CORE `a11y.tmpl.json` harness. A member of the `vite_a11y_visual_harness` FAMILY flags an
+    a11y spec that lacks an axe-builder `.analyze()` call or an assertion on its result.
+  normative_text: |
+    An accessibility test is only meaningful if it runs an accessibility engine and asserts on
+    the outcome. Over the supplied scan roots the detector identifies a11y specs (basename
+    contains `a11y`, or the file carries an `A11Y` journey-URN harness code) and requires each to
+    contain BOTH: (1) an axe builder — `AxeBuilder` or an `@axe-core/playwright` import — followed
+    by an `.analyze()` call; and (2) an assertion (`expect(`) on the results. A spec missing
+    either is flagged: it either never measures accessibility, or measures it and ignores the
+    answer. WHICH files are a11y specs is decided by the basename/harness-code identification;
+    the axe+assert check is this member's job.
+  fix_hint: |
+    Follow the a11y harness template:
+      import AxeBuilder from '@axe-core/playwright'
+      const results = await new AxeBuilder({ page }).analyze()
+      const critical = results.violations.filter(v => v.impact === 'critical')
+      expect(critical.length).toBeLessThanOrEqual(0)
+    Disposition is `documentation-only`: the detector emits the RAW list of a11y specs missing
+    the axe run or the assertion.
+  exceptions:
+    - Non-a11y specs (no `a11y` basename token, no `A11Y` harness code) are out of scope.
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-A11Y-HARNESS-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: a11y_spec
+    text: >-
+      a `*.spec.ts`/`*.test.ts` identified as an accessibility test by an `a11y` basename token
+      or an `A11Y` journey-URN harness code.
+  - term_id: axe_analyze
+    text: >-
+      the `AxeBuilder(...).analyze()` call (from `@axe-core/playwright`) that runs the
+      accessibility engine and returns the violations an a11y spec must assert on.

@@ -1,0 +1,65 @@
+schema_version: 1.1.0
+rule_id: tester.vite.train-e2e-coverage
+kind: rule
+status: active
+name: Every registered train has at least one E2E/journey spec
+statement: >-
+  Every train registered in the plan (`plan/_trains.yaml` and/or `plan/_trains/*.yaml`) MUST
+  have at least one end-to-end journey spec that exercises it — a `*.spec.ts`/`*.test.ts` bound
+  to that train by any of: a `// Train: train:{train_id}` header, a `{train_id}.` filename
+  prefix, or a `e2e/{train_id}/` parent directory. A registered train with no covering E2E
+  spec is a SILENT coverage gap: the whole journey it declares can regress with nothing turning
+  red. This is the Vite/Playwright realization of the core obligations in
+  `test_train_e2e_existence.py` ("every train ≥1 E2E test") and the train→smoke coverage note
+  in `tester/conventions/smoke.convention.yaml`; it is the frontend counterpart of
+  `tester.convex.train-coverage`. The detector is the frontend.workspace.runtime family below.
+implementation:
+  type: validator
+  ref: vite_train_e2e_coverage
+content:
+  summary: >-
+    A "every registered train has ≥1 covering E2E spec" obligation. The realization is a member
+    of the `vite_train_e2e_coverage` FAMILY: a zero-dependency JS detector that reads the train
+    registry, collects the set of train_ids covered by journey specs (header/filename-prefix/dir
+    binding), and flags any registered train with no covering spec — anchored at the train's
+    declaration line.
+  normative_text: |
+    The plan's `_trains` registry is authoritative for the set of journeys the product claims.
+    Coverage of that set is a tester obligation: an unexercised train is a whole user journey
+    that no browser test ever drives. Over the supplied scan roots the detector:
+      1. collects every registered train_id from `plan/_trains.yaml` and `plan/_trains/*.yaml`;
+      2. collects every journey spec's bound train_id (via `// Train:` header, `{train_id}.`
+         filename prefix, or `e2e/{train_id}/` parent dir);
+      3. flags each registered train_id with no covering spec.
+    This is the RAW factual channel — a train that is backend-only by design is a downstream
+    baseline/ratchet decision, not something this detector special-cases (matching the core
+    `test_train_e2e_existence` semantics). In frg-app this surfaces `3004-end-a-match` and
+    `3101-join-closed-tournament` (registry points at spec files that do not exist) and the
+    entire `8001/8301/8302` payout theme (no E2E at all).
+  fix_hint: |
+    Add a journey spec for the uncovered train, e.g. `apps/game/tests/e2e/{train_id}.smoke.spec.ts`
+    carrying `// Train: train:{train_id}` and a `test:train:{train_id}:E2E-001-...` URN that
+    navigates the journey and asserts observable content. Or, if the train is intentionally
+    backend-only, record that in the downstream baseline. Disposition is `documentation-only`:
+    the detector emits the RAW uncovered-train list.
+  exceptions:
+    - A repo with no `plan/_trains.yaml` and no `plan/_trains/` directory has no train registry
+      and is out of scope (nothing to cover).
+    - Trains commented-out/deferred in the registry are not declared and are not counted.
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-TRAIN-E2E-COVERAGE-001
+    - TESTER-TRAIN-COVERAGE-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: registered_train
+    text: >-
+      a train whose `train_id` (`\d{4}-[a-z0-9-]+`) appears in `plan/_trains.yaml` or a
+      `plan/_trains/*.yaml` file — the authoritative set of journeys the product declares.
+  - term_id: covering_spec
+    text: >-
+      a `*.spec.ts`/`*.test.ts` journey spec bound to a train by a `// Train:` header, a
+      `{train_id}.` filename prefix, or a `e2e/{train_id}/` parent directory.
