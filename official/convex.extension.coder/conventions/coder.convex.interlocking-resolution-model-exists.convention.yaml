@@ -1,0 +1,60 @@
+schema_version: 1.1.0
+rule_id: coder.convex.interlocking-resolution-model-exists
+kind: rule
+status: active
+name: Interlocking route resolution returns structured metadata, not a bare trainId (Convex)
+statement: >-
+  An `InterlockingRunner.resolveTrain(...)` MUST resolve a structured `InterlockingResolution` model
+  carrying the route metadata — not a bare `trainId` string. The model MUST define the fields
+  `interlockingId`, `routeId`, `trainId`, `trainPath`, `category`, `categoryDigit`, `guardId`, and
+  `reason`. This is the Convex-stack realization of the agnostic core obligation
+  `coder.train.interlocking-resolution-model-exists` (core afokapu/atdd#1251); the JS detector that
+  enforces it is the convex.workspace.runtime implementation referenced below.
+implementation:
+  type: validator
+  ref: coder.convex.interlocking-resolution-model-exists
+content:
+  summary: >-
+    An agnostic "structured route resolution" obligation, rendered for the Convex backend. The JS
+    realization scans `convex/trains/**/*.ts`: when an `InterlockingRunner` exposes `resolveTrain`, an
+    `InterlockingResolution` type/interface/class defining the eight required fields MUST exist;
+    otherwise the route is resolved as a bare trainId. Member of the `convex_interlocking_infrastructure`
+    FAMILY detector (checks/interlocking_resolution_model.mjs).
+  normative_text: |
+    Core runtime spec afokapu/atdd#1251 suggests the resolution model. For the Convex/TS stack:
+
+        export interface InterlockingResolution {
+          interlockingId: string; routeId: string; trainId: string; trainPath: string;
+          category: string; categoryDigit: string; guardId: string; reason: string;
+        }
+
+    A bare trainId string loses the routeId, guardId, category/categoryDigit, trainPath, and the
+    human-readable reason needed for trace, projection equivalence, and category-vs-train-digit
+    validation. WHICH runtime files are inspected and HOW the model fields are recognized is the
+    per-stack detector's concern (Convex: collecting the InterlockingResolution property names).
+  fix_hint: |
+    Define the structured model and return it from resolveTrain:
+
+      return {
+        interlockingId, routeId, trainId, trainPath,
+        category, categoryDigit, guardId, reason,
+      };
+
+    This rule is `strict`: a resolveTrain backed only by a bare trainId is not suppressible and fails CI.
+  exceptions:
+    - Applies only when an `InterlockingRunner` with a `resolveTrain` method is present (a missing
+      runner/method is the separate `coder.convex.interlocking-runner-exists` concern).
+metadata:
+  aliases:
+    - CONVEX-INTERLOCKING-RESOLUTION-MODEL-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0
+  core_design_refs:
+    - afokapu/atdd#1246
+    - afokapu/atdd#1251
+terms:
+  - term_id: interlocking_resolution_model
+    text: >-
+      the `InterlockingResolution` structure returned by resolveTrain, carrying interlockingId, routeId,
+      trainId, trainPath, category, categoryDigit, guardId, reason.
