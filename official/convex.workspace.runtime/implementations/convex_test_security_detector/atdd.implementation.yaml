@@ -1,0 +1,12 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_test_security_detector
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.convex.security-auth
+emits_rule_ids:
+- tester.convex.security-auth
+- tester.convex.security-input
+entrypoint: detect.mjs
+report: detect.mjs
