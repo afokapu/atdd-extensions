@@ -1,0 +1,4 @@
+# frontend interlocking registry
+routes:
+  - route_id: host-match
+  - route_id: play-match

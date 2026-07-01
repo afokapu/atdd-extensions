@@ -15,6 +15,8 @@ nodes:
   - tester.vite.train-e2e-coverage
   - tester.vite.visual-harness
 
+  - tester.vite.interlocking-route-e2e-coverage
+  - tester.vite.interlocking-station-master-smoke
 edges:
   - source_ref: tester.vite.a11y-harness
     target_ref: tester.vite.e2e-names-valid-train
@@ -48,3 +50,12 @@ edges:
     target_ref: tester.vite.visual-harness
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
+
+  - source_ref: tester.vite.interlocking-route-e2e-coverage
+    target_ref: tester.vite.train-e2e-coverage
+    type: relates-to
+    reason: 'Frontend E2E coverage sibling — interlocking-route coverage parallels train E2E coverage.'
+  - source_ref: tester.vite.interlocking-station-master-smoke
+    target_ref: tester.vite.interlocking-route-e2e-coverage
+    type: relates-to
+    reason: 'Station-master smoke coverage complements interlocking route E2E coverage.'

@@ -1,0 +1,28 @@
+schema_version: 1.1.0
+rule_id: tester.vite.interlocking-route-e2e-coverage
+kind: rule
+status: active
+name: Interlocking route E2E coverage (frontend)
+statement: Every admissible route declared by a consumer interlocking MUST have a
+  Playwright end-to-end spec that exercises it.
+rationale: Guarded routes are the operator-facing surface; an admissible route with
+  no E2E spec ships an unexercised path.
+terms:
+- term_id: interlocking
+  text: a consumer route-control layer that guards admissible routes
+- term_id: admissible_route
+  text: a route the interlocking permits/guards
+implementation:
+  type: validator
+  ref: vite_interlocking_e2e_coverage
+content:
+  summary: Frontend E2E coverage of interlocking-guarded routes
+  normative_text: 'For each admissible route in the consumer interlocking registry
+    (plan/_interlocking.yaml), the frontend e2e tree MUST contain a Playwright spec
+    bound to it (by // Interlocking: route:{id} header, {route}. filename, or e2e/{route}/
+    dir). An uncovered admissible route is a gap. FRONTEND half of interlocking route
+    coverage; backend half is tester.convex.interlocking-route-coverage.'
+  fix_hint: Add an e2e spec under tests/e2e naming the uncovered interlocking route.
+metadata:
+  severity: 2
+  disposition: block

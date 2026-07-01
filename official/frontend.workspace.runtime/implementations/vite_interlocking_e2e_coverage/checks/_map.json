@@ -1,0 +1,4 @@
+{
+  "interlocking-route-e2e-coverage": "tester.vite.interlocking-route-e2e-coverage",
+  "interlocking-station-master-smoke": "tester.vite.interlocking-station-master-smoke"
+}

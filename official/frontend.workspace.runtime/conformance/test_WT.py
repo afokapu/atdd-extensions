@@ -29,6 +29,7 @@ _IMPL_DIRS = _WS / "implementations"
 # WT's own implementations. Each convention node is
 # frontend.extension.vite-tester/conventions/{rule_id}.convention.yaml
 WT_IMPLS = [
+    "vite_interlocking_e2e_coverage",
     "vite_journey_test_detector",
     "vite_train_e2e_coverage",
     "vite_presentation_smoke_coverage",

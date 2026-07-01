@@ -17,6 +17,8 @@ owns:
   conventions:
     - conventions/tester.vite.a11y-harness.convention.yaml
     - conventions/tester.vite.e2e-names-valid-train.convention.yaml
+    - conventions/tester.vite.interlocking-route-e2e-coverage.convention.yaml
+    - conventions/tester.vite.interlocking-station-master-smoke.convention.yaml
     - conventions/tester.vite.journey-layer-assembly.convention.yaml
     - conventions/tester.vite.journey-no-acceptance-marker.convention.yaml
     - conventions/tester.vite.journey-train-header.convention.yaml
