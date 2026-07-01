@@ -1,0 +1,51 @@
+schema_version: 1.1.0
+rule_id: coder.vite.route-resolved-train-lists-wagon
+kind: rule
+status: active
+name: A routed train's wagons must all be registered
+statement: When a Vite/React router renders `<TrainView trainId="..." />` whose trainId resolves to a train
+  registered in `plan/_trains.yaml`, every wagon in that train's `wagons:` list MUST itself be registered in
+  `plan/_wagons.yaml`. This is the Vite-stack realization of the agnostic train -> wagon coverage obligation
+  (SPEC-CODER-ROUTE-0005; the python-pytest sibling is `coder.frontend.resolved-train-lists-wagon`). The
+  detector that enforces it — the same TSX router scanner that, having resolved a trainId, walks the train's
+  wagon list against the wagon registry — is the frontend.workspace.runtime family implementation below.
+terms:
+- term_id: registered_wagon
+  text: a wagon whose slug appears under `wagons:` in `plan/_wagons.yaml`; the set a routed train's wagon
+    list is checked against.
+- term_id: train_wagon_list
+  text: the `wagons:` array on a train entry in `plan/_trains.yaml`, naming the wagons a train composes.
+implementation:
+  type: validator
+  ref: vite_route_train_wagon_coverage
+content:
+  summary: A "a routed train may only compose registered wagons" obligation, the Vite/React sibling of
+    coder.frontend.resolved-train-lists-wagon. The realization is a zero-dependency JS detector that, after
+    resolving a router's `<TrainView trainId>` to a registered train, checks each wagon in that train's
+    `wagons:` list against `plan/_wagons.yaml` and flags any that is missing.
+  normative_text: 'A train is only as real as the wagons it composes. If a routed train lists a wagon that is
+    not registered in `plan/_wagons.yaml`, the runner has nothing to mount for that segment of the journey —
+    a structurally green route that renders an incomplete or blank train at runtime. The obligation: every
+    wagon named by a routed, registered train exists in the wagon registry. WHICH files are routers, HOW the
+    trainId is resolved, and HOW the plan registries are read is delegated to the per-stack detector; for the
+    Vite/React stack it resolves the `<TrainView trainId>` binding to a train in `plan/_trains.yaml`, then
+    verifies each entry of that train''s `wagons:` list is present in `plan/_wagons.yaml`.
+
+    '
+  fix_hint: "Register the wagon, or drop it from the train:\n  # plan/_trains.yaml\n  #   - train_id: 3001-host-a-match\n\
+    \  #     wagons: [curate-content, ghost-wagon]   ->  ghost-wagon FORBIDDEN (not in plan/_wagons.yaml)\n\
+    \  # plan/_wagons.yaml — add the missing wagon:\n  #   - wagon: ghost-wagon\n  #     urn: wagon:ghost-wagon\n\
+    Keep the train's wagon list and the wagon registry in lockstep.\n"
+  exceptions:
+  - Only triggers for trains that are themselves registered; an unregistered trainId is reported by
+    `coder.vite.route-trainid-not-registered` instead (the checks do not double-report).
+  - Dynamic, non-resolvable trainId expressions never reach the wagon check (advisory-only under
+    `coder.vite.route-trainid-expression-not-static`).
+  - When no `plan/_wagons.yaml` is reachable, the wagon registry is treated as empty only if a
+    `plan/_trains.yaml` is present; a repo with no plan layer at all is out of scope.
+metadata:
+  aliases:
+  - BOUNDARIES-ROUTE-COVERAGE-002
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0

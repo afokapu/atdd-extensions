@@ -1,0 +1,8 @@
+{
+  "nostub-arrow-literal": "coder.vite.presentation-nostub-arrow-literal",
+  "nostub-fn-return": "coder.vite.presentation-nostub-fn-return",
+  "nostub-empty-fragment": "coder.vite.presentation-nostub-empty-fragment",
+  "nostub-empty-element": "coder.vite.presentation-nostub-empty-element",
+  "nostub-unconditional": "coder.vite.presentation-nostub-unconditional",
+  "nostub-allowlist-migration": "coder.vite.presentation-nostub-allowlist-migration"
+}

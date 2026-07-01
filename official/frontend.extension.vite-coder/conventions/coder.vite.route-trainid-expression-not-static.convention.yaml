@@ -1,0 +1,50 @@
+schema_version: 1.1.0
+rule_id: coder.vite.route-trainid-expression-not-static
+kind: rule
+status: active
+name: Non-static TrainView trainId is advisory-only
+statement: A Vite/React router that renders `<TrainView trainId={expr} />` where `expr` cannot be resolved
+  to a literal at scan time (member access, prop, call, ternary) is surfaced as an ADVISORY finding — never
+  a hard failure. This is the Vite-stack realization of the agnostic advisory owned by the coder extension
+  (SPEC-CODER-ROUTE-0005; the python-pytest sibling is `coder.frontend.trainid-expression-not-statically`).
+  The rule preserves the hard-fail-suppressed decision — rendered verification of dynamic routes belongs
+  to the runtime/behavioral half of the incident series, not to this static scanner.
+terms:
+- term_id: static_trainid
+  text: a trainId the detector can resolve to a string literal at scan time — a `trainId="..."` attribute or
+    a `trainId={IDENT}` bound to a same-file `const IDENT = "literal"`.
+- term_id: dynamic_trainid
+  text: a `trainId={expr}` whose value is not statically resolvable (member access, prop drill, call,
+    ternary); it cannot be checked against the plan registry and is reported advisory-only.
+implementation:
+  type: validator
+  ref: vite_route_train_wagon_coverage
+content:
+  summary: An advisory "this trainId could not be statically resolved" signal, the Vite/React sibling of
+    coder.frontend.trainid-expression-not-statically. The realization is a zero-dependency JS detector that
+    flags every `<TrainView trainId={expr}>` whose expression is neither a literal nor a same-file `const`,
+    at severity 1 — never hard-failing.
+  normative_text: 'The route -> train -> wagon coverage checks can only verify a trainId the scanner can read
+    as a literal. A dynamic expression (`route.trainId`, `getTrain()`, `flag ? a : b`) is opaque to a static
+    scan, so it is neither passed nor failed: it is surfaced as an advisory so a human can confirm the route
+    resolves, while the gate stays green. The obligation is deliberately weak — severity 1, never a hard
+    fail — because over-reporting dynamic routes would punish legitimate data-driven routing. WHICH
+    expressions count as static (literals and same-file `const` bindings) versus dynamic is delegated to the
+    per-stack detector; everything else is advisory.
+
+    '
+  fix_hint: "Prefer a statically-resolvable trainId so the coverage checks can verify it:\n  <TrainView trainId={route.trainId}\
+    \ />        ->  advisory (cannot resolve)\n  const PLAY_TRAIN = \"3002-play-a-match\"\n  <TrainView trainId={PLAY_TRAIN}\
+    \ />           ->  resolved (checked against the registry)\nIf the route is genuinely data-driven, the\
+    \ advisory is informational only and never fails the gate.\n"
+  exceptions:
+  - A `trainId={IDENT}` bound to a same-file `const IDENT = "literal"` IS statically resolved and is NOT
+    advisory — it flows into the registry checks instead.
+  - This rule never hard-fails (severity 1); it is a documentation-only advisory by construction.
+  - Comment-embedded `<TrainView>` occurrences are stripped before scanning and never reported.
+metadata:
+  aliases:
+  - BOUNDARIES-ROUTE-COVERAGE-003
+  severity: 1
+  disposition: documentation-only
+  introduced_in: 0.1.0

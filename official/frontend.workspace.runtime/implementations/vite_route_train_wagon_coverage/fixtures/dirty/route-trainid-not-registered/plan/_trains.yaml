@@ -1,0 +1,12 @@
+trains:
+  3-match:
+    30-match-nominal:
+    - train_id: 3001-host-a-match
+      description: Host picks a scenario and creates a gold/azur tournament
+      wagons:
+      - curate-content
+      - setup-match
+    - train_id: 3002-play-a-match
+      description: Play a match through to resolution
+      wagons:
+      - run-match

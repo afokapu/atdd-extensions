@@ -1,0 +1,5 @@
+{
+  "route-trainid-not-registered": "coder.vite.route-trainid-not-registered",
+  "route-resolved-train-lists-wagon": "coder.vite.route-resolved-train-lists-wagon",
+  "route-trainid-expression-not-static": "coder.vite.route-trainid-expression-not-static"
+}

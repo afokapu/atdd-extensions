@@ -1,0 +1,47 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-fn-return
+kind: rule
+status: active
+name: Function presentation component must not return only null/undefined
+statement: A Vite/React presentation component defined as a function (declaration or block-body arrow) MUST
+  NOT have a body whose only return is `null`, `undefined`, or a bare `return;`. This is the Vite-stack
+  realization of the agnostic no-stub-presentation obligation (rule family PRESENTATION-NOSTUB, incident 318;
+  the python-pytest sibling is `coder.frontend.function-or-function-expression`). The detector — a
+  conservative zero-dep scanner that collects a component block's return operands — is the
+  frontend.workspace.runtime family implementation referenced below.
+terms:
+- term_id: block_body
+  text: the `{ ... }` body of a function-declaration or block-body arrow component; the region whose return
+    statements are classified.
+- term_id: sole_stub_return
+  text: a block whose every return operand is a stub literal (null/undefined/bare) with no meaningful-JSX
+    return path; the construct this rule flags.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: A "function presentation component renders something" obligation, the Vite/React sibling of
+    coder.frontend.function-or-function-expression. The realization collects every return in a PascalCase
+    component's block body and flags the component when they are all bare `null`/`undefined`/`return;`.
+  normative_text: 'A function component whose only reachable return is null renders nothing — the same blank
+    screen as the arrow-null case, but hidden inside a block body. The obligation: a function presentation
+    component must have at least one return that renders visible content. WHICH files are in scope and HOW
+    returns are collected (without descending into nested closures) is delegated to the per-stack detector;
+    for the Vite/React stack it walks the block body, gathers each `return` operand, and flags only when
+    every operand classifies as a stub literal.
+
+    '
+  fix_hint: "Return content on at least one path:\n  function StatusPanel() { return null; }              ->\
+    \  FORBIDDEN\n  function StatusPanel() { return <div>...</div>; }    ->  allowed\nA guarded `return null`\
+    \ is fine as long as a sibling path returns real JSX.\n"
+  exceptions:
+  - A guarded null with a sibling meaningful-JSX return is NOT a stub (see
+    coder.vite.presentation-nostub-guarded-negative).
+  - A component with no return at all is not flagged (it may have side effects); only all-stub returns are.
+  - Files outside a `presentation/` path segment, and test files, are skipped.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-002
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0

@@ -1,0 +1,48 @@
+schema_version: 1.1.0
+rule_id: coder.vite.boundaries-fe-layers
+kind: rule
+status: active
+name: Frontend code follows the 4-layer architecture
+statement: Every Vite/React frontend source module (`.ts` / `.tsx`) MUST live under one of the four
+  architecture layers — presentation, application, domain, or integration. This is the Vite-stack
+  realization of the agnostic frontend-layering obligation owned by the coder extension
+  (frontend.convention.yaml::rules, issue 394; the python-pytest sibling is
+  `coder.frontend.boundaries-fe-layers`). The detector — a zero-dep path scanner over the consumer's
+  frontend `src/` tree — is the frontend.workspace.runtime family implementation referenced below.
+terms:
+- term_id: architecture_layer
+  text: one of presentation / application / domain / integration — the four layers of the frontend clean
+    architecture; every feature module belongs to exactly one.
+- term_id: root_composition_file
+  text: a top-level file that legitimately sits outside a layer (`App.tsx`, `main.tsx`, `index.ts`,
+    `trains.ts`, `composition.ts`, `*.config.ts`, `*.d.ts`); exempt from this rule.
+implementation:
+  type: validator
+  ref: vite_boundaries_fe
+content:
+  summary: A "every module has a layer" obligation, the Vite/React sibling of
+    coder.frontend.boundaries-fe-layers. The realization walks the frontend `src/` tree and flags any
+    `.ts`/`.tsx` module (that is not a root/composition file or directly in `src/`) whose path does not
+    include one of the four layer segments.
+  normative_text: 'Clean architecture only holds if every module has a home. A source file dropped into a
+    feature directory without a layer segment (`play-grid/join-tournament/JoinButton.tsx`) has no declared
+    responsibility and escapes the import-direction checks that key off the layer. The obligation: every
+    frontend module lives under `presentation/`, `application/`, `domain/`, or `integration/`. WHICH files
+    are exempt (root composition files, config, type decls, files directly in `src/`) is delegated to the
+    per-stack detector; everything else must carry a layer segment in its path.
+
+    '
+  fix_hint: "Move the module into the layer that matches its responsibility:\n  play-grid/join-tournament/JoinButton.tsx\
+    \             ->  FORBIDDEN (no layer)\n  play-grid/join-tournament/presentation/JoinButton.tsx  ->  allowed\n\
+    Presentation for UI, application for hooks/use-cases, domain for pure types, integration for adapters.\n"
+  exceptions:
+  - Root/composition files (`App.tsx`, `main.tsx`, `index.ts`, `trains.ts`, `composition.ts`) and files
+    directly in `src/` are exempt.
+  - Config (`*.config.ts`) and type-declaration (`*.d.ts`) files are exempt.
+  - Test files (`*.test.tsx` / `*.spec.tsx`) are out of scope.
+metadata:
+  aliases:
+  - BOUNDARIES-FE-LAYERS-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0

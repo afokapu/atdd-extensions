@@ -1,0 +1,7 @@
+no_stub_presentation:
+  scan_dirs:
+    - apps/game/src
+  allowlist:
+    - path: apps/game/src/shared/presentation/LegacyShell.tsx
+    - path: apps/game/src/shared/presentation/OldBanner.tsx
+      migration: forge/frg-app#412

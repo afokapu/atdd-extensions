@@ -1,0 +1,7 @@
+wagons:
+  - wagon: curate-content
+    urn: wagon:curate-content
+  - wagon: setup-match
+    urn: wagon:setup-match
+  - wagon: run-match
+    urn: wagon:run-match
