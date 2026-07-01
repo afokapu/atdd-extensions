@@ -1,0 +1,16 @@
+---
+// Clean: untrusted content rendered as escaped text, never as raw HTML.
+interface Props {
+  title: string;
+  summary: string;
+}
+const { title, summary } = Astro.props;
+// Reading a length is not a sink; no set:html, no innerHTML assignment.
+const summaryLength = summary.length;
+---
+
+<article>
+  <h2>{title}</h2>
+  <p>{summary}</p>
+  <span data-length={summaryLength}></span>
+</article>
