@@ -1,0 +1,70 @@
+schema_version: 1.1.0
+rule_id: coder.convex.commons-domain-no-outbound
+kind: rule
+status: active
+name: Convex commons domain layer must have no outbound edges
+statement: >-
+  A module in the domain layer of a Convex/TS commons module (a non-test, non-generated
+  file under a `commons/domain/` or `shared/domain/` tree) MUST NOT import from the
+  commons `application/` or `integration/` layers. Dependencies point inward only —
+  integration -> application -> domain — so the domain layer, being innermost, depends on
+  nothing outward. This is the Convex-stack realization of the agnostic core obligation
+  `coder.commons.domain-layer-in-commons` ("Domain layer in commons has no outbound edges
+  (no application/integration imports)"); the obligation is stack-neutral (it applies to
+  any consumer's layered shared module), the detector is TS-specific. The detector — a
+  lexical import scan resolving each import's target layer — is the
+  convex.workspace.runtime family implementation referenced below.
+terms:
+- term_id: commons_module
+  text: >-
+    the shared cross-cutting code root of a consumer repo, recognized by a path segment
+    named `commons` (canonical) or `shared` (legacy). Inside it, a file's layer is the
+    segment after the commons root: `domain`, `application`, or `integration`.
+- term_id: outbound_edge
+  text: >-
+    an import from a domain-layer module whose resolved target is the `application` or
+    `integration` layer of the same commons module — a dependency pointing outward, which
+    inverts the inward-only dependency direction.
+implementation:
+  type: validator
+  ref: convex_commons_layering_detector
+content:
+  summary: >-
+    A "the commons domain layer stays innermost" obligation, the Convex realization of
+    coder.commons.domain-layer-in-commons. The realization is a zero-dependency JS detector
+    (lexical import scan, no TS runtime) that, for each domain-layer module under the scan
+    roots, flags every import whose resolved target is the commons `application` or
+    `integration` layer.
+  normative_text: |
+    The commons module groups cross-cutting concerns (validation, events, clients, auth)
+    that no single wagon owns, organized into three layers whose dependencies point inward
+    only: integration -> application -> domain. The domain layer holds pure business rules
+    and types; it must depend on nothing outward. A domain module that imports the
+    application or integration layer has pulled orchestration or infrastructure inward,
+    inverting the architecture and making the domain impossible to unit-test in isolation.
+
+    The obligation is "the commons domain layer has no outbound edges"; HOW the offending
+    imports are found is delegated to the per-stack detector. For Convex/TS the detector
+    identifies a domain module by location (under a `commons/domain/` or `shared/domain/`
+    tree) and resolves each import specifier — relative paths against the source directory,
+    `@commons/*`/`@shared/*` aliases by segment — reporting every one that resolves into the
+    commons `application` or `integration` layer.
+  fix_hint: |
+    Keep the domain layer pure. Move the collaborator out of the domain:
+      * orchestration that calls integration  -> the application layer (via a port)
+      * external clients / persistence         -> the integration layer
+    The domain should import only other domain types/functions and plain TS libraries. If
+    the domain needs a capability, declare a port type in the domain (or application) and let
+    an outer layer implement it — the domain names the abstraction, never the outer module.
+  exceptions:
+  - Non-domain commons modules (`application/*`, `integration/*`) are out of scope for this rule.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `_generated/` are skipped.
+  - Bare package imports (`convex`, `react`, ...) are not commons edges — a separate purity
+    rule governs framework/runtime imports.
+metadata:
+  aliases:
+  - CONVEX-COMMONS-DOMAIN-OUTBOUND-001
+  - BOUNDARIES-COMMONS-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
