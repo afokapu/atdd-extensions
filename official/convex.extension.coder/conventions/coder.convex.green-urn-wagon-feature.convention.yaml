@@ -1,0 +1,60 @@
+schema_version: 1.1.0
+rule_id: coder.convex.green-urn-wagon-feature
+kind: rule
+status: active
+name: URN wagon and feature segments are well-formed identifiers
+statement: >-
+  A Convex server implementation file MUST carry a GREEN traceability header, and specifically
+  the URN wagon and feature segments are well-formed kebab-case identifiers (^[a-z][a-z0-9-]*$).
+  Stack-neutral obligation (required in every implementation file), convex-specific line-comment
+  detector; realized by the family validator convex_green_traceability_detector (core alias
+  GREEN-URN-003).
+implementation:
+  type: validator
+  ref: convex_green_traceability_detector
+content:
+  summary: >-
+    GREEN header/URN traceability rule: the URN wagon and feature segments are well-formed kebab-
+    case identifiers (^[a-z][a-z0-9-]*$). One member of the convex traceability FAMILY detector
+    (zero-dependency JS header parser over each implementation file).
+  normative_text: |
+    Every Convex server implementation file (a `.ts` module under the scanned function/app tree,
+    excluding `_generated/` codegen and `*.test.*`/`*.spec.*` files) MUST carry a traceability
+    header. This member of the GREEN header/URN family enforces that the URN wagon and feature
+    segments are well-formed kebab-case identifiers (^[a-z][a-z0-9-]*$). This is the convex
+    realization of the agnostic GREEN traceability obligation `coder.green.component-urn-wagon-
+    feature` (core alias GREEN-URN-003); the obligation is stack-neutral (the header is required in
+    every implementation file, backend or frontend), the `// …` line-comment detector is JS-
+    specific. HOW the header is parsed is delegated to the per-stack family detector
+    `convex_green_traceability_detector`; WHAT must hold is this rule.
+  fix_hint: |
+    Add or correct the traceability header so that the URN wagon and feature segments are well-formed kebab-case identifiers (^[a-z][a-z0-9-]*$). The canonical header is:
+      // URN: component:{wagon}:{feature}:{Name}:{side}:{layer}
+      // Tested-By:
+      // - test:{wagon}:{feature}:{TEST_URN}
+      // Runtime: convex
+      // Purpose: <one line, <= 80 chars>
+    This rule's disposition is `documentation-only` (traceability, severity 3); the detector always emits the RAW finding and a downstream coach decides ratcheting.
+  exceptions:
+    - Test files (`*.test.*` / `*.spec.*`) are out of scope — they carry no production URN header.
+    - Generated code under `_generated/` is never scanned.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+    - The manifest-existence half of the obligation (wagon/feature exist in the wagon manifest) is
+      enforced downstream by the consumer's coach against its own plan; the detector realizes the
+      source-visible half (segments present and well-formed kebab-case).
+metadata:
+  aliases:
+    - GREEN-URN-003
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: traceability_header
+    text: >-
+      the leading run of `//` line comments (URN, Tested-By, Runtime, Purpose) that every
+      implementation file carries so component <-> wagon <-> feature <-> test edges are
+      recoverable from source.
+  - term_id: component_urn
+    text: >-
+      the stable identifier component:{wagon}:{feature}:{name}:{side}:{layer} that names a
+      component and locates it in the wagon/feature hierarchy.

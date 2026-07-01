@@ -1,0 +1,11 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_green_no_globals
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.convex.green-no-globals
+emits_rule_ids:
+- coder.convex.green-no-globals
+entrypoint: detect.mjs
+report: detect.mjs

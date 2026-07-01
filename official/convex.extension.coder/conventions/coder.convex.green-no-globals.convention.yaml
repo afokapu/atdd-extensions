@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.convex.green-no-globals
+kind: rule
+status: active
+name: Convex server modules must not stand up module-level global singletons
+statement: >-
+  A Convex server module MUST NOT create a module-level (top-level) mutable singleton —
+  a global DB handle, connection pool, or HTTP/service client — nor assign to a
+  `global`/`globalThis` slot. Dependencies MUST be injected (constructor or parameter
+  injection, even if wired manually), so business logic stays testable and refactorable.
+  This is the Convex-stack realization of the agnostic GREEN guardrail GR-NOGLOBALS
+  ("No globals/singletons; inject dependencies"); the obligation is stack-neutral (the
+  guardrail also carries a `**/*.dart` variant), the detector is JS-specific. The detector
+  that enforces it — a column-0 line scan for exported DB/client singletons and global
+  assignments — is the convex.workspace.runtime implementation referenced below.
+implementation:
+  type: validator
+  ref: convex_green_no_globals
+content:
+  summary: >-
+    A "no module-level global/singleton in Convex server source; inject dependencies
+    instead" obligation, the Convex realization of green guardrail GR-NOGLOBALS. The
+    realization is a zero-dependency JS detector (line scan, no TS runtime) that flags
+    each top-level `export const db/client/pool = …`, `export const x = new …Client(…)`,
+    and `globalThis.x = …` in a scanned Convex module, exempting composition roots.
+  normative_text: |
+    Clean Architecture and RED->GREEN both require that side-effecting collaborators be
+    injected, not reached for through a module-global. A `export const db = new PgClient(...)`
+    at module scope binds infrastructure at import time: it cannot be swapped for an in-memory
+    fake in a test, and it silently couples every importer to that concrete instance. The
+    obligation is "no module-level singleton survives in server source; dependencies are
+    injected". HOW the singletons are found is delegated to the per-stack detector; for Convex
+    the detector scans column-0 declarations (indented declarations are inside a function/class
+    scope and out of scope) for the DB/client/pool family and for `global`/`globalThis`
+    assignments. Composition roots (`composition.ts`, `wagon.ts`, `main.ts`, `server.ts`,
+    `index.ts`) are the sanctioned wiring seam and are exempt.
+  fix_hint: |
+    Replace the module-level singleton with injected dependencies:
+      * define a small port interface (e.g. `ChoiceRepository`) and take it as a
+        constructor/parameter argument, or
+      * instantiate the concrete client ONLY inside the composition root
+        (`composition.ts` / `wagon.ts`), which is exempt.
+    This rule's disposition is `strict`: a module-level global singleton in server source is
+    not suppressible. The detector always emits the RAW finding.
+  exceptions:
+    - Composition roots (`composition.ts`, `wagon.ts`, `main.ts`, `server.ts`, `index.ts`) are
+      exempt — they are the one place dependency wiring is allowed to violate the rule.
+    - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+    - Generated code under `_generated/` is never scanned.
+    - Indented (non-column-0) declarations are inside a function/class scope and are not
+      module-level singletons; only top-level declarations are flagged.
+metadata:
+  aliases:
+    - GREEN-GR-NOGLOBALS
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: module_level_singleton
+    text: >-
+      a top-level (column-0) `export const` binding that holds shared mutable
+      infrastructure — a DB handle, connection pool, or HTTP/service client — instantiated at
+      import time; the construct this rule forbids in favour of injection.
+  - term_id: dependency_injection
+    text: >-
+      supplying a collaborator to a unit through its constructor or parameters (even wired
+      manually in a composition root) rather than reaching for a module-global, so the unit is
+      testable with a substitute.

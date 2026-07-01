@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+// Member check: coder.convex.green-urn-side  (GREEN/URN traceability family)
+//
+// CONTRACT (v1.1): reads ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES, writes RAW
+// {rule_id,file,line,col,evidence,source_line} violations to ATDD_VIOLATIONS_REPORT,
+// exits 0 regardless of violation count. Zero deps; shared parsing lives in
+// ../urn_header.mjs. Evaluates ONE rule over each file's parsed header.
+import { runCheck } from "../urn_header.mjs";
+
+runCheck("coder.convex.green-urn-side", (H, file) => {
+  if (!H.urn || H.segs.length !== 6) return null;
+  const SIDES = new Set(["frontend", "backend"]);
+  if (SIDES.has(H.segs[4])) return null;
+  return { line: H.urn.no, col: H.urn.col,
+    evidence: `URN side segment "${H.segs[4]}" is not one of frontend|backend`,
+    source_line: H.urn.raw };
+});
