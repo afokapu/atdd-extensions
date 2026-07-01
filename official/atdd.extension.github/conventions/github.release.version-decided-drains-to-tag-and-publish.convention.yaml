@@ -1,0 +1,67 @@
+schema_version: 1.1.0
+rule_id: github.release.version-decided-drains-to-tag-and-publish
+kind: rule
+status: active
+name: The GitHub release worker drains core's version_decided into a tag + publish
+statement: >-
+  When core (the State Store, afokapu/atdd#1172) decides a new release version it enqueues a
+  provider-neutral `version_decided` outbox message carrying only `{version, change_class}` and writes
+  NO git tag and NO external_ref. The GitHub release extension MUST be the consumer half: it drains each
+  pending `version_decided` message for its configured provider, creates the annotated git tag `vX.Y.Z`,
+  publishes to the ecosystem (PyPI for this repo), and writes the tag back as an `external_ref`
+  (provider=github, ref_kind=tag, ref_value=vX.Y.Z) before marking the outbox message drained. This is
+  the GitHub-platform realization of core #1172 step 5 — core decides the number, the extension performs
+  the provider side-effect.
+content:
+  summary: >-
+    Core owns the version number and emits a neutral decision signal; the publish mechanics (tag,
+    PyPI, the git-tag external_ref writeback) live entirely in this extension (version-source-of-truth
+    design §2/§3). The python-pytest worker referenced below realizes that obligation.
+  normative_text: |
+    Drain contract (mirrors core's atdd.state.sync_engine.push_outbox per-message isolation):
+
+      - Scope: only outbox messages with operation == "version_decided" AND provider == the configured
+        provider are touched; everything else is left for its own worker.
+      - Side-effect: for each, cut the annotated git tag `vX.Y.Z` and publish to the ecosystem. The
+        publish is double-gated — a dry_run/--no-publish flag AND the ATDD_RELEASE_ALLOW_PUBLISH env
+        guard — so tests and un-opted-in runs never reach real PyPI.
+      - Writeback: on success, ExternalRefStore.link("release", "github", "tag", "vX.Y.Z") records the
+        provider-side identity of the decided release, then the outbox message is marked drained.
+      - Idempotency: the tag external_ref is the durable completion marker; re-draining an
+        already-tagged version performs no side-effect and is a no-op.
+      - Fail-loud: a publish error raises, leaves the outbox message PENDING (undrained), and is
+        logged + surfaced non-zero — never a faked green.
+
+    Separation (4.0.0 full core/extension split): the worker never imports `atdd`. It drains against a
+    duck-typed store exposing core's shipped sync API and additionally conforms structurally to core's
+    SyncProvider Protocol (push(operation, payload) -> PushOutcome) so it also composes with core's own
+    push_outbox engine — proven by shape, with zero import coupling.
+  fix_hint: |
+    If `version_decided` messages accumulate undrained:
+      1. Confirm the worker is registered for the right provider (default "github") and that the
+         outbox message's provider matches.
+      2. Inspect the failure — a publish error leaves the message pending by design; read the logged
+         `release publish failed` error and the non-zero result.errors entry.
+      3. To perform a real publish, arm the guard explicitly: ATDD_RELEASE_ALLOW_PUBLISH=1 (omitting it,
+         or passing dry_run, records the tag ref without touching PyPI).
+      4. Re-run the drain; an already-tagged version is a safe no-op.
+  exceptions:
+    - a stack whose release extension publishes elsewhere (npm, nowhere) configures its own provider +
+      publisher; the neutral core signal is unchanged.
+metadata:
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+parity:
+  source_fragments_preserved: false
+  examples_preserved: false
+  implementation_preserved: true
+  fix_hint_preserved: true
+  reviewed_at: '2026-07-01'
+terms:
+- term_id: version_decided
+  text: core's provider-neutral outbox decision signal {version, change_class}, enqueued by
+    atdd.state.version.bump; names no provider and no publish mechanics.
+- term_id: tag_external_ref
+  text: the writeback (provider=github, ref_kind=tag, ref_value=vX.Y.Z) recording the provider-side
+    identity of the release core decided; the durable idempotency marker.
