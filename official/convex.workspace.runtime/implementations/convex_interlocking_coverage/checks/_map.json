@@ -1,0 +1,6 @@
+{
+  "interlocking_route_coverage": "tester.convex.interlocking-route-coverage",
+  "interlocking_production_runner": "tester.convex.interlocking-production-runner-used",
+  "interlocking_smoke_coverage": "tester.convex.interlocking-smoke-coverage-for-station-master",
+  "interlocking_trace_binds": "tester.convex.interlocking-trace-binds-declared-route"
+}
