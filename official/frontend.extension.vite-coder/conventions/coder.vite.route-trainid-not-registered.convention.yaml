@@ -1,0 +1,55 @@
+schema_version: 1.1.0
+rule_id: coder.vite.route-trainid-not-registered
+kind: rule
+status: active
+name: Router TrainView trainId must be a registered train
+statement: A Vite/React router file (`App.tsx` / `router.tsx`) that renders `<TrainView trainId="..." />`
+  with a statically-resolvable trainId MUST reference a train registered in `plan/_trains.yaml`. This is the
+  Vite-stack realization of the agnostic route -> train coverage obligation owned by the coder extension
+  (SPEC-CODER-ROUTE-0005; the python-pytest sibling is `coder.frontend.trainid-not-registered-in`). The
+  detector — a lightweight TSX scanner that parses every `<TrainView>` binding and resolves same-file
+  `const` declarations before checking the plan registry — is the frontend.workspace.runtime family
+  implementation referenced below; the obligation is stack-neutral, the detector is TSX-specific.
+terms:
+- term_id: train_view
+  text: the route-level `<TrainView trainId="..." />` component that the FrontendTrainRunner resolves to a
+    wagon presentation; routes render it instead of importing wagon screens directly.
+- term_id: registered_train
+  text: a train whose `train_id` appears under `trains:` in `plan/_trains.yaml`; the set a router's trainId
+    is checked against.
+implementation:
+  type: validator
+  ref: vite_route_train_wagon_coverage
+content:
+  summary: A "every routed trainId resolves to a registered train" obligation, the Vite/React sibling of
+    coder.frontend.trainid-not-registered-in. The realization is a zero-dependency JS detector that scans
+    router files (`App.tsx` / `router.tsx`) for `<TrainView trainId>` bindings, resolves literals and
+    same-file `const` identifiers, and flags any resolved trainId absent from `plan/_trains.yaml`.
+  normative_text: 'Routes are the entry seam of the frontend: each one hands control to a train via
+    `<TrainView trainId="..." />`, and the FrontendTrainRunner resolves that train to a wagon presentation.
+    A trainId that is not registered in `plan/_trains.yaml` routes to nothing — a dead or blank screen that
+    a green path-based suite cannot see. The obligation: every statically-resolvable trainId rendered by a
+    router file names a train registered in the plan. WHICH files are routers and HOW the binding is parsed
+    is delegated to the per-stack detector; for the Vite/React stack it scans `App.tsx` / `router.tsx`,
+    matches `<TrainView ...>` tags, and resolves `trainId="literal"` or `trainId={IDENT}` against a same-file
+    `const IDENT = "literal"` before consulting the registry.
+
+    '
+  fix_hint: "Register the train, or point the route at a registered one:\n  <TrainView trainId=\"9999-ghost-train\"\
+    \ />   ->  FORBIDDEN (not in plan/_trains.yaml)\n  # add to plan/_trains.yaml:\n  #   - train_id: 9999-ghost-train\n\
+    \  #     wagons: [ ... ]\n  <TrainView trainId=\"3001-host-a-match\" />   ->  allowed (registered)\n\
+    Keep the router and the plan registry in lockstep so every route resolves to a real train.\n"
+  exceptions:
+  - Dynamic trainId expressions that cannot be statically resolved (member access, prop drill, call) are
+    NOT flagged here; they surface under `coder.vite.route-trainid-expression-not-static` (advisory).
+  - Same-file `const NAME = "literal"` declarations ARE resolved before the registry check.
+  - Comment lines and block comments are stripped before scanning, so a `<TrainView>` inside a doc comment
+    is not treated as a real route.
+  - When no `plan/_trains.yaml` is reachable from a router file, the detector emits nothing (a repo without
+    a plan registry is out of scope, not a violation).
+metadata:
+  aliases:
+  - BOUNDARIES-ROUTE-COVERAGE-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0

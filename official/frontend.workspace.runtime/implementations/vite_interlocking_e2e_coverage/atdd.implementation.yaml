@@ -1,0 +1,12 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: vite_interlocking_e2e_coverage
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.vite.interlocking-route-e2e-coverage
+emits_rule_ids:
+- tester.vite.interlocking-route-e2e-coverage
+- tester.vite.interlocking-station-master-smoke
+entrypoint: detect.mjs
+report: detect.mjs

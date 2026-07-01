@@ -1,0 +1,54 @@
+schema_version: "1.0.0"
+
+# First-class workspace PROVIDER: a reusable, domain-agnostic runtime that the
+# Convex extensions (convex.extension.coder / convex.extension.tester)
+# target. Namespaced id (scope segment is `workspace`):
+#   <publisher>.workspace.<name>
+#
+# This is the FIRST real (non-stub) JavaScript runtime provider in the hub. Its
+# adapter is Python (the ATDD engine speaks one protocol — discover/run/translate)
+# but it shells OUT to a JS runner; the detectors it runs are pure JS/TS. Owns
+# ZERO conventions (those live in atdd.extension.convex-*).
+workspace_id: convex.workspace.runtime
+kind: workspace
+version: "0.1.0"
+
+# Discovery + run CONTRACT this provider implements — the SAME contract as
+# atdd.workspace.python-pytest v1.1.0 (scan-mount env channel + structured JSON
+# violation report). Implementations declare the contract they satisfy
+# (`contract_version`); the resolver checks SemVer compatibility against this
+# value, refusing on mismatch.
+contract_version: "1.1.0"
+
+# Typed CAPABILITIES this workspace provides (#1138). convex provides exactly one
+# capability: an execution command-runner. Phase 0 runs detectors with plain
+# `node` (dependency-free proof of the seam); Phase 0.5 swaps the command to
+# `vitest run` for test-framework semantics WITHOUT changing this contract.
+capabilities:
+  - capability_id: execution.convex
+    domain: execution
+    type: test-runner
+    contract: atdd.workspace.capability.execution.command-runner.v1
+    runtime:
+      language: typescript
+      runner: node          # → vitest in Phase 0.5
+      package_manager: pnpm
+      command: node
+
+# Shared runtime files materialized into each workspace INSTANCE at resolve time.
+# Phase 0 needs none (detectors are zero-dependency .mjs). Phase 0.5 adds
+# package.json + vitest.config.ts here.
+shared_runtime:
+  files: []
+
+# How this provider finds the executable units an extension ships, and the
+# provider-contract range those implementations must satisfy.
+discovers:
+  implementations:
+    - "**/atdd.implementation.yaml"
+  requires_contract: "^1.0.0"
+
+conformance:
+  suite: conformance/
+
+governed_by_conventions: []

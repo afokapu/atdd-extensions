@@ -1,0 +1,69 @@
+schema_version: 1.1.0
+rule_id: coder.vite.boundaries-http-client
+kind: rule
+status: active
+name: Vite/React HTTP must go through the centralized client (no raw fetch/axios)
+statement: When Vite/React frontend production code performs an HTTP request, it MUST go through the project's
+  centralized, contract-driven HTTP client rather than calling the platform `fetch()` primitive or a bare
+  `axios` call directly inside a component / presentation file, so that contracts, interceptors, auth,
+  and telemetry are applied uniformly. This is the Vite-stack realization of the agnostic "no un-governed
+  HTTP egress" boundary obligation owned by the coder extension (the python-pytest sibling is `coder.boundaries.http-client`).
+  The detector that enforces it — a regex-over-source scan that reports each raw `fetch(`/`axios` call
+  site in a non-client `*.ts`/`*.tsx` file — is the frontend.workspace.runtime implementation referenced
+  below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: centralized_http_client
+  text: the project's governed HTTP client through which all Vite/React frontend HTTP access must flow,
+    applying request/response contracts, interceptors, auth, and telemetry uniformly; recognized by the
+    detector as a file whose basename names a client.
+- term_id: raw_http_call
+  text: a direct call to the platform `fetch()` primitive (a bare `fetch(` that is not a property access
+    or part of a longer identifier) or a bare `axios.`/`axios(` call — the un-governed egress this boundary
+    forbids in component/presentation files.
+implementation:
+  type: validator
+  ref: coder.vite.boundaries-http-client
+content:
+  summary: A "all HTTP access flows through the governed client" boundary obligation, the Vite/React sibling
+    of coder.boundaries.http-client. The realization is a zero-dependency JS detector (regex over source,
+    no TS runtime) that flags every raw `fetch(` and bare `axios.`/`axios(` call in each scanned `*.ts`/`*.tsx`
+    file, exempting the centralized client module (identified by a `client`-named filename) and skipping
+    tests, comments, and vendored/build dirs.
+  normative_text: 'Raw `fetch()` (and a bare `axios` call) bypasses the contract layer, request/response
+
+    interceptors, auth, and telemetry the governed HTTP client applies, creating un-observable,
+
+    un-contracted egress straight from a UI component. The obligation is "frontend code does not
+
+    call the HTTP primitive directly; it uses the centralized contract-driven client". WHICH
+
+    primitive and HOW it is detected is delegated to the per-stack detector. For the Vite/React
+
+    stack the detector matches a `fetch(` call that is not a property access or a longer identifier
+
+    (so `this.fetch(` and `prefetch(` are not matched) and a bare `axios.`/`axios(` call (not
+
+    `myaxios`), scanning non-test `*.ts`/`*.tsx` files; each matching site in a file that is NOT the
+
+    centralized client is a violation. Comment lines (single-line and block) are skipped.
+
+    '
+  fix_hint: "Route the call through the project's centralized, contract-driven HTTP client instead of\
+    \ the raw\nprimitive:\n  const res = await fetch(`/api/users/${id}`)\n  ->\n  const user = await httpClient.get<User>({\
+    \ path: `/api/users/${id}` })\nThe client applies the request/response contract, interceptors, auth,\
+    \ and telemetry. The one\nmodule legitimately permitted to wrap the primitive is the client implementation\
+    \ itself —\nrecognized by its `client`-named filename and therefore out of scope. This rule's disposition\
+    \ is\n`strict`: new raw fetch()/axios calls fail the gate and are not suppressible by default.\n"
+  exceptions:
+  - The centralized client module itself (a file whose basename names a client, e.g. `httpClient.ts`,
+    `apiClient.ts`) legitimately wraps the primitive and is out of scope.
+  - Test code is out of scope — `*.test.ts(x)` / `*.spec.ts(x)` files are excluded.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+  - Property-access and longer-identifier forms (`obj.fetch(`, `prefetch(`, `myaxios(`) are not matched;
+    only the bare `fetch(` primitive and a bare `axios` call are.
+metadata:
+  aliases:
+  - VITE-BOUNDARIES-HTTP-CLIENT-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

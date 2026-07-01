@@ -1,0 +1,86 @@
+schema_version: 1.1.0
+rule_id: coder.convex.performance-perf
+kind: rule
+status: active
+name: Avoid per-item IO and unbounded table scans in Convex server code (advisory)
+statement: 'A Convex server module (a `*.ts`/`*.tsx`/`*.js`/`*.mjs` file under the `convex/` function
+  tree, excluding `_generated/` codegen and test files) SHOULD NOT perform per-item IO inside iteration,
+  nor scan a whole table unbounded. This node surfaces two advisory smells: (1) an `await` inside a `for`/`while`
+  body or a `.map(`/`.forEach(` callback — serialized per-item IO that scales latency with collection
+  size; and (2) a `.collect()` on a `ctx.db.query(...)` chain with no `.withIndex(` — a full-table scan
+  whose cost grows with table size. This is the Convex-stack realization of the agnostic `coder.performance.perf`
+  principle ("no per-item IO inside iteration"); its strict, gating specialization for document reads
+  in loops is `coder.convex.nplus1-db-in-loop`. The detector that surfaces these smells — a zero-dependency
+  regex/brace scan over source — is the atdd.workspace.convex implementation referenced below; its disposition
+  is documentation-only (coaching, not a gate).'
+terms:
+- term_id: convex_server_module
+  text: a non-test, non-generated source file under the `convex/` function tree that Convex auto-discovers
+    and runs on its backend (a query/mutation/action/http handler or a module they import).
+- term_id: per_item_io
+  text: an IO operation — most often an `await`ed `ctx.db`/network call — executed once per element of
+    an enclosing loop or iteration callback, producing serialized O(N) round trips.
+- term_id: full_table_scan
+  text: a `.collect()` on a `ctx.db.query(...)` chain with no `.withIndex(...)` — reads every row of the
+    table, so cost grows with table size rather than with the result set.
+- term_id: batching
+  text: restructuring per-item IO into one bounded operation outside the loop — an indexed `.collect()`,
+    `getAll`, a join in memory, or a single bulk request — so cost does not scale with collection size.
+implementation:
+  type: validator
+  ref: coder.convex.performance-perf
+content:
+  summary: An advisory "no per-item IO inside iteration, no unbounded table scan" obligation, the Convex
+    sibling of the coder.performance.perf principle. The realization is a zero-dependency JS detector
+    (regex + brace/paren matching over source, no TS runtime) that flags (1) each `await` lexically inside
+    a loop body / iteration callback, and (2) each `.collect()` whose `ctx.db.query(...)` chain carries
+    no `.withIndex(`. Disposition is documentation-only — these are coaching signals, surfaced but not
+    gating. Generated code and `*.test.ts`/`*.spec.ts` files are out of scope.
+  normative_text: 'Per-item IO inside iteration is the canonical performance regression: one query/request
+    per element
+
+    turns an O(1) operation into O(N) round trips, and `await`-ing inside a loop serializes those round
+
+    trips. A `.collect()` over an unindexed query reads the whole table, so its cost grows with table
+
+    size rather than with the result set. The remedy is the same shape in both cases — hoist or batch
+    the
+
+    IO out of the loop (a single indexed `.collect()` + an in-memory join, `getAll`, or one bulk
+
+    operation), and back every `.collect()` with a `.withIndex(...)` so the scan is bounded. This node
+    is
+
+    documentation-only at the Convex layer: enforcement of the gating case (a document read inside a loop)
+
+    is delegated to the strict specialization `coder.convex.nplus1-db-in-loop`; this node coaches the
+
+    broader smell surface. WHICH smells count and HOW they are detected is delegated to the per-stack
+
+    detector, which scans `convex/**` modules supplied as scan roots.
+
+    '
+  fix_hint: "Batch and index the IO:\n  const rows = await ctx.db.query(\"rankings\").collect();   //\
+    \ full-table scan\n  for (const row of rows) {\n    const player = await ctx.db.get(row.playerId);\
+    \          // serialized per-item IO\n    ...\n  }\nbecomes\n  const rows = await ctx.db\n    .query(\"\
+    rankings\")\n    .withIndex(\"by_tournament\", (q) => q.eq(\"tournamentId\", id))   // bounded scan\n\
+    \    .collect();\n  const players = await ctx.db.getAll(rows.map((r) => r.playerId)); // one batched\
+    \ read\nUse an indexed query, `getAll`/a batch read, or a dataloader so cost is O(1) round trips and\
+    \ bounded\nby the result set. This rule's disposition is `documentation-only`: the detector emits\
+    \ the RAW smell\nlist for coaching/observability; it does not gate. The strict gate on document-reads-in-loops\
+    \ is\n`coder.convex.nplus1-db-in-loop`.\n"
+  exceptions:
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Generated code under `convex/_generated/` is never scanned (codegen, never edited).
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+  - A `.collect()` backed by a `.withIndex(...)` is a bounded scan and is NOT flagged.
+  - An `await` outside any loop body (a single hoisted read) is NOT flagged — only per-item awaits inside
+    iteration are advisory.
+  - Migration/backfill directories may be supplied as a consumer exclude (`ATDD_SCAN_EXCLUDES`) — one-shot
+    jobs legitimately scan and walk tables.
+metadata:
+  aliases:
+  - CONVEX-PERFORMANCE-PERF-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0

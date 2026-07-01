@@ -1,0 +1,12 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: vite_gsap_detector
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.vite.presentation-gsap-commons
+- coder.vite.presentation-gsap-layer
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention: coder.vite.presentation-gsap-commons

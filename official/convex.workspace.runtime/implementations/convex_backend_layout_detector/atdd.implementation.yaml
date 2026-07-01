@@ -1,0 +1,13 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_backend_layout_detector
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.convex.backend-layer-catalog
+emits_rule_ids:
+- coder.convex.backend-layer-catalog
+- coder.convex.backend-suffix-matches
+- coder.convex.backend-dependency-edges
+entrypoint: detect.mjs
+report: detect.mjs

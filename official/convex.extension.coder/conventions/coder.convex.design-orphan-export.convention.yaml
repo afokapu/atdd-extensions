@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: coder.convex.design-orphan-export
+kind: rule
+status: active
+name: Convex exports have a consumer or are an API entry
+statement: Every symbol a Convex module exports MUST either be a Convex API entry point (an export wired
+  to `query`/`mutation`/`action`/`internalQuery`/`internalMutation`/ `internalAction`/`httpAction`/`httpRouter`/`cronJobs`,
+  or a `default` export such as the schema — Convex consumes these via the runtime and the generated client,
+  not via a source import) OR be imported by at least one other module, so the function tree stays lean
+  and free of dead exports. This is the Convex-stack realization of the agnostic "no dead exports" obligation
+  (the python-pytest sibling is `coder.design.orphan-export`). The detector that enforces it — a scan
+  that compares every module's exports against the set of names imported anywhere — is the atdd.workspace.convex
+  implementation referenced below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: convex_api_entry
+  text: an export wired to a Convex registration helper (`query`/`mutation`/`action`/ `internalQuery`/`internalMutation`/`internalAction`/`httpAction`/`httpRouter`/
+    `cronJobs`) or a `default` export; consumed by Convex's runtime and generated client, so it needs
+    no source importer and is never an orphan.
+- term_id: consumer
+  text: any module that imports the exported name (named or default/namespace import); one such importer
+    satisfies the rule for that export.
+- term_id: orphan_export
+  text: a non-entry exported symbol that no module imports — dead surface area to remove or wire into
+    a consumer.
+implementation:
+  type: validator
+  ref: convex_design_detector
+content:
+  summary: An agnostic "no dead exports" obligation, the Convex sibling of coder.design.orphan-export.
+    The realization is a zero-dependency JS detector that reads each module's export declarations (`export
+    const/function/class/interface/type/enum`), marks the ones wired to a Convex entry helper, collects
+    every named/default import across the scan, and flags any non-entry export whose name no importer
+    references — skipping `index.ts` barrels, `_generated/`, and test files.
+  normative_text: 'A Convex export with zero consumers is dead weight: it grows the function tree, the
+
+    deploy bundle, and the maintenance burden without paying for itself. The one carve-out
+
+    is the Convex API entry: an export wired to `query`/`mutation`/`action`/`internal*`/
+
+    `httpAction`/`httpRouter`/`cronJobs` (or a `default` export like the schema) is consumed
+
+    by Convex''s runtime and the generated client — Convex auto-discovers it from the file
+
+    path — so it legitimately has no source importer and is never an orphan. The obligation:
+
+    every other export is imported somewhere. WHICH export and import forms are parsed and
+
+    WHICH exports count as entries is delegated to the per-stack detector; for Convex it
+
+    reads `export` declarations, treats a Convex-helper-wired or `default` export as an
+
+    entry, collects named (`import { A }`) and default/namespace imports across the scan,
+
+    and flags the rest. Barrel `index.ts` re-exports are out of scope (they are pass-through
+
+    surface, not owned declarations).
+
+    '
+  fix_hint: "Wire the orphaned export into a consumer, promote it to an entry, or remove it:\n  convex/.../domain.ts\
+    \  exports `deadRotate`  (imported by nothing)  ->\n    * import it from a module that uses it, OR\n\
+    \    * if it is meant to be a Convex endpoint, wire it through query/mutation/action, OR\n    * delete\
+    \ the export (and the symbol, if it is genuinely unused).\nKeep the function tree lean — every non-entry\
+    \ export earns its place by having a\nconsumer. This rule is `strict`: an unconsumed non-entry export\
+    \ is not suppressible and\nfails.\n"
+  exceptions:
+  - Convex API entries (exports wired to `query`/`mutation`/`action`/`internalQuery`/ `internalMutation`/`internalAction`/`httpAction`/`httpRouter`/`cronJobs`)
+    and `default` exports are consumed by the runtime/client and are never flagged.
+  - '`index.ts`/`index.tsx` barrel re-exports are out of scope (pass-through surface).'
+  - Test files (`*.test.*` / `*.spec.*`), `_generated/`, and vendored/build dirs are out of scope.
+  - A namespace import (`import * as ns`) of a module marks that module's symbols as consumed (the detector
+    counts the namespace binding as an importer).
+metadata:
+  aliases:
+  - CONVEX-DESIGN-ORPHAN-EXPORT-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

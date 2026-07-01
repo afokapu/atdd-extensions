@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-i18n-switcher
+kind: rule
+status: active
+name: Language switcher drives the change-language API with the picked locale
+statement: A Vite/React language/locale switcher component MUST pass the locale the user selected (a value
+  flowing from the supported-locale list) to the i18n change-language API, rather than hardcoding a locale
+  string literal into the call site. This is the Vite/React realization of the agnostic "the switcher
+  reflects the supported locales" obligation owned by the coder extension. The stack-specific detector
+  that enforces it (a zero-dependency Node scan of the switcher component for a change-language call made
+  with a hardcoded locale string) is the frontend.workspace.runtime implementation referenced below —
+  the obligation is agnostic, the detector is not.
+terms:
+- term_id: language_switcher
+  text: a frontend component (`LanguageSwitcher`/`LocaleSwitcher`/`LanguageToggle`) that lets users choose
+    the active locale; recognized by a basename carrying both a language/locale token and a switch/toggle/select/pick
+    token.
+- term_id: change_language_api
+  text: the i18n locale-setter (`setLang` / `setLocale` / `changeLanguage` / `i18n.changeLanguage` …)
+    the switcher calls; its argument must be the picked locale, never a hardcoded string literal.
+implementation:
+  type: validator
+  ref: vite_i18n_detector
+source:
+  legacy_path: official/atdd.extension.coder/conventions/coder.presentation.i18n-switcher.convention.yaml
+  legacy_section: rules
+  legacy_rule_id: coder.presentation.i18n-switcher
+  extraction_mode: high_fidelity
+content:
+  summary: An agnostic "the locale switcher reflects the supported locales" obligation, the UI companion
+    to `coder.vite.presentation-i18n-config`. The Vite/React realization locates the switcher by basename
+    (a component carrying both a language/locale token and a switch/toggle/select/pick token) and flags
+    a change-language call (`setLang` / `setLocale` / `changeLanguage` / `i18n.changeLanguage` …) whose
+    argument is a hardcoded locale string literal instead of the picked value.
+  normative_text: 'The locale a user switches to must be the locale they picked, sourced from the application''s
+    supported
+
+    locales. A switcher that hardcodes `setLang(''en'')` cannot reflect the real locale set — adding or
+
+    removing a supported locale never reaches the picker, and the call always sets the same baked-in
+
+    value. The obligation is "the switcher drives the change-language API with the selected locale"; WHICH
+
+    component is the switcher and HOW the hardcoding is detected is delegated to the per-stack detector.
+
+    For Vite/React the detector locates the switcher among `*LanguageSwitcher*` / `*LocaleSwitcher*` /
+
+    `*LanguageToggle*`-style basenames and flags any `setLang`/`setLocale`/`changeLanguage`-family call
+
+    invoked with a string literal locale argument; a call passing a variable (the mapped/picked value)
+    is
+
+    absolved.
+
+    '
+  fix_hint: "Pass the locale the user picked, not a literal:\n  onClick={() => setLang('sw')}        \
+    \                  ->  FORBIDDEN (hardcoded)\n  {OPTIONS.map((opt) => <button onClick={() => setLang(opt)}\
+    \ />)}  ->  pass the picked value\nDerive the option list from the supported-locale list so the picker\
+    \ tracks the app's locales. This\nrule is `strict`: a new hardcoded locale in a switcher's change-language\
+    \ call is not suppressible and\nfails.\n"
+  exceptions:
+  - A change-language call whose argument is a variable/identifier (the mapped or picked locale) is absolved
+    — only string-literal arguments are flagged.
+  - If no language/locale switcher component exists, the rule is inert (nothing to check).
+  - Test code (`*.test.*` / `*.spec.*`) is excluded; vendored/build dirs are skipped.
+metadata:
+  aliases:
+  - VITE-PRESENTATION-I18N-SWITCHER-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: true
+  implementation_preserved: true
+  fix_hint_preserved: true
+  reviewed_at: '2026-07-01'

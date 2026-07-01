@@ -1,0 +1,38 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-empty-fragment
+kind: rule
+status: active
+name: Presentation component must not return an empty fragment
+statement: A Vite/React presentation component MUST NOT render an empty fragment (`<></>` or
+  `<Fragment></Fragment>` with zero children and zero attributes) as its whole body. This is the Vite-stack
+  realization of the agnostic no-stub-presentation obligation (rule family PRESENTATION-NOSTUB, incident 318;
+  the python-pytest sibling is `coder.frontend.empty-fragment-return-or`). The detector is the
+  frontend.workspace.runtime family implementation referenced below.
+terms:
+- term_id: empty_fragment
+  text: a `<></>` or `<Fragment></Fragment>` with no children and no attributes; a render that produces no
+    visible DOM.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: A "presentation component renders more than an empty fragment" obligation, the Vite/React sibling
+    of coder.frontend.empty-fragment-return-or. The realization flags a component whose sole render is
+    `<></>` or `<Fragment></Fragment>` with zero children.
+  normative_text: 'An empty fragment is the JSX spelling of "render nothing" — it passes any check that only
+    looks for a JSX return, yet produces no DOM. The obligation: a presentation component must render at
+    least one child. WHICH constructs count as empty (zero children, zero attributes) is delegated to the
+    per-stack detector; a fragment carrying children (`<>{items}</>`) is not flagged.
+
+    '
+  fix_hint: "Render children, not an empty fragment:\n  return <></>              ->  FORBIDDEN\n  return <>{children}</>\
+    \    ->  allowed (renders its children)\n"
+  exceptions:
+  - A fragment with children (`<>{children}</>`) is not empty and is not flagged.
+  - Files outside a `presentation/` path segment, and test files, are skipped.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-003
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0

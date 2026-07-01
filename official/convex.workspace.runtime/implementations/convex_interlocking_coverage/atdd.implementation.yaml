@@ -1,0 +1,14 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_interlocking_coverage
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.convex.interlocking-route-coverage
+emits_rule_ids:
+- tester.convex.interlocking-route-coverage
+- tester.convex.interlocking-production-runner-used
+- tester.convex.interlocking-smoke-coverage-for-station-master
+- tester.convex.interlocking-trace-binds-declared-route
+entrypoint: detect.mjs
+report: detect.mjs

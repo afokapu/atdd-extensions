@@ -1,0 +1,84 @@
+schema_version: 1.1.0
+rule_id: tester.convex.security-input
+kind: rule
+status: active
+name: Convex input-validation tests must assert rejection of bad input
+statement: >-
+  A Vitest test file under the Convex function tree (a `*.test.ts`/`*.spec.ts` file beneath a
+  `convex/` scan root, excluding `_generated/` codegen) that is an INPUT-VALIDATION test — one whose
+  `// URN: test:...-INPUT|VALIDATION|VALIDATE-NNN` header, or whose URN-derived basename
+  `{wmbt_lower}-input|validation|validate-{nnn}[-slug].test.ts`, marks it as covering input
+  validation — MUST contain at least one REJECTION assertion (`.rejects`, `.toThrow`, `ConvexError`,
+  `ArgumentValidationError`, `.throws`). This is the Convex/Vitest realization of the agnostic tester
+  obligation `tester.security.input` ("Input-validation tests assert rejection of malformed and
+  adversarial payloads") owned by the tester extension; the python-pytest sibling asserts the same
+  over `test_*.py` (`pytest.raises`). The obligation is stack-bound; the realizing detector — a scan
+  over `convex/**` test files that flags each input-validation test whose body makes no rejection
+  assertion — is the convex.workspace.runtime FAMILY implementation `convex_test_security_detector`
+  referenced below.
+implementation:
+  type: validator
+  ref: convex_test_security_detector
+content:
+  summary: >-
+    An "input-validation tests actually assert rejection" obligation, the Vitest sibling of the
+    agnostic `tester.security.input`. The realization is a zero-dependency JS detector that
+    identifies each input-validation test (INPUT/VALIDATION/VALIDATE URN header or URN-derived
+    basename) and flags it when its body contains no rejection assertion. An input test that only
+    submits a well-formed payload and checks it succeeds is a silent green gap: it proves nothing
+    about how the endpoint handles malformed or adversarial input.
+  normative_text: |
+    Input validation is only actually covered when a test PROVES that bad input is refused —
+    malformed, out-of-range, type-wrong, or adversarial payloads must be shown to raise, not merely
+    a valid payload shown to succeed. The IDENTITY of a test comes from its explicit
+    `// URN: test:{wagon}:{feature}:{WMBT}-{HARNESS}-{NNN}[-slug]` header (a CORE invariant, owned
+    elsewhere); a test whose harness segment is `INPUT`, `VALIDATION` or `VALIDATE` is claiming
+    input-validation coverage.
+
+    For the Convex/Vitest stack the detector treats a `*.test.ts`/`*.spec.ts` as an input-validation
+    test when its URN header carries an `-INPUT-`/`-VALIDATION-`/`-VALIDATE-` harness OR its basename
+    renders one (`p001-input-001-reject-malformed.test.ts`). Such a file MUST contain a rejection
+    assertion: `.rejects`, `toThrow`/`toThrowError`, a `ConvexError`/`ArgumentValidationError`
+    reference, or `.throws`. An input-validation test with none of these is a violation. WHICH
+    per-language pattern marks an input test, and HOW a rejection is recognized, is delegated to the
+    per-stack detector; other stacks own their own renderings.
+  fix_hint: |
+    Add at least one assertion that a bad payload is refused, alongside any happy-path check:
+
+      test('rejects an out-of-range cell code', async () => {
+        const t = convexTest(schema)
+        await expect(
+          t.mutation(anyApi.votes.submitVote, { cell: 999, sessionId: 's1' }),
+        ).rejects.toThrow(/invalid cell code/i)
+      })
+
+    Cover the adversarial shapes that matter for the endpoint (empty/oversized strings, wrong types,
+    boundary values, injection-looking input). This rule is `documentation-only`: the detector emits
+    the RAW list of input-validation tests missing a rejection assertion as an advisory signal (no
+    inline-suppression marker, no hard fail); whether it blocks is the downstream consumer's
+    disposition decision, never the detector's.
+  exceptions:
+    - Non-input tests (no `-INPUT-`/`-VALIDATION-`/`-VALIDATE-` URN harness and no input-rendered
+      basename) are out of scope.
+    - Generated code under `convex/_generated/` is never scanned; vendored/build dirs
+      (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+    - Non-test files (anything not `*.test.ts` / `*.spec.ts`) are not inspected.
+    - Authentication/authorization coverage is governed by the sibling rule
+      `tester.convex.security-auth`, not this one.
+metadata:
+  aliases:
+    - TESTER-CONVEX-SECURITY-INPUT-001
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: input_validation_test
+    text: >-
+      a `*.test.ts`/`*.spec.ts` whose `// URN: test:...` header carries an
+      `INPUT`/`VALIDATION`/`VALIDATE` harness segment, or whose basename renders one
+      (`{wmbt}-input|validation|validate-{nnn}[-slug].test.ts`).
+  - term_id: rejection_assertion
+    text: >-
+      an assertion that bad input is refused — `.rejects`, `toThrow`/`toThrowError`, a
+      `ConvexError`/`ArgumentValidationError` reference, or `.throws` — the proof that the test
+      exercises the failure path, not only the happy path.

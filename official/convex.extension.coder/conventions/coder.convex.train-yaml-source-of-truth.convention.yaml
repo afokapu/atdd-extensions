@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.convex.train-yaml-source-of-truth
+kind: rule
+status: active
+name: Train definition is the single source of truth; the Station Master delegates, never orchestrates inline
+statement: >-
+  A Convex Station Master module (an `app.ts`/`app.tsx` or `station-master.ts`/`station_master.ts`
+  router) MUST NOT hardcode a multi-wagon orchestration sequence inline. It MUST delegate to a
+  declarative train definition — mapping an action/journey to a train id and invoking a
+  `TrainRunner` (or an equivalent journey-id map) so the wagon ORDER is data, not import
+  statements. A Station Master that imports two or more wagon surfaces (`@<wagon>/wagon`) and calls
+  them in sequence, with no `TrainRunner`/journey-id delegation, violates this rule. This is the
+  Convex-stack realization of the agnostic "Train YAML is the single source of truth for
+  orchestration; production and tests both consume it via TrainRunner" obligation (the Python
+  sibling is `coder.train.yaml-is-the`). The detector is the convex.workspace.runtime
+  implementation referenced below.
+implementation:
+  type: validator
+  ref: convex_train_composition_detector
+content:
+  summary: >-
+    A "the train definition, not the Station Master, owns the wagon order" obligation, the Convex
+    sibling of coder.train.yaml-is-the. The realization is a zero-dependency JS detector that flags
+    a Station Master (`app.ts` / `station-master.ts`) that wires ≥2 wagon surfaces inline without
+    delegating to a `TrainRunner` or a journey-id map.
+  normative_text: |
+    A train's wagon order belongs in ONE declarative place (the train definition), consumed
+    identically by production and tests via the `TrainRunner`. When the Station Master instead
+    imports `@pace-dilemmas/wagon` and `@resolve-dilemmas/wagon` and calls them in sequence, the
+    orchestration now lives in code — changing a workflow means editing imports and call chains,
+    tests drift from production, and operational replay by train id is impossible. The correct
+    Station Master maps an action to a train id and hands that id to a `TrainRunner`; the runner
+    loads the definition and drives the wagons. The obligation is "no inline multi-wagon sequence
+    in the Station Master"; the sanctioned shape is action -> train id -> `TrainRunner`. HOW inline
+    orchestration is recognized is delegated to the per-stack detector.
+  fix_hint: |
+    Replace the inline wagon sequence with declarative delegation:
+      * define a journey-id map (`const JOURNEY_MAP = { start_quiz: "1006-quiz-workflow-adaptive" }`),
+      * resolve the action to a train id, and
+      * invoke `new TrainRunner(trainId).execute(inputs)` — let the runner load the definition and
+        orchestrate the wagons.
+    Move any per-wagon wiring into the wagon's own `wagon.ts` composition root.
+    This rule's disposition is `strict`: there is no inline-suppression marker.
+  exceptions:
+    - A Station Master that already delegates via `TrainRunner` / a journey-id (train id) map is
+      compliant regardless of how many trains it routes to.
+    - A wagon's own `wagon.ts` composition root is not a Station Master and is out of scope here
+      (its cross-wagon wiring is governed by coder.convex.train-wagons-communicate-via-cargo).
+    - Test files (`*.test.ts`/`*.spec.ts`) are out of scope.
+    - Generated/vendored/build dirs are skipped during traversal.
+metadata:
+  aliases:
+    - COACH-TRAIN-COMPOSITION-003
+    - CONVEX-TRAIN-YAML-SOT-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: station_master
+    text: >-
+      the thin router (`app.ts` / `station-master.ts`) that maps a user action to a journey and
+      invokes the runner — the Convex analogue of app.py's Station Master. It routes, it does not
+      orchestrate.
+  - term_id: declarative_delegation
+    text: >-
+      resolving an action to a train id and invoking a `TrainRunner` (or an equivalent journey-id
+      map) so the wagon order is loaded from the train definition — as opposed to an inline
+      sequence of direct wagon calls.

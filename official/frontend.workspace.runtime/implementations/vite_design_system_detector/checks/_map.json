@@ -1,0 +1,6 @@
+{
+  "vite_design_primitives": "coder.vite.design-primitives",
+  "vite_design_token_color": "coder.vite.design-token-color",
+  "vite_design_token_hardcoded": "coder.vite.design-token-hardcoded",
+  "vite_design_orphan_ui": "coder.vite.design-orphan-ui"
+}

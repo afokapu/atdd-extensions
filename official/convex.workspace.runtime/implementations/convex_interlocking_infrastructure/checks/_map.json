@@ -1,0 +1,7 @@
+{
+  "interlocking_runner_exists": "coder.convex.interlocking-runner-exists",
+  "interlocking_resolution_model": "coder.convex.interlocking-resolution-model-exists",
+  "interlocking_station_routing": "coder.convex.station-master-interlocking-routing",
+  "interlocking_delegates": "coder.convex.interlocking-delegates-to-trainrunner",
+  "interlocking_no_cargo": "coder.convex.interlocking-does-not-carry-cargo"
+}

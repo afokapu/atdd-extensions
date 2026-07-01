@@ -1,0 +1,67 @@
+schema_version: 1.1.0
+rule_id: coder.vite.commons-domain-no-outbound
+kind: rule
+status: active
+name: Vite commons domain layer must have no outbound edges
+statement: >-
+  A module in the domain layer of a Vite/React commons module (a non-test file under a
+  `commons/domain/` or `shared/domain/` tree) MUST NOT import from the commons `application/`
+  or `integration/` layers. In the layer-first frontend commons, dependencies point inward
+  only — integration -> application -> domain — so the domain layer, being innermost, depends
+  on nothing outward. This is the Vite-stack realization of the agnostic core obligation
+  `coder.commons.domain-layer-in-commons` ("Domain layer in commons has no outbound edges (no
+  application/integration imports)"); the obligation is stack-neutral (any consumer's layered
+  shared module is bound), the detector is TS-specific. The detector — a lexical import scan
+  resolving each import's target layer — is the frontend.workspace.runtime family
+  implementation referenced below.
+terms:
+- term_id: commons_module
+  text: >-
+    the frontend shared cross-cutting code root, recognized by a path segment named `commons`
+    (canonical) or `shared` (legacy). Frontend commons is layer-first: a file's layer is the
+    segment after the commons root (`domain`, `application`, `integration`).
+- term_id: outbound_edge
+  text: >-
+    an import from a domain-layer module whose resolved target is the `application` or
+    `integration` layer of the same commons module — a dependency pointing outward.
+implementation:
+  type: validator
+  ref: vite_commons_layering_detector
+content:
+  summary: >-
+    A "the frontend commons domain layer stays innermost" obligation, the Vite realization of
+    coder.commons.domain-layer-in-commons. The realization is a zero-dependency JS detector
+    (lexical import scan, no TS runtime) that, for each domain-layer module under the scan
+    roots, flags every import whose resolved target is the commons `application` or
+    `integration` layer.
+  normative_text: |
+    The frontend commons is organized layer-first precisely so that layer dependencies can be
+    enforced structurally: integration -> application -> domain, inward only. The domain layer
+    holds framework-agnostic types, value objects, and errors; it depends on nothing outward. A
+    domain module that imports the application or integration layer pulls hooks, context, or
+    external clients inward — the domain can no longer be reasoned about or tested without the
+    outer layers, and the layering guarantee is void.
+
+    The obligation is "the commons domain layer has no outbound edges"; HOW the offending
+    imports are found is delegated to the per-stack detector. For Vite/React the detector
+    identifies a domain module by location (under a `commons/domain/` or `shared/domain/` tree)
+    and resolves each import specifier — relative paths against the source directory,
+    `@commons/*`/`@shared/*` aliases by segment — reporting every one that resolves into the
+    commons `application` or `integration` layer.
+  fix_hint: |
+    Keep the domain layer pure. Move the collaborator outward:
+      * hooks / context / orchestration  -> the application layer,
+      * HTTP clients / adapters          -> the integration layer.
+    The domain should import only other domain types and plain TS. If it needs a capability,
+    name a port type in the domain and let an outer layer implement it.
+  exceptions:
+  - Non-domain commons modules (`application/*`, `integration/*`) are out of scope for this rule.
+  - Test files (`*.test.*` / `*.spec.*`) are skipped; vendored/build dirs are not walked.
+  - Bare package imports are governed by the domain framework-purity rule, not this one.
+metadata:
+  aliases:
+  - VITE-COMMONS-DOMAIN-OUTBOUND-001
+  - BOUNDARIES-COMMONS-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

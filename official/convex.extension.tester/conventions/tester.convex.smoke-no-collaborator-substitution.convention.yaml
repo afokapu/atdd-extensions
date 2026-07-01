@@ -1,0 +1,80 @@
+schema_version: 1.1.0
+rule_id: tester.convex.smoke-no-collaborator-substitution
+kind: rule
+status: active
+name: A Convex/Vitest SMOKE test must not substitute a production collaborator
+statement: >-
+  A SMOKE-phase Convex/Vitest test (a `*.test.ts`/`*.spec.ts` whose basename contains `smoke` or
+  whose header declares `Phase: SMOKE` / `Smoke: true`) MUST exercise the REAL subject and its real
+  collaborators. It MUST NOT substitute a production collaborator — neither by faking infrastructure
+  (`vi.fn(`, `vi.mock(`, `jest.fn(`, `jest.mock(`), nor by stubbing behavior over a real object
+  (`vi.spyOn(...).mockImplementation/mockReturnValue/mockResolvedValue`), nor by assigning a
+  locally-defined function or lambda over an object attribute (`obj.method = () => ...`). A smoke
+  test that substitutes a collaborator is a unit test wearing a SMOKE label: it passes CI while
+  exercising nothing real. This is the Convex/TypeScript realization of the CORE tester rule
+  `tester.smoke.no-collaborator-substitution` (#704), whose Python detector is scope-limited and
+  which names this exact realization the follow-up: "Scope is Python-only; TS smoke tests
+  (consumer-repo frontend e2e) are a #704 follow-up." The obligation is agnostic (it governs any
+  consumer's smoke tests); only the substitution SYNTAX is stack-specific, so the detector is
+  TypeScript/Vitest-specific.
+implementation:
+  type: validator
+  ref: tester.convex.smoke-no-collaborator-substitution
+content:
+  summary: >-
+    A "SMOKE tests exercise real collaborators, never substitutes" obligation, the Vitest sibling of
+    the CORE python-only `tester.smoke.no-collaborator-substitution`. The realization is a
+    zero-dependency JS detector (a member of the `convex_smoke_fidelity_detector` FAMILY) that scans
+    every smoke test file and flags each line that fakes infrastructure or reassigns a collaborator's
+    behavior.
+  normative_text: |
+    A SMOKE test certifies that the real subject works against real infrastructure. Static analysis
+    cannot certify that a test exercises real infrastructure (a runtime-behaviour property,
+    undecidable from source — Rice's theorem), so this rule performs only the decidable NEGATIVE
+    check: it catches the substitution patterns that turn a smoke test into a false-green unit test.
+
+    For the Convex/Vitest stack the forbidden substitutions are:
+      * infrastructure fakes — `vi.fn(`, `vi.mock(`, `jest.fn(`, `jest.mock(`;
+      * behavior stubs over a real object — `.mockImplementation(`, `.mockReturnValue(`,
+        `.mockResolvedValue(` (typically via `vi.spyOn`);
+      * attribute reassignment — assigning a local function/lambda over an object attribute, e.g.
+        `client.post = async () => (...)` or `obj.method = function () { ... }`.
+    Environment setup is allowed and never triggers this rule (it substitutes nothing on the
+    subject). WHICH patterns constitute substitution in a given language is delegated to the
+    per-stack detector; the Python rendering (monkeypatch.setattr / local-lambda assignment) stays
+    in CORE.
+  fix_hint: |
+    The flagged SMOKE test replaces a collaborator instead of driving the real code path. Choose ONE:
+      - If it was never a smoke test: relabel it — change `// Phase:` and the filename away from
+        SMOKE (it is a unit/integration test).
+      - If it should be smoke: remove the substitution and exercise the real boundary (real HTTP /
+        real Convex client / real DB). Import the real module; do not `vi.mock` it.
+    This rule is `suppress-and-clean`: the detector emits the RAW substitution list; whether it
+    blocks is the downstream consumer's disposition decision. Temporary escape — an inline marker on
+    the offending line:
+      // atdd:suppress(tester.convex.smoke-no-collaborator-substitution) UNTIL=<YYYY-MM-DD>
+  exceptions:
+    - Non-smoke tests (unit / integration / widget) are out of scope — they legitimately mock, and
+      are identified by the absence of a `smoke` basename token and any `Phase SMOKE` / `Smoke true`
+      header line.
+    - Environment setup (setting env vars, cwd, temp dirs) substitutes nothing on the subject and is
+      never flagged.
+    - Generated code under `convex/_generated/` and vendored/build dirs (`node_modules`, `dist`,
+      `build`, `.next`) are never scanned.
+metadata:
+  aliases:
+    - TESTER-CONVEX-SMOKE-NO-SUBSTITUTION-001
+  severity: 4
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0
+terms:
+  - term_id: smoke_test_file
+    text: >-
+      a `*.test.ts`/`*.spec.ts`(x) whose basename contains `smoke`, or whose header declares
+      `Phase: SMOKE` / `Smoke: true`; the file class this rule governs.
+  - term_id: collaborator_substitution
+    text: >-
+      replacing one of the subject's real collaborators with a test double — an infrastructure fake
+      (`vi.fn`/`vi.mock`/`jest.fn`/`jest.mock`), a behavior stub (`.mockImplementation` /
+      `.mockReturnValue` / `.mockResolvedValue`), or a local function/lambda assigned over an object
+      attribute — so the smoke exercises the double instead of the real code path.

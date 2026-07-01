@@ -1,0 +1,63 @@
+schema_version: 1.1.0
+rule_id: coder.astro.no-hardcoded-color
+kind: rule
+status: active
+name: Astro/CSS colors must use design tokens, not hardcoded literals
+statement: A color used as a VALUE in `.astro` styling (a `<style>` block, an inline `style` attribute,
+  or a Tailwind arbitrary value) or in a `styles/*.css` rule MUST reference a design token (`var(--color-*)`),
+  never a raw hex (`#rrggbb`) or color function (`rgb(…)`/`hsl(…)`) literal. The token DEFINITION itself
+  — a literal color on a `--custom-prop:` declaration — is the one permitted place for the literal.
+terms:
+- term_id: design_token
+  text: a named color declared once as a CSS custom property (`--color-*`, in the `@theme` block) and
+    referenced via `var(--color-*)`; the single source of truth for the palette.
+- term_id: hardcoded_color
+  text: a raw hex (`#rgb`/`#rrggbb`/`#rrggbbaa`) or color function (`rgb`/`rgba`/`hsl`/`hsla`) literal
+    used as a styling value, as opposed to a `var(--color-*)` token reference. A literal that IS a token
+    definition (on a `--custom-prop:` line) does not count.
+implementation:
+  type: validator
+  ref: astro_hardcoded_literal_detector
+content:
+  summary: 'A "no hardcoded color outside the token layer" obligation. The realization is a zero-dependency
+    JS detector that flags hex and `rgb`/`rgba`/`hsl`/`hsla` literals in `.astro` styling contexts (scoped
+    `<style>` blocks, inline `style="…"` attributes, and Tailwind arbitrary `…-[#…]` values) and in `styles/*.css`,
+    EXCEPT when the literal is the value of a CSS custom-property declaration line (`--color-x: #…;`),
+    which is the token''s own definition.'
+  normative_text: 'apps/web defines its palette once, as CSS custom properties in the `@theme` block,
+    and
+
+    consumes those tokens everywhere through `var(--color-*)`. A hardcoded hex or `rgb(…)`
+
+    used as a value forks the palette: it cannot be retuned centrally, it escapes dark/contrast
+
+    theming, and it drifts from the named system. The obligation is "color values reference the
+
+    token layer"; HOW literals are recognized is delegated to the per-stack detector. The
+
+    detector flags a literal only where it is actually styling — inside a `<style>` block, an
+
+    inline `style` attribute, a Tailwind arbitrary value, or a `.css` rule — and never flags a
+
+    literal that IS a token definition (a `--custom-prop:` line). Incidental hex elsewhere
+
+    (a `<meta name="theme-color">` tag, an `href="#anchor"`) is out of scope.
+
+    '
+  fix_hint: "Reference a token instead of inlining the color:\n  * `color: #ff0000;`  → `color: var(--color-ember);`\n\
+    \  * `class=\"bg-[#1a1a1a]\"` → `class=\"bg-[var(--color-charcoal)]\"`\n  * `style=\"color: #fff\"\
+    ` → use a token-backed class or `style={`…var(--color-ivory)…`}`.\nIf the color is genuinely new,\
+    \ FIRST add a token (`--color-…: #…;` in the `@theme` block)\nand then reference it. Disposition is\
+    \ `strict`: there is no inline-suppression marker; the\nliteral must move behind a token.\n"
+  exceptions:
+  - 'A literal on a CSS custom-property declaration line (`--color-x: #…;`) is the token DEFINITION and
+    is never flagged.'
+  - In `.astro` markup, hex/`rgb` outside a styling context (e.g. `<meta name="theme-color">`, `href="#id"`)
+    is not a styling value and is out of scope.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`, `_generated`) are skipped.
+metadata:
+  aliases:
+  - ASTRO-NO-HARDCODED-COLOR-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

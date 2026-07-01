@@ -1,0 +1,19 @@
+---
+import Counter from "@/components/Counter.jsx";
+import Chart from "@/components/Chart.svelte";
+const items = ["a", "b", "c"];
+---
+
+<section>
+  <!-- Hydrated islands: each interactive handler sits on a client:* directive. -->
+  <Counter client:visible onClick={items.length} />
+  <Chart client:load onInput={items} />
+
+  <!-- Plain static HTML: a string-valued inline handler is valid static markup,
+       not an un-hydrated island, so it is out of scope. -->
+  <button type="button" onclick="history.back()">Back</button>
+
+  <ul>
+    {items.map((i) => <li>{i}</li>)}
+  </ul>
+</section>

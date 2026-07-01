@@ -1,0 +1,12 @@
+{
+  "green_urn_marker": "coder.vite.green-urn-marker",
+  "green_urn_pattern": "coder.vite.green-urn-pattern",
+  "green_urn_wagon_feature": "coder.vite.green-urn-wagon-feature",
+  "green_urn_name_matches": "coder.vite.green-urn-name-matches",
+  "green_urn_side": "coder.vite.green-urn-side",
+  "green_urn_layer": "coder.vite.green-urn-layer",
+  "green_header_runtime": "coder.vite.green-header-runtime",
+  "green_header_purpose": "coder.vite.green-header-purpose",
+  "green_header_tested_by": "coder.vite.green-header-tested-by",
+  "green_header_order": "coder.vite.green-header-order"
+}

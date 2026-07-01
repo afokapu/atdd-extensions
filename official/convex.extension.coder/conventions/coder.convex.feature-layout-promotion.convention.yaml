@@ -1,0 +1,92 @@
+schema_version: 1.1.0
+rule_id: coder.convex.feature-layout-promotion
+kind: rule
+status: active
+name: A single-file Convex layer should be promoted to a directory once it outgrows one file
+statement: 'A single-file Convex feature layer — `api.ts`, `application.ts`, `domain.ts`, or `integration.ts`
+  — SHOULD be promoted to a layer DIRECTORY (`<layer>/index.ts` plus `<layer>/<topic>.ts` members) once
+  it exceeds the project promotion threshold: more than 150 lines OR more than 3 exported entities. A
+  layer kept in one file past that point has stopped being discoverable at a glance — its multiple responsibilities
+  should be split into per-topic modules behind a barrel. This is a NATIVE Convex obligation with no Core
+  sibling: it encodes the single-file -> directory promotion policy of the Convex 4-layer layout (a layer
+  is one file until it grows, then becomes a directory). The detector that enforces it — a per-file line-count
+  and exported-entity count over each single-file layer module — is the atdd.workspace.convex implementation
+  referenced below; the obligation is stack-bound, the detector is Convex-specific. Its disposition is
+  `advisory`: it is a layout nudge, never a hard gate.'
+terms:
+- term_id: single_file_layer
+  text: a Convex feature layer rendered as a single module — `api.ts`, `application.ts`, `domain.ts`,
+    or `integration.ts`. The unit this rule measures for promotion to a directory.
+- term_id: promotion_threshold
+  text: the project policy bound that triggers promoting a single-file layer to a directory — more than
+    150 physical lines OR more than 3 exported entities (either suffices).
+- term_id: exported_entity
+  text: a top-level exported declaration that contributes a name to the module's public surface — `export
+    const`/`let`/`var`/`function`/`async function`/`class`/`abstract class`/`type`/ `interface`/`enum`,
+    or `export default`; re-export forms (`export { ... }`, `export *`) are not counted.
+implementation:
+  type: validator
+  ref: convex_layout_structure_detector
+content:
+  summary: A NATIVE Convex "promote a single-file layer to a directory when it grows" advisory. The realization
+    is a zero-dependency JS detector that, for each single-file layer module (`api.ts`/ `application.ts`/`domain.ts`/`integration.ts`)
+    under the supplied scan roots, counts physical lines and top-level exported entity declarations and
+    emits one violation per module that exceeds 150 lines OR 3 exported entities. Generated code and test
+    files are out of scope.
+  normative_text: 'The Convex layout keeps each feature layer in ONE file initially — `domain.ts`, `application.ts`,
+
+    `api.ts`, `integration.ts` — and promotes that file to a DIRECTORY (`domain/index.ts` +
+
+    `domain/<entity>.ts`, etc.) only when it outgrows a single module. The promotion trigger is a
+
+    file longer than 150 lines OR carrying more than 3 exported entities. Past either bound a
+
+    single-file layer has accreted enough distinct responsibilities that a reader can no longer take
+
+    it in at a glance, and its public surface is better expressed as several small per-topic modules
+
+    behind an `index.ts` barrel.
+
+
+    The obligation is "a layer that has outgrown one file is promoted to a directory"; HOW size is
+
+    measured is delegated to the per-stack detector. For Convex the detector measures physical line
+
+    count (excluding a single trailing newline) and counts top-level exported ENTITY declarations
+
+    (`export const`/`let`/`var`/`function`/`async function`/`class`/`abstract class`/`type`/
+
+    `interface`/`enum`, plus `export default`); re-export forms (`export { ... }`, `export *`) are
+
+    not entity declarations and are not counted. A module over EITHER threshold is reported once,
+
+    with the breached bound(s) named in the evidence. Once promoted, the directory''s members are no
+
+    longer single-file layer basenames and are not flagged — the directory layout is the desired end
+
+    state.
+
+    '
+  fix_hint: "Promote the layer to a directory and split its responsibilities into per-topic modules behind\
+    \ a\nbarrel:\n  * `domain.ts`        -> `domain/index.ts` (re-exports) + `domain/<entity-or-vo>.ts`\n\
+    \  * `application.ts`   -> `application/index.ts` + `application/<use-case>.ts`\n  * `api.ts`    \
+    \       -> `api/index.ts` + `api/<topic>.ts`\n  * `integration.ts`   -> `integration/index.ts` + `integration/<adapter>.ts`\n\
+    Keep each split module focused (one entity / one use case / one adapter) and re-export the public\n\
+    surface from `index.ts` so call sites are unaffected. The thresholds (150 lines, 3 exports) are\n\
+    the promotion trigger, not a hard cap — this rule's disposition is `advisory`: the detector emits\n\
+    the RAW over-threshold list as guidance; whether and when to act on it is the downstream\nconsumer's\
+    \ call, never the detector's.\n"
+  exceptions:
+  - Already-promoted layers are out of scope — once a layer is a directory, its members are not single-file
+    layer basenames and are not measured here.
+  - Non-layer modules (structural files like `wagon.ts`/`composition.ts`/`index.ts`, and the Convex root
+    modules `schema.ts`/`http.ts`) are not single-file layers and are not measured.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Generated code under `convex/_generated/` and vendored/build dirs (`node_modules`, `dist`, `build`,
+    `.next`) are skipped during traversal.
+metadata:
+  aliases:
+  - CONVEX-LAYOUT-PROMOTION-001
+  severity: 1
+  disposition: advisory
+  introduced_in: 0.1.0

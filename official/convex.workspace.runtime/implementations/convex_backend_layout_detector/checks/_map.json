@@ -1,0 +1,5 @@
+{
+  "convex_backend_layer_catalog": "coder.convex.backend-layer-catalog",
+  "convex_backend_suffix_matches": "coder.convex.backend-suffix-matches",
+  "convex_backend_dependency_edges": "coder.convex.backend-dependency-edges"
+}

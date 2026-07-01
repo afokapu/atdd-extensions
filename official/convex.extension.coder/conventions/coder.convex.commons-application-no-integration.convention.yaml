@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.convex.commons-application-no-integration
+kind: rule
+status: active
+name: Convex commons application layer must not import integration
+statement: >-
+  A module in the application layer of a Convex/TS commons module (a non-test, non-generated
+  file under a `commons/application/` or `shared/application/` tree) MUST NOT import from the
+  commons `integration/` layer. The application layer orchestrates via ports it declares;
+  the integration layer implements those ports. An application module that imports integration
+  directly reverses the port/adapter relationship and couples orchestration to a concrete
+  adapter. This is the Convex-stack realization of the agnostic core obligation
+  `coder.commons.application-layer-uses-ports` ("Application layer uses ports; integration
+  implements them (no application→integration edges)"); the obligation is stack-neutral, the
+  detector is TS-specific. The detector — a lexical import scan resolving each import's target
+  layer — is the convex.workspace.runtime family implementation referenced below.
+terms:
+- term_id: commons_module
+  text: >-
+    the shared cross-cutting code root of a consumer repo, recognized by a path segment named
+    `commons` (canonical) or `shared` (legacy); a file's layer is the segment after that root
+    (`domain`, `application`, `integration`).
+- term_id: port
+  text: >-
+    an abstract interface declared in the domain or application layer that the application
+    depends on; the integration layer supplies concrete implementations. The application names
+    the port, never the adapter.
+implementation:
+  type: validator
+  ref: convex_commons_layering_detector
+content:
+  summary: >-
+    A "the commons application layer depends on ports, not adapters" obligation, the Convex
+    realization of coder.commons.application-layer-uses-ports. The realization is a
+    zero-dependency JS detector (lexical import scan, no TS runtime) that, for each
+    application-layer module under the scan roots, flags every import whose resolved target is
+    the commons `integration` layer.
+  normative_text: |
+    In the inward-only dependency direction integration -> application -> domain, the
+    application layer sits between domain and integration. It expresses use-cases and
+    orchestration in terms of ports — abstract interfaces it (or the domain) declares — and
+    never reaches outward to the integration layer that implements them. An
+    application module that imports an integration module has inverted the dependency:
+    orchestration now knows a concrete adapter, cannot be tested against a fake port, and the
+    integration layer is no longer freely swappable.
+
+    The obligation is "the application layer uses ports; it does not import integration"; HOW
+    the offending imports are found is delegated to the per-stack detector. For Convex/TS the
+    detector identifies an application module by location and resolves each import specifier —
+    relative paths against the source directory, `@commons/*`/`@shared/*` aliases by segment —
+    reporting every one that resolves into the commons `integration` layer.
+  fix_hint: |
+    Depend on a port instead of the adapter:
+      * declare an interface (a `*Port` type) in the domain or application layer,
+      * take it as a constructor/factory argument in the application module,
+      * let the integration layer implement it and wire it at the composition root.
+    The application module should import the port type, never the integration implementation.
+  exceptions:
+  - Non-application commons modules (`domain/*`, `integration/*`) are out of scope for this rule.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `_generated/` are skipped.
+  - Bare package imports are not commons edges.
+metadata:
+  aliases:
+  - CONVEX-COMMONS-APP-INTEGRATION-001
+  - BOUNDARIES-COMMONS-002
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

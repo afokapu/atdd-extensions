@@ -1,0 +1,67 @@
+schema_version: 1.1.0
+rule_id: coder.convex.backend-suffix-matches
+kind: rule
+status: active
+name: Convex component file suffix matches its layer's component_type catalog
+statement: >-
+  A Convex module that sits in a canonical layer directory MUST carry a component-type suffix that
+  belongs to that same layer. This is the Convex-stack realization of the agnostic core obligation
+  "Component file suffix matches its layer's component_type catalog (e.g. `*_controller.py` for
+  presentation.controllers)" (`coder.backend.component-file-suffix-matches`, alias
+  BOUNDARIES-LAYER-002). Each component_type in the backend layer catalog carries a `typescript`
+  suffix and belongs to exactly one layer (`-controller.ts` -> presentation, `-repository.ts` ->
+  integration, `-use-case.ts` -> application, `-service.ts` -> domain, …). A file whose recognized
+  suffix names a layer OTHER than the directory it lives in (an integration `*-repository.ts`
+  placed under `presentation/`) advertises the wrong layer and breaks the read-the-layer-off-the-
+  filename discipline. The detector that enforces it — a basename-suffix vs directory-layer
+  comparison — is the convex.workspace.runtime family implementation referenced below; the
+  obligation is stack-bound, the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: convex_backend_layout_detector
+content:
+  summary: >-
+    A "file suffix matches its layer" obligation, the Convex sibling of
+    coder.backend.component-file-suffix-matches. The realization is a zero-dependency Node ESM
+    detector (path + basename scan, no TS runtime) that maps each recognized TypeScript component
+    suffix to its owning layer and flags any file whose suffix's layer differs from the canonical
+    layer directory it resides in.
+  normative_text: |
+    The layer catalog assigns every component_type a TypeScript suffix and exactly one owning layer:
+    presentation owns `-controller`/`-routes`/`-serializer`/`-middleware`/`-guard`/`-view`;
+    application owns `-use-case`/`-handler`/`-port`/`-interface`/`-policy`/`-workflow`/`-saga`;
+    domain owns `-service`/`-spec`/`-event`/`-exception`; integration owns `-repository`/`-client`/
+    `-cache`/`-engine`/`-formatter`/`-notifier`/`-queue`/`-store`/`-mapper`/`-scheduler`/`-monitor`
+    and their catalog siblings. The obligation: a file's suffix and its containing layer directory
+    must agree. HOW the suffix is matched is delegated to the per-stack detector; for Convex it
+    strips the extension, matches the basename against the suffix->layer map (longest suffix wins),
+    reads the file's layer from its nearest canonical-layer ancestor directory, and flags any
+    mismatch. Files with no recognized component suffix (plain entities, `api.ts`, `domain.ts`) and
+    files outside a canonical layer directory are not in scope for this rule.
+  fix_hint: |
+    Reconcile the file's suffix with its directory — either move the file to the layer its suffix
+    names, or rename it to a suffix owned by its current layer:
+      * `presentation/order-repository.ts` -> move to `integration/order-repository.ts`, or
+      * rename to `presentation/order-controller.ts` if it truly is a presentation controller.
+  exceptions:
+    - Files with no recognized component-type suffix (plain domain entities, `api.ts`, `wagon.ts`, `index.ts`) are out of scope.
+    - Files not located inside a canonical layer directory are governed by coder.convex.backend-layer-catalog, not this rule.
+    - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - BOUNDARIES-LAYER-002
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+terms:
+  - term_id: component_suffix
+    text: >-
+      the trailing `-<type>` token of a module basename (`-controller`, `-repository`, `-use-case`,
+      `-service`, …) drawn from the backend layer catalog's `typescript` suffixes; it names the
+      component_type and, transitively, the single layer that owns it.
+  - term_id: owning_layer
+    text: >-
+      the one architecture layer (presentation / application / domain / integration) a component
+      suffix belongs to per the catalog. The file must live in the directory of its suffix's owning
+      layer.

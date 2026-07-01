@@ -1,0 +1,4 @@
+train_id: 9001-real
+title: Fixture train 9001-real
+wagons:
+  - some-wagon

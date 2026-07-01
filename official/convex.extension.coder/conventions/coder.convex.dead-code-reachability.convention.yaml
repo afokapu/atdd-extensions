@@ -1,0 +1,83 @@
+schema_version: 1.1.0
+rule_id: coder.convex.dead-code-reachability
+kind: rule
+status: active
+name: Convex modules must be reachable from a graph root
+statement: 'Every production TypeScript module under the `convex/` function tree (a `*.ts`/`*.tsx` file,
+  excluding `_generated/` codegen and test files) MUST be reachable from at least one GRAPH ROOT by following
+  the static import graph. For Convex the roots are the modules the runtime and the generated client anchor
+  on: `schema.ts` (auto-loaded), `http.ts` (auto-loaded HTTP router), an `index.ts`/`index.tsx` barrel,
+  a test file, or any module that exports a Convex function (`query`/`mutation`/`action`/`internalQuery`/
+  `internalMutation`/`internalAction`/`httpAction` — Convex auto-discovers these as API entry points).
+  This is the Convex-stack realization of the agnostic "all production source is reachable from an entry
+  point" obligation (the python-pytest sibling is `coder.dead-code.reachability-typescript`). The detector
+  that enforces it — a regex-over-import-specifiers scan that builds the file-level import graph and BFS-walks
+  it from the convention roots — is the atdd.workspace.convex implementation referenced below; the obligation
+  is stack-bound, the detector is JS-specific.'
+terms:
+- term_id: graph_root
+  text: a Convex module that anchors reachability analysis — `schema.ts`/`http.ts` (auto-loaded at the
+    convex root), an `index.ts`/`index.tsx` barrel, a test file, or ANY module exporting a Convex function
+    (Convex auto-discovers it as an API entry). All modules reachable from a root are "alive".
+- term_id: reachable_module
+  text: a `*.ts`/`*.tsx` module under `convex/` that some graph root transitively imports via resolved
+    relative (`./`/`../`) specifiers; the forward BFS closure from the roots.
+- term_id: convex_api_entry
+  text: a module exporting a Convex function (`query`/`mutation`/`action`/`internalQuery`/ `internalMutation`/`internalAction`/`httpAction`).
+    Convex turns the file path into a client API path, so the module is an auto-discovered entry point
+    and always a root.
+implementation:
+  type: validator
+  ref: coder.convex.dead-code-reachability
+content:
+  summary: A "every Convex module is reachable from a graph root" obligation, the Convex sibling of coder.dead-code.reachability-typescript.
+    The realization is a zero-dependency JS detector (regex over import/export/require/dynamic-import
+    specifiers, no TS runtime) that resolves relative `./`/`../` paths into a file-level import graph,
+    marks roots (schema.ts/http.ts/index barrel/exported Convex fn/test), forward-BFS-walks the graph,
+    and flags any `*.ts`/`*.tsx` module under `convex/` that no root reaches, skipping `_generated/` and
+    `*.test.ts`/`*.spec.ts` files.
+  normative_text: 'Dead (unreachable) Convex code inflates the deploy bundle and the maintenance surface
+
+    while serving no caller. A module is "alive" when some graph root transitively imports
+
+    it. Graph roots are Convex''s anchors: `schema.ts` and `http.ts` (auto-loaded at the
+
+    convex root), `index.ts`/`index.tsx` barrels, test files, and — crucially for Convex —
+
+    ANY module that exports a Convex function, because Convex auto-discovers every
+
+    `query`/`mutation`/`action`/`internal*`/`httpAction` from the file tree and turns its
+
+    path into an API entry point. The obligation is "every module is reachable from a
+
+    root"; HOW roots are enumerated and edges resolved is delegated to the per-stack
+
+    detector. For Convex the detector resolves relative (`./`, `../`) specifiers against the
+
+    importing module''s directory (trying `.ts`, `.tsx`, and `/index.ts(x)`); external (npm)
+
+    and `_generated` specifiers are outside the graph.
+
+    '
+  fix_hint: "Make the module reachable, or remove it:\n  * import/re-export it from a module a root already\
+    \ reaches, or\n  * promote it into a Convex function file (export a query/mutation/action) so it\n\
+    \    becomes an auto-discovered entry, or\n  * re-export it from an `index.ts` barrel, or\n  * cover\
+    \ it with a test that imports it, or\n  * delete the dead module.\nThis rule's disposition is `strict`:\
+    \ there is no inline-suppression marker. Pre-existing\ndead modules in a consumer repo are held flat\
+    \ by a downstream ratchet baseline (a\nconsumer/coach concern), not by the detector — the detector\
+    \ always emits the RAW\nunreachable-module list.\n"
+  exceptions:
+  - Any module exporting a Convex function (`query`/`mutation`/`action`/`internalQuery`/ `internalMutation`/`internalAction`/`httpAction`)
+    is itself a ROOT (Convex auto-discovers it) — never reported as dead.
+  - '`schema.ts`, `http.ts`, `crons.ts`, `auth.config.ts`, and `index.ts`/`index.tsx` barrels are structural
+    roots — never reported as dead.'
+  - Test files (`*.test.*` / `*.spec.*`) are graph roots and are out of the scanned set.
+  - Generated code under `convex/_generated/` is never scanned, and never an edge target.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`, `.nuxt`, `coverage`) are skipped during
+    traversal.
+metadata:
+  aliases:
+  - CONVEX-DEAD-CODE-REACHABILITY-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

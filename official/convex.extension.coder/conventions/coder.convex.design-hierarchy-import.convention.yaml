@@ -1,0 +1,89 @@
+schema_version: 1.1.0
+rule_id: coder.convex.design-hierarchy-import
+kind: rule
+status: active
+name: Convex layers import only inward in the hierarchy
+statement: 'A Convex feature file MUST import only inward in the layer hierarchy — presentation (`api.ts`)
+  -> application -> domain, with integration -> application/domain and the composition root (`composition.ts`/`wagon.ts`)
+  free to reach any layer — and the domain foundation MUST import nothing upward or outward, so the dependency
+  flow stays one-directional and the pure core stays Convex-free. Specifically forbidden: `domain` importing
+  any other layer; `application` importing `presentation` or `integration`; `presentation` importing `integration`
+  (it must go through application); `integration` importing `presentation`. This is the Convex-stack realization
+  of the agnostic "layers import only inward" obligation (the python-pytest sibling is `coder.design.hierarchy-import`).
+  The detector that enforces it — a scan that classifies each file and its relative imports to layers
+  and flags upward/outward edges — is the atdd.workspace.convex implementation referenced below; the obligation
+  is stack-bound, the detector is JS-specific.'
+terms:
+- term_id: layer_hierarchy
+  text: the Convex feature dependency order presentation (`api.ts`) -> application -> domain, with integration
+    -> application/domain and the composition root over all; imports may only flow inward (toward domain)
+    or stay in the same layer.
+- term_id: upward_import
+  text: an import from an inner layer to an outer one (e.g. `domain.ts` importing `./application`, or
+    `application.ts` importing `./api`); forbidden because it inverts the hierarchy and couples the core
+    to its callers.
+- term_id: outward_import
+  text: a layer-skipping or cross-direction edge that the inward order forbids (e.g. `api.ts` importing
+    `./integration` instead of going through application); forbidden because it bypasses the layer that
+    should mediate the access.
+implementation:
+  type: validator
+  ref: convex_design_detector
+content:
+  summary: An agnostic "the feature dependency flow is one-directional (inward)" obligation, the Convex
+    sibling of coder.design.hierarchy-import. The realization is a zero-dependency JS detector that classifies
+    a file to a layer by its basename (`api.ts` -> presentation, `application.ts`, `domain.ts`, `integration.ts`,
+    `composition.ts`/`wagon.ts` -> composition) or a path segment, resolves each relative import to a
+    target layer, and flags any edge not permitted by the inward direction — skipping external/npm imports,
+    `_generated/`, and test files.
+  normative_text: 'A Convex feature is a layered hierarchy: presentation (`api.ts`) adapts the runtime
+    and
+
+    may reach application and domain; application orchestrates use cases and may reach only
+
+    domain; integration provides db/external access and may reach application and domain;
+
+    the composition root assembles the slice and may reach anything; and the domain
+
+    foundation is pure — it imports NOTHING from another layer. An upward import (domain ->
+
+    application) or a layer-skipping/outward import (presentation -> integration,
+
+    application -> presentation) breaks the hierarchy and couples the core to its callers.
+
+    The obligation: every relative import points inward or stays in the same layer. WHICH
+
+    forms count as upward/outward is delegated to the per-stack detector; for Convex the
+
+    detector classifies files and relative `./`/`../` specifiers to layers and checks each
+
+    edge against the permitted-target set (presentation -> {presentation, application,
+
+    domain}; application -> {application, domain}; integration -> {integration,
+
+    application, domain}; composition -> any; domain -> {domain}). External (npm) imports
+
+    and imports to unclassifiable modules are outside the hierarchy.
+
+    '
+  fix_hint: "Keep feature imports flowing inward, and keep the domain pure:\n  convex/.../domain.ts  \
+    \     ->  import { x } from './application'   ->  FORBIDDEN\n  convex/.../application.ts  ->  import\
+    \ { closeness } from './domain' ->  allowed\nMove shared logic DOWN into the domain foundation instead\
+    \ of importing up, route\npresentation through application use cases instead of touching integration,\
+    \ and never\nlet the domain reach another layer. This rule is `strict`: an upward or outward edge\
+    \ is\nnot suppressible and fails.\n"
+  exceptions:
+  - Same-layer and inward imports (presentation -> application -> domain; integration -> application/domain)
+    are the intended flow and are never flagged.
+  - The composition root (`composition.ts`/`wagon.ts`) may reach any layer (it assembles the slice) and
+    is never flagged for an outward edge.
+  - External (npm) imports such as `convex/values`/`convex/server` and imports to unclassifiable modules
+    are outside the hierarchy and not checked here (domain's ban on importing `convex/*` is the separate
+    `coder.convex.domain-no-convex-import` rule).
+  - Test files (`*.test.*` / `*.spec.*`), `_generated/`, and vendored/build dirs are out of scope.
+metadata:
+  aliases:
+  - CONVEX-DESIGN-HIERARCHY-IMPORT-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

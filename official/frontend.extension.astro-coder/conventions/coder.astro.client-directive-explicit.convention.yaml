@@ -1,0 +1,63 @@
+schema_version: 1.1.0
+rule_id: coder.astro.client-directive-explicit
+kind: rule
+status: active
+name: Astro interactive islands must declare a client:* directive
+statement: A framework-component / React-style event handler (`onClick={…}`, `onInput={…}`, any `on<Capital>={…}`
+  attribute) written in `.astro` markup MUST sit on an element that also carries an explicit `client:*`
+  hydration directive (`client:load`, `client:visible`, `client:idle`, `client:media`, `client:only`).
+  Without one, Astro ships the element as static HTML and the handler never hydrates — the interactivity
+  is dead. The directive must be present and explicit, never implied.
+terms:
+- term_id: client_directive
+  text: an Astro hydration directive (`client:load`/`client:visible`/`client:idle`/`client:media`/ `client:only`)
+    that turns a statically-rendered component into a live client-side island.
+- term_id: jsx_handler
+  text: a React/JSX-style event-handler attribute of the form `on<Capital>={expression}` (`onClick`, `onInput`,
+    `onSubmit`, …), distinct from a lowercase string-valued inline HTML handler such as `onclick="…"`.
+implementation:
+  type: validator
+  ref: astro_structure_detector
+content:
+  summary: A "no un-hydrated interactivity in Astro markup" obligation. The realization is a zero-dependency
+    JS detector that scans `.astro` template markup (frontmatter and `<style>` blocks excluded) for React/JSX-style
+    handler attributes (`on<Capital>={…}`) and flags each one whose owning element has no `client:*` directive
+    in its attribute list. Plain inline HTML handlers (lowercase `onclick="…"`, string-valued) are valid
+    static markup and out of scope.
+  normative_text: 'Astro is static-first: a component renders to HTML and ships zero client JavaScript
+
+    unless it is explicitly hydrated as an island via a `client:*` directive. A JSX-style
+
+    event handler is a hydration-only construct — it is meaningful only after the component
+
+    boots on the client. Written without a `client:*` directive it is silently inert: the
+
+    button renders, the cursor changes, and the click does nothing, with no error to signal
+
+    the mistake. The obligation is "every island handler is paired with an explicit
+
+    hydration directive"; HOW handlers are recognized is delegated to the per-stack detector.
+
+    The detector resolves each `on<Capital>={…}` attribute to its owning tag and checks the
+
+    tag''s attribute region for a `client:*` token.
+
+    '
+  fix_hint: "Add the hydration directive the interactivity requires, choosing the strategy that fits:\n\
+    \  * `client:load`    — hydrate immediately (above-the-fold, always-interactive);\n  * `client:visible`\
+    \ — hydrate when the element scrolls into view (below the fold);\n  * `client:idle`    — hydrate when\
+    \ the main thread is idle (low priority);\n  * `client:only=\"react\"` — skip SSR, render only on\
+    \ the client.\nIf the element is NOT meant to be interactive, remove the dead handler instead. Disposition\n\
+    is `suppress-and-clean`: a justified static-only case may be marked with the project's\nsuppression\
+    \ marker, but the expectation is to clean it up (hydrate or delete), not to\nsuppress indefinitely.\n"
+  exceptions:
+  - Plain inline HTML handlers (lowercase, string-valued, e.g. `onclick="history.back()"`) are valid static-HTML
+    attributes and are NOT flagged.
+  - Frontmatter (`---...---`) and `<style>` blocks are not markup and are out of scope.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`, `_generated`) are skipped.
+metadata:
+  aliases:
+  - ASTRO-CLIENT-DIRECTIVE-001
+  severity: 2
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0

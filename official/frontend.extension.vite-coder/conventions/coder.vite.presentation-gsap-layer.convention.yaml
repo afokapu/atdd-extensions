@@ -1,0 +1,83 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-gsap-layer
+kind: rule
+status: active
+name: Animation library is confined to the presentation layer
+statement: When production Vite/React code imports a UI animation library (the stack's GSAP-class motion
+  dependency), that import — or a bare `gsap.<method>(` call — MUST occur only within a feature's presentation
+  layer; the domain, application, and integration layers MUST NOT reference it. This is the Vite/React
+  realization of the agnostic "animation belongs to the view layer" obligation owned by the coder extension.
+  The stack-specific detector that enforces it (a zero-dependency Node scan for `gsap` imports/uses in
+  non-presentation TypeScript files) is the frontend.workspace.runtime implementation referenced below
+  — the obligation is agnostic, the detector is not.
+terms:
+- term_id: animation_library
+  text: a frontend motion/animation dependency (the Vite/React stack's `gsap`, `gsap/*`, `@gsap/*`) used
+    to drive view transitions; the agnostic obligation confines it to the view layer, the detector binds
+    the concrete import token.
+- term_id: presentation_layer
+  text: the view layer of a feature, recognized by a `presentation` path segment under the scanned source
+    root; the only layer permitted to import or use an animation library.
+- term_id: non_presentation_layer
+  text: a `domain`, `application`, or `integration` layer (recognized by that path segment) that must
+    stay free of animation-library imports and uses.
+implementation:
+  type: validator
+  ref: vite_gsap_detector
+source:
+  legacy_path: official/atdd.extension.coder/conventions/coder.presentation.gsap-layer.convention.yaml
+  legacy_section: rules
+  legacy_rule_id: coder.presentation.gsap-layer
+  extraction_mode: high_fidelity
+content:
+  summary: An agnostic "animation belongs to the view layer" obligation. The Vite/React realization forbids
+    `import ... from "gsap"` (and `gsap/*`, `@gsap/*`, dynamic-`import()`, CJS-`require`, type-only forms)
+    and bare `gsap.<method>(` usage anywhere a file's path carries a `domain`, `application`, or `integration`
+    layer segment; presentation files are exempt.
+  normative_text: 'GSAP and equivalent animation libraries are approved for frontend animation but must
+    be constrained to
+
+    the presentation layer to preserve layer purity and prevent architectural drift. Importing an
+
+    animation library into domain/application/integration code couples business logic to a view concern,
+
+    making those layers untestable in isolation and leaking rendering detail upward. The obligation is
+
+    "animation imports live only in presentation"; WHICH library token is matched and HOW it is detected
+
+    is delegated to the per-stack detector. For Vite/React the tokens are `gsap` / `gsap/*` / `@gsap/*`
+
+    across ESM, type-only, dynamic-`import()`, and CJS-`require` forms (plus bare `gsap.<method>(` usage),
+
+    and the detector reads layer membership from the path segments of the scanned source root — a file
+    in
+
+    a `presentation` subtree is exempt, one carrying a `domain`/`application`/`integration` segment is
+    in
+
+    scope.
+
+    '
+  fix_hint: "Move the animation usage into the presentation layer:\n  play-grid/application/useTileState.ts\
+    \   import { gsap } from \"gsap\"   ->  FORBIDDEN\n  play-grid/presentation/Tile.tsx         import\
+    \ { gsap } from \"gsap\"   ->  allowed\nDrive animation from a presentation component/hook and pass\
+    \ plain data down from application code, so\ndomain/application/integration stay free of view-library\
+    \ imports. This rule is `strict`: a new\nnon-presentation gsap import/use is not suppressible and\
+    \ fails.\n"
+  exceptions:
+  - Presentation-layer files (any file whose path carries a `presentation` segment) may import and use
+    the animation library freely — that is the intended home.
+  - Layer-less files (no `domain`/`application`/`integration`/`presentation` segment) are out of scope.
+  - Test code (`*.test.*` / `*.spec.*`) is excluded; vendored/build dirs are skipped.
+metadata:
+  aliases:
+  - VITE-PRESENTATION-GSAP-LAYER-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: true
+  implementation_preserved: true
+  fix_hint_preserved: true
+  reviewed_at: '2026-07-01'

@@ -1,0 +1,69 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-token-hardcoded
+kind: rule
+status: active
+name: No hardcoded hex/rgb color literals in Vite/React source or styles
+statement: A Vite/React UI file — component source (`*.tsx`) or stylesheet (`*.css`) — MUST NOT embed
+  a hardcoded color literal (a `#rrggbb`/`#rgb` hex, an `rgb(...)`, or an `rgba(...)`); colors come from
+  the design-system tokens instead, so theming stays centralized. This is the Vite-stack realization of
+  the agnostic "visual values come from tokens" obligation owned by the coder extension (the python-pytest
+  sibling is `coder.design.token-hardcoded`). The detector that enforces it — a regex-over-source scan
+  that reports each hardcoded color literal in a `*.tsx`/ `*.css` file (common neutrals tolerated) — is
+  the frontend.workspace.runtime implementation referenced below; the obligation is stack-bound, the detector
+  is JS-specific.
+terms:
+- term_id: color_token
+  text: a named color value defined once in the design system (a `colors.` accessor in source, or a CSS
+    custom property `--color-*` in styles) that centralizes the palette.
+- term_id: hardcoded_color_literal
+  text: a raw color value embedded directly in a UI file — a `#rrggbb`/`#rgb` hex, an `rgb(...)`, or an
+    `rgba(...)` call — that bypasses the token set; the construct this rule flags in `*.tsx`/`*.css`.
+implementation:
+  type: validator
+  ref: vite_design_system_detector
+content:
+  summary: A "no hardcoded color literals" obligation, the Vite/React sibling of coder.design.token-hardcoded.
+    The realization is a zero-dependency JS detector that flags each six- or three-digit hex literal and
+    each `rgb()`/`rgba()` function call in a `*.tsx` or `*.css` file, tolerating the common neutrals (`#fff`/`#000`/`#ffffff`/`#000000`/`#1a1a1a`)
+    and skipping comments. Unlike the color-property rule, this scans BOTH component source and stylesheets
+    and matches the literal form anywhere on a line.
+  normative_text: 'A hardcoded hex or rgb/rgba literal forks the palette away from the centralized design
+    tokens,
+
+    so a future re-theme silently misses it — and stylesheets are just as much a leak surface as
+
+    component source. The obligation: UI color values are sourced from design tokens, never embedded
+
+    as raw literals. WHICH literal forms are matched and WHICH neutrals are tolerated is delegated to
+
+    the per-stack detector; for the Vite/React stack it matches `#rrggbb`/`#rgb` hex and `rgb(`/
+
+    `rgba(` calls in `*.tsx` and `*.css` files, allows the common black/white/near-black neutrals,
+
+    and skips comment lines. This rule overlaps by design with `coder.vite.design-token-color` (the
+
+    color-property detector): a `*.tsx` `color: ''#3a7bd5''` triggers both — this rule additionally
+
+    catches hex/rgb literals in stylesheets and outside style-property positions.
+
+    '
+  fix_hint: "Replace the hardcoded literal with a design token:\n  .card { color: #3a7bd5 }          \
+    \       ->  FORBIDDEN\n  :root { --color-accent: #3a7bd5 }         // define the token once...\n \
+    \ .card { color: var(--color-accent) }      ->  allowed\nIn component source, pull the color from\
+    \ the token/theme set (`colors.accent`); in stylesheets,\nreference a CSS custom property. This rule's\
+    \ disposition is `strict`: a hardcoded color literal\nin a UI file is not suppressible and fails the\
+    \ gate.\n"
+  exceptions:
+  - Common neutrals (`#fff`, `#000`, `#ffffff`, `#000000`, `#1a1a1a`) are tolerated.
+  - CSS custom-property references (`var(--color-accent)`) carry no literal and are not flagged.
+  - Comment lines (single-line and block) are skipped.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope; vendored/build directories (`node_modules`,
+    `dist`, `build`, `.next`) are skipped during the walk.
+  - 'The token-definition source that legitimately declares the palette literals (e.g. a `:root { --color-*:
+    #... }` foundations file) should be scoped out via the consumer''s excludes.'
+metadata:
+  aliases:
+  - VITE-DESIGN-TOKEN-HARDCODED-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

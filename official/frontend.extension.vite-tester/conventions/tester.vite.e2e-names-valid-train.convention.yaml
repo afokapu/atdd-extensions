@@ -1,0 +1,64 @@
+schema_version: 1.1.0
+rule_id: tester.vite.e2e-names-valid-train
+kind: rule
+status: active
+name: Every E2E/journey spec names a registered train
+statement: >-
+  Every end-to-end journey spec in the e2e tree MUST name a train that is registered in the
+  plan. Concretely: a `*.spec.ts`/`*.test.ts` under an `e2e` path segment (or carrying a
+  journey marker) either (a) declares a train binding — a `// Train: train:{id}` header or a
+  `{train_id}.` filename prefix — whose `train_id` IS present in `plan/_trains*`, or it is a
+  violation. A spec that binds a train_id absent from the registry, OR an e2e-tree spec that
+  names no train at all, is orphaned from the train plan. This is the Vite/Playwright
+  realization of the core `test_train_frontend_e2e.py` VAL-0026 rule ("directory '{train_id}'
+  is not a registered train_id" / "spec file should be in a `<train_id>` location"), rendered
+  for frg-app's flat train_id-prefixed filename layout. The detector is the
+  frontend.workspace.runtime family below.
+implementation:
+  type: validator
+  ref: vite_train_e2e_coverage
+content:
+  summary: >-
+    A "every e2e spec names a registered train" obligation — the reverse-coverage half of the
+    `vite_train_e2e_coverage` FAMILY. A zero-dependency JS detector that, for each journey spec
+    in the e2e tree, flags either an unknown bound train_id or the absence of any train binding.
+  normative_text: |
+    Train coverage is bidirectional: `tester.vite.train-e2e-coverage` proves every train has a
+    spec; this rule proves every e2e spec has a train. For each `*.spec.ts`/`*.test.ts` that is
+    an e2e-tree spec (path has an `e2e` segment) or otherwise carries a journey marker, the
+    detector resolves its train binding (from the `// Train:` header or the `{train_id}.`
+    filename prefix) and:
+      - if the bound train_id is NOT in `plan/_trains*` → violation (names a non-existent train);
+      - if NO train binding is present at all → violation (an e2e spec orphaned from the plan).
+    In frg-app this surfaces `curate-content.localise-content.smoke.spec.ts`: it sits in the
+    train e2e dir, has no `NNNN-slug` prefix and no `// Train:` header (only `Feature:` +
+    wagon-keyed `Acceptance:` lines), so it names no train — a pure orphan. WHICH files are
+    e2e-tree specs is delegated to the shared detector; validating the binding against the
+    registry is this member's job.
+  fix_hint: |
+    Give the spec a real train binding: name the file `{train_id}.smoke.spec.ts` and add
+    `// Train: train:{train_id}` for a registered train; or, if the spec is a wagon/feature-level
+    acceptance smoke rather than a train journey, move it out of the `e2e/` train tree. If the
+    train_id is simply misspelled, correct it to match the registry. Disposition is
+    `documentation-only`: the detector emits the RAW orphaned/invalid-binding list.
+  exceptions:
+    - A repo with no train registry (no `plan/_trains.yaml`, no `plan/_trains/`) is out of scope
+      — with no registry there is nothing to validate a binding against (avoids false positives).
+    - Specs that are not e2e-tree specs and carry no journey marker (ordinary unit/acceptance
+      specs elsewhere) are out of scope.
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-E2E-NAMES-VALID-TRAIN-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: e2e_tree_spec
+    text: >-
+      a `*.spec.ts`/`*.test.ts` whose path contains an `e2e` segment (or which carries a
+      journey marker) — a spec expected to bind to a train.
+  - term_id: orphaned_spec
+    text: >-
+      an e2e-tree spec that names no registered train — it declares no train binding, or a
+      `train_id` absent from `plan/_trains*`.

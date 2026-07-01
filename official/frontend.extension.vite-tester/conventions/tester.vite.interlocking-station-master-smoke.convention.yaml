@@ -1,0 +1,27 @@
+schema_version: 1.1.0
+rule_id: tester.vite.interlocking-station-master-smoke
+kind: rule
+status: active
+name: Interlocking station-master smoke coverage (frontend)
+statement: An interlocking station-master rendered surface MUST have a smoke end-to-end
+  spec asserting its mounted routes render.
+rationale: The station-master aggregates guarded routes; without a smoke spec its
+  rendered surface is unverified.
+terms:
+- term_id: station_master
+  text: the interlocking node that mounts/aggregates admissible routes
+- term_id: smoke_spec
+  text: a *.smoke.spec.ts asserting operator-observable render
+implementation:
+  type: validator
+  ref: vite_interlocking_e2e_coverage
+content:
+  summary: Frontend smoke coverage of the interlocking station-master
+  normative_text: 'When the interlocking registry declares a station_master, the frontend
+    e2e tree MUST contain a *.smoke.spec.ts covering it (// StationMaster: {id} header
+    or {id}.*.smoke.spec.ts). Absence is a gap. FRONTEND counterpart to tester.convex.interlocking-smoke-coverage-for-station-master.'
+  fix_hint: Add a *.smoke.spec.ts that mounts the station-master and asserts its routes
+    render.
+metadata:
+  severity: 2
+  disposition: block

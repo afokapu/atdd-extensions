@@ -1,0 +1,12 @@
+@theme {
+  /* Token DEFINITIONS: a literal color on a custom-property line is the one place
+     a hex belongs — it is the single source the rest of the system references. */
+  --color-charcoal: #1a1a1a;
+  --color-ivory: #f6f1e7;
+}
+
+.button {
+  color: var(--color-ivory);
+  background: var(--color-charcoal);
+  border: 1px solid var(--color-gold);
+}

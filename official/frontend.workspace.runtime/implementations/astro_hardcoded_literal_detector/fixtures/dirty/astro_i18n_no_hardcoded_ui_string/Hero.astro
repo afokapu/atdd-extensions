@@ -1,0 +1,11 @@
+---
+import { type Locale } from "@/i18n/config";
+const { locale } = Astro.props as { locale: Locale };
+---
+
+<section>
+  <!-- Hardcoded English copy: bypasses the i18n/ui.ts catalog, cannot be translated. -->
+  <h1>Forge best entrepreneurs. Season after season.</h1>
+  <p>A competitive league for entrepreneurs.</p>
+  <button>Join a League</button>
+</section>

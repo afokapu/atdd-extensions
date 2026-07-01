@@ -1,0 +1,11 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: coder.vite.security-xss
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.vite.security-xss
+emits_rule_ids:
+- coder.vite.security-xss
+entrypoint: detect.mjs
+report: detect.mjs

@@ -1,0 +1,53 @@
+schema_version: 1.1.0
+rule_id: tester.vite.journey-no-acceptance-marker
+kind: rule
+status: active
+name: Vite journey/E2E specs must not carry Acceptance or WMBT markers
+statement: >-
+  A Vite/Playwright journey spec MUST NOT carry an `// Acceptance:` or `// WMBT:` header line.
+  Journey and acceptance test headers are mutually exclusive: a journey test binds to a
+  `Train:`, an acceptance test binds to an `Acceptance:` + `WMBT:` pair. A journey spec that
+  also carries an `Acceptance:`/`WMBT:` marker is conflating the two header identities and is
+  ambiguous about what it tests. This is the Vite/Playwright realization of the core rule
+  "Acceptance: and WMBT: lines MUST NOT appear in journey tests" / the `mutual_exclusion` block
+  in `tester/conventions/train.convention.yaml`. The detector is the frontend.workspace.runtime
+  family below.
+implementation:
+  type: validator
+  ref: vite_journey_test_detector
+content:
+  summary: >-
+    A "journey specs carry no Acceptance:/WMBT: marker" obligation, the Vite/Playwright sibling
+    of the core journey/acceptance mutual-exclusion rule (and of
+    `tester.convex.journey-no-acceptance-marker`). A member of the `vite_journey_test_detector`
+    FAMILY flags a journey spec that also carries an `Acceptance:` or `WMBT:` header line.
+  normative_text: |
+    A test file has exactly one header identity. Journey tests carry `Train:` and MUST NOT
+    carry `Acceptance:`/`WMBT:`; acceptance tests carry `Acceptance:`+`WMBT:` and MUST NOT
+    carry `Train:`. A journey spec that mixes both is untraceable — a resolver cannot tell
+    whether it exercises a train workflow or a single acceptance criterion. frg-app's
+    `curate-content.localise-content.smoke.spec.ts` is the cautionary real case: it carries
+    `Acceptance:` lines in an `assembly`-layer smoke spec but no `Train:` — it should be a
+    train-bound journey (flagged here once it names a train) or a wagon-level acceptance smoke
+    (moved out of the train E2E dir). WHICH files are journey specs is delegated to the shared
+    detector; asserting the absence of `Acceptance:`/`WMBT:` is this member's job.
+  fix_hint: |
+    Remove the `// Acceptance:` / `// WMBT:` lines from a train-bound journey spec (its train
+    binding is the `// Train:` header). If the file is really an acceptance test, move it out
+    of the journey/e2e tree and give it the acceptance header identity instead. Disposition is
+    `documentation-only`: the detector emits the RAW offending-marker list.
+  exceptions:
+    - Non-journey specs (acceptance/unit tests) are out of scope — they are SUPPOSED to carry
+      `Acceptance:`/`WMBT:`.
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-JOURNEY-NO-ACCEPTANCE-MARKER-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: acceptance_marker
+    text: >-
+      an `// Acceptance:` or `// WMBT:` header line — the identity of an acceptance test, which
+      MUST NOT appear in a journey (assembly) spec.

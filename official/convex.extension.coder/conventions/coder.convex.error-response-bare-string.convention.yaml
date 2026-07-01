@@ -1,0 +1,84 @@
+schema_version: 1.1.0
+rule_id: coder.convex.error-response-bare-string
+kind: rule
+status: active
+name: Convex errors must be coded ConvexError, not bare strings
+statement: When a Convex server module (`*.ts`/`*.tsx`/`*.js`/`*.mjs` under the `convex/` function tree,
+  excluding `_generated/` codegen and test files) signals a failure, it MUST throw a structured, coded
+  error — `throw new ConvexError({ code, message })` — NOT a bare string (`throw "boom"` / `` throw `…`
+  ``) and NOT a generic `throw new Error("…")`. A bare-string or generic-Error throw loses the machine-readable
+  code clients branch on and degrades error handling to substring matching. This is the Convex-stack realization
+  of the agnostic "errors are structured" obligation owned by the coder extension (the python-pytest sibling
+  is `coder.error-response.bare-string`, which forbids `HTTPException(detail="…")`). The obligation is
+  stack-bound; the detector that enforces it — a regex over Convex source for `throw <string>` and `throw
+  new Error(…)` sites — is the atdd.workspace.convex implementation referenced below. It is the sibling
+  of `coder.convex.error-response-code-format`, which constrains the shape of the `code` value once a
+  `ConvexError` is used.
+terms:
+- term_id: coded_error
+  text: a `ConvexError` whose payload is an object carrying at least a `code` (machine-readable classification)
+    and a `message` — the structured failure form Convex delivers to the client verbatim, which this rule
+    requires.
+- term_id: bare_string_throw
+  text: a `throw` whose operand is a plain string, single-quoted, or template literal (`throw "…"` / ``
+    throw `…` ``) — an anti-pattern this rule forbids.
+- term_id: generic_error_throw
+  text: a `throw new Error(…)` raising the built-in `Error` rather than a `ConvexError`; its message is
+    redacted to the client in production, so it carries no usable error contract.
+- term_id: convex_server_module
+  text: a non-test, non-generated source file under the `convex/` function tree that Convex runs on its
+    backend — the unit this rule scans.
+implementation:
+  type: validator
+  ref: convex_error_response_detector
+content:
+  summary: A Convex-stack "error responses carry a structured, coded body" obligation, the sibling of
+    coder.error-response.bare-string. The realization is a zero-dependency JS detector (regex over source,
+    no TS runtime) that — after masking comments and string contents so anchors inside them are ignored
+    — flags each `throw "<literal>"` / `` throw `<template>` `` and each `throw new Error(…)`. A `throw
+    new ConvexError({…})` (the correct form) and a `throw err` re-throw of an error object are never flagged.
+  normative_text: 'A Convex query/mutation/action that throws a bare string or a generic `Error` gives
+    the client
+
+    nothing to branch on — there is no stable code, no classification, only prose. The obligation
+
+    is "failures are raised as `ConvexError` carrying at least a `code` and a `message`" (the
+
+    ConvexError payload is delivered to the client verbatim, unlike a generic `Error` whose message
+
+    is redacted in production). WHICH construct raises the error and HOW the bare form is detected
+
+    is delegated to the per-stack detector. For Convex the detector is a regex over `convex/**`
+
+    modules supplied as scan roots, matching `throw` immediately followed by a string/template
+
+    literal, and `throw new Error(` (the `Error` token does not match `new ConvexError(`). Each
+
+    such site is a violation; comments, string contents, generated code under `_generated/`, and
+
+    test files are out of scope.
+
+    '
+  fix_hint: "Replace the bare throw with a coded ConvexError:\n  throw \"unknown sku\";              \
+    \                              // ❌ bare string\n  throw new Error(\"qty must be positive\");    \
+    \                    // ❌ generic Error\n  ->\n  throw new ConvexError({ code: \"RESOURCE_NOT_FOUND\"\
+    , message: \"unknown sku\" });\n  throw new ConvexError({ code: \"INVALID_INPUT\", message: \"qty\
+    \ must be positive\" });\nPromote the human message into `message`, classify the failure with a canonical\
+    \ `code` (see\ncoder.convex.error-response-code-format), and attach debugging context as extra payload\
+    \ fields.\nRe-throwing a caught error object (`throw err`) is fine. This rule's disposition is `strict`:\n\
+    new bare-string / generic-Error throws fail the gate and are not suppressible by default.\n"
+  exceptions:
+  - A `throw new ConvexError({…})` — the prescribed correct form — is never flagged.
+  - A re-throw of an existing error object (`throw err`, `throw caught`) carries no string literal and
+    is not matched.
+  - Any `throw` site written inside comments or string/template contents is masked before matching and
+    is not flagged.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are never scanned;
+    vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped.
+metadata:
+  aliases:
+  - CONVEX-ERROR-BARE-STRING-001
+  - ERROR-BARE-STRING-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0

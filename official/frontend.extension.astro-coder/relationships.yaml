@@ -1,0 +1,40 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for frontend.extension.astro-coder. Sorted-adjacent sibling chain
+# (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
+graph_id: frontend.extension.astro-coder.relationships
+
+nodes:
+  - coder.astro.client-directive-explicit
+  - coder.astro.component-frontmatter-fence
+  - coder.astro.i18n-no-hardcoded-ui-string
+  - coder.astro.logging-silent-swallow
+  - coder.astro.no-hardcoded-color
+  - coder.astro.no-secret-in-frontmatter
+  - coder.astro.security-xss
+
+edges:
+  - source_ref: coder.astro.client-directive-explicit
+    target_ref: coder.astro.component-frontmatter-fence
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.astro.component-frontmatter-fence
+    target_ref: coder.astro.i18n-no-hardcoded-ui-string
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.astro.i18n-no-hardcoded-ui-string
+    target_ref: coder.astro.logging-silent-swallow
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.astro.logging-silent-swallow
+    target_ref: coder.astro.no-hardcoded-color
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.astro.no-hardcoded-color
+    target_ref: coder.astro.no-secret-in-frontmatter
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.astro.no-secret-in-frontmatter
+    target_ref: coder.astro.security-xss
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'

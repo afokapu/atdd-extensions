@@ -1,0 +1,66 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-orphan-ui
+kind: rule
+status: active
+name: Every exported React component is connected to the rendered UI
+statement: ANY React component exported from a Vite/React `*.tsx` file MUST be imported by at least one
+  other source file in the codebase, so no UI surface is left fully disconnected from the rendered tree.
+  This is the Vite-stack realization of the agnostic "no orphaned UI" obligation owned by the coder extension
+  (the python-pytest sibling is `coder.design.orphan-ui`). The detector that enforces it — a two-pass
+  cross-file scan that collects every imported identifier and reports each exported PascalCase component
+  whose name is imported nowhere — is the frontend.workspace.runtime implementation referenced below;
+  the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: exported_component
+  text: a PascalCase React component exported from a `*.tsx` file via `export function X`, `export default
+    function X`, or `export const X =` — the unit this rule requires to be connected.
+- term_id: import_reference
+  text: the appearance of a component's name in any `import` statement (default, namespace, or named,
+    counting both sides of an `as` alias) anywhere in the scanned source; its total absence is what this
+    rule flags as an orphan.
+implementation:
+  type: validator
+  ref: vite_design_system_detector
+content:
+  summary: A "no UI component is left dead/disconnected" obligation, the Vite/React sibling of coder.design.orphan-ui.
+    The realization is a zero-dependency JS detector that, in pass one, gathers every identifier any import
+    statement brings into scope across the scan set, then in pass two flags each PascalCase component
+    exported from a `*.tsx` file (`export function X`, `export default function X`, `export const X =`)
+    whose name appears in no import anywhere.
+  normative_text: 'A component that is exported but never imported is dead UI: it is disconnected from
+    the rendered
+
+    tree, cannot be exercised in situ, and silently drifts from the rest of the system. The
+
+    obligation: every exported React component is referenced (imported) by at least one other file.
+
+    WHICH declarations count as components and HOW references are resolved is delegated to the
+
+    per-stack detector. For the Vite/React stack a component is a PascalCase name exported via
+
+    `export function`, `export default function`, or `export const`; a reference is the appearance
+
+    of that name in any `import` statement (default, namespace, or named — counting both sides of an
+
+    `as` alias) across all scanned `*.ts`/`*.tsx` files. A component named by no import is an orphan.
+
+    '
+  fix_hint: "Connect the component to the rendered tree, or remove it:\n  web/src/feature/presentation/OrphanCard.tsx\
+    \  (exported, imported by nobody)  ->  FORBIDDEN\n  import { OrphanCard } from './OrphanCard'    \
+    \  // ...then render <OrphanCard/>  ->  allowed\nEither import and render the component from a connected\
+    \ surface, or delete it if it is genuinely\nunused. This rule's disposition is `strict`: an exported\
+    \ component referenced by no import fails\nthe gate and is not suppressible by default.\n"
+  exceptions:
+  - Non-PascalCase exports (hooks like `useX`, helpers, constants, types) are not treated as components
+    and are not flagged.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope, both as export sources and as the import references
+    that connect a component.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+  - A default export imported under a renamed identifier may evade the name-based reference match; keep
+    the imported name aligned with the component's declared name.
+metadata:
+  aliases:
+  - VITE-DESIGN-ORPHAN-UI-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

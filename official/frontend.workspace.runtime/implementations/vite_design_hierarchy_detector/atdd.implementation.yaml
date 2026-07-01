@@ -1,0 +1,13 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: vite_design_hierarchy_detector
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.vite.design-tokens-pure
+- coder.vite.design-dependency-flow
+- coder.vite.design-wagons-import
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention: coder.vite.design-dependency-flow

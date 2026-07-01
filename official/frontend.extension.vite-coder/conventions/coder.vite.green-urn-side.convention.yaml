@@ -1,0 +1,55 @@
+schema_version: 1.1.0
+rule_id: coder.vite.green-urn-side
+kind: rule
+status: active
+name: URN side segment is frontend or backend
+statement: >-
+  A Vite/React app implementation file MUST carry a GREEN traceability header, and specifically
+  the URN side segment is one of frontend|backend. Stack-neutral obligation (required in every
+  implementation file), vite-specific line-comment detector; realized by the family validator
+  vite_green_traceability_detector (core alias GREEN-URN-005).
+implementation:
+  type: validator
+  ref: vite_green_traceability_detector
+content:
+  summary: >-
+    GREEN header/URN traceability rule: the URN side segment is one of frontend|backend. One member
+    of the vite traceability FAMILY detector (zero-dependency JS header parser over each
+    implementation file).
+  normative_text: |
+    Every Vite/React app implementation file (a `.tsx` module under the scanned function/app tree,
+    excluding `_generated/` codegen and `*.test.*`/`*.spec.*` files) MUST carry a traceability
+    header. This member of the GREEN header/URN family enforces that the URN side segment is one of
+    frontend|backend. This is the vite realization of the agnostic GREEN traceability obligation
+    `coder.green.component-urn-side` (core alias GREEN-URN-005); the obligation is stack-neutral
+    (the header is required in every implementation file, backend or frontend), the `// …` line-
+    comment detector is JS-specific. HOW the header is parsed is delegated to the per-stack family
+    detector `vite_green_traceability_detector`; WHAT must hold is this rule.
+  fix_hint: |
+    Add or correct the traceability header so that the URN side segment is one of frontend|backend. The canonical header is:
+      // URN: component:{wagon}:{feature}:{Name}:{side}:{layer}
+      // Tested-By:
+      // - test:{wagon}:{feature}:{TEST_URN}
+      // Runtime: vite
+      // Purpose: <one line, <= 80 chars>
+    This rule's disposition is `documentation-only` (traceability, severity 3); the detector always emits the RAW finding and a downstream coach decides ratcheting.
+  exceptions:
+    - Test files (`*.test.*` / `*.spec.*`) are out of scope — they carry no production URN header.
+    - Generated code under `_generated/` is never scanned.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - GREEN-URN-005
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: traceability_header
+    text: >-
+      the leading run of `//` line comments (URN, Tested-By, Runtime, Purpose) that every
+      implementation file carries so component <-> wagon <-> feature <-> test edges are
+      recoverable from source.
+  - term_id: component_urn
+    text: >-
+      the stable identifier component:{wagon}:{feature}:{name}:{side}:{layer} that names a
+      component and locates it in the wagon/feature hierarchy.

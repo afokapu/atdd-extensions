@@ -1,0 +1,85 @@
+schema_version: 1.1.0
+rule_id: coder.vite.refactor-coach-ratchet-pres
+kind: rule
+status: active
+name: Presentation-layer ratchet trimming must not silently gut a view
+statement: When the refactor ratchet trims a presentation-layer component, the reduction MUST NOT leave
+  a gutted stub — a component that still exports but renders nothing (returns only `null` or an empty
+  fragment) — without recorded smoke evidence for the governing issue. This is the Vite/React realization
+  of the agnostic "mechanical trimming of the view layer must be smoke-verified" obligation owned by the
+  coder extension. The stack-specific detector that surfaces it (a zero-dependency Node scan for presentation
+  components that export but render no real JSX) is the frontend.workspace.runtime implementation referenced
+  below — the obligation is agnostic, the detector is not.
+terms:
+- term_id: gutted_presentation_stub
+  text: a presentation-layer file (`*/presentation/*.{ts,tsx,jsx,js}`) that still exports a React component
+    but renders nothing (returns only `null` / `<></>` / `<Fragment />`) — the static residue of a view
+    trimmed too far by the ratchet.
+- term_id: smoke_evidence
+  text: a recorded attestation that the trimmed feature was manually smoke-tested, stored at `.atdd/smoke-evidence/<issue>.yaml`;
+    its presence (for the governing issue) absorbs the reduction.
+- term_id: advisory_gate
+  text: the disposition for this rule — severity 3, advisory rather than blocking, but gating the SMOKE->REFACTOR
+    transition until smoke evidence is recorded.
+implementation:
+  type: validator
+  ref: coder.vite.refactor-coach-ratchet-pres
+source:
+  legacy_path: official/atdd.extension.coder/conventions/coder.refactor.coach-ratchet-pres.convention.yaml
+  legacy_section: ratchet_smoke_gate.rules
+  legacy_rule_id: coder.refactor.coach-ratchet-pres
+  extraction_mode: high_fidelity
+content:
+  summary: An agnostic "the view layer must not be silently emptied by the ratchet" obligation. The Vite/React
+    realization flags any presentation-layer file (`*/presentation/*.{ts,tsx,jsx,js}`) that exports a
+    React component whose body renders NO real JSX — it returns only `null` or an empty fragment — the
+    static fingerprint of a component trimmed to a stub while structural validators stayed green. The
+    finding is advisory and RAW; the smoke-evidence gate is applied downstream.
+  normative_text: 'The refactor ratchet treats line-count / duplication reduction as improvement, but
+    presentation files
+
+    are uniquely sensitive because lines often correspond to user-visible features. Past incident (core
+
+    issue #358, replacing #319): 8 match features were removed during ratchet trimming, structural
+
+    validators stayed green, and the loss was caught only by manual smoke testing hours later. The
+
+    surviving artifact of that kind of over-trim is a presentation component that still exports its symbol
+
+    (so imports and structural checks pass) but renders nothing. The obligation is "a presentation view
+
+    reduced to an empty render is gated until smoke evidence is recorded"; WHICH files count and HOW the
+
+    smell is recognized is delegated to the per-stack detector. For Vite/React the detector scans
+
+    presentation-layer files for an exported component whose only render is `null` / `<></>` /
+
+    `<Fragment />` and emits the RAW finding; the smoke-evidence absorption (`.atdd/smoke-evidence/<issue>.yaml`)
+
+    is a coach/consumer concern, not the detector''s.
+
+    '
+  fix_hint: "If the empty render is intentional, smoke-test the affected feature and record evidence:\n\
+    \  atdd validate coder --smoke-required <issue>\nwhich writes `.atdd/smoke-evidence/<issue>.yaml`;\
+    \ with evidence recorded the reduction is absorbed.\nOtherwise, restore the trimmed render. Severity\
+    \ is 3 (advisory + gate, not stop-the-world) — the past\nincident took hours to find, not weeks. This\
+    \ rule's disposition is `advisory`: the detector always\nemits the RAW finding regardless of evidence.\n"
+  exceptions:
+  - A presentation component that renders real JSX (any non-fragment element) is not a stub and is never
+    flagged — a conditional `return null` guard alongside real markup is fine.
+  - Non-presentation files (domain/application/integration, or layer-less) are out of scope.
+  - A stub whose governing issue has recorded smoke evidence is absorbed by the gate (applied by the coach/consumer
+    layer, NOT by the detector — the detector emits the RAW finding regardless).
+  - Test code (`*.test.*` / `*.spec.*`) is excluded; vendored/build dirs are skipped.
+metadata:
+  aliases:
+  - VITE-COACH-RATCHET-PRES-001
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+parity:
+  source_fragments_preserved: true
+  examples_preserved: true
+  implementation_preserved: true
+  fix_hint_preserved: true
+  reviewed_at: '2026-07-01'

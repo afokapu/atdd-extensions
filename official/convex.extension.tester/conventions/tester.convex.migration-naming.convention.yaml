@@ -1,0 +1,108 @@
+schema_version: 1.1.0
+rule_id: tester.convex.migration-naming
+kind: rule
+status: active
+name: Convex migration files are named deterministically from their migration id
+statement: 'A Convex migration module (a non-test, non-generated `*.ts`/`*.tsx`/`*.js`/`*.mjs` file under
+  a `convex/migrations/**` subtree that exports a one-shot migration function — an `internalMutation`/
+  `mutation`/`internalAction`/`action`, or a migrations-component `migration(...)`) MUST be named DETERMINISTICALLY
+  from its migration id, so the persistence change and the test that proves it stay traceable to each
+  other. For the Convex stack the migration id is carried by the exported migration function name, and
+  the deterministic rendering is: the file''s snake_case stem equals the snake_case rendering of that
+  exported name. Convex addresses a migration as `migrations/<file_stem>:<export>` (e.g. `migrations/backfill_matches:backfillMatches`),
+  so `backfill_matches.ts` exporting `backfillMatches` is derivable; a stem that is not snake_case, or
+  that does not match any exported migration''s snake_case rendering, is not. This is the Convex/TypeScript
+  sibling of the official python/Supabase-stack `tester.migration.naming` (which renders Supabase `<timestamp>_<slug>.sql`):
+  the agnostic invariant — a persistent contract must have a backing store — stays in CORE (`tester.migration.persistent-contract-requires-backing-store`);
+  what stays here is the per-stack FILENAME-from-migration-id rendering. The realizing detector — a basename
+  scan over `convex/migrations/**` that derives the expected stem from each file''s exported migration
+  name — is the atdd.workspace.convex implementation referenced below; the obligation is stack-bound,
+  the detector is Convex-specific.'
+terms:
+- term_id: convex_migration_module
+  text: a TypeScript module under `convex/migrations/**` that exports a one-shot migration function (an
+    `internalMutation`/`mutation`/`internalAction`/`action`, or a migrations-component `migration(...)`),
+    invoked as `migrations/<file_stem>:<exportName>`. The unit this rule checks.
+- term_id: migration_id
+  text: the identifier of a migration artifact. For the Convex stack it is carried by the exported migration
+    function's name; the file is named after it (its snake_case rendering) and a migration test is named
+    after it, so the change, its id, and its test stay traceable.
+- term_id: deterministic_stem
+  text: the file stem a migration MUST carry — the snake_case rendering of its exported migration id (`backfillMatches`
+    -> `backfill_matches`); a stem that is not snake_case or does not match any exported migration's rendering
+    is not derivable from the id.
+implementation:
+  type: validator
+  ref: tester.convex.migration-naming
+content:
+  summary: A "Convex migration files follow the id-derived naming pattern" obligation, the Convex/TypeScript
+    sibling of the official `tester.migration.naming`. The realization is a zero-dependency JS detector
+    that scans each migration module under a `convex/migrations/**` subtree (skipping `index.*` barrels
+    and files with no migration export) and flags any whose snake_case file stem is not the snake_case
+    rendering of one of its exported migration functions. A mis-named migration is a traceability gap
+    — the persistence change can no longer be matched deterministically to its id or its test.
+  normative_text: 'Migrations are the store-level realization of a persistent contract. The store-tech-agnostic
+
+    obligation — every persistent contract has a migration or an existing backing store — is owned by
+
+    the CORE node `tester.migration.persistent-contract-requires-backing-store`. What remains here is
+
+    the per-stack NAMING discipline: a migration''s filename is derived from its migration id so the
+
+    artifact, its id, and its test never drift apart.
+
+
+    Core renders this for the Supabase/PostgreSQL stack as `supabase/migrations/<timestamp>_<slug>.sql`
+
+    with a colocated test named after the migration id. Convex has no SQL migration files: a Convex
+
+    migration is a TypeScript module under `convex/migrations/` that exports a one-shot
+
+    `internalMutation` (or `mutation`/`internalAction`/`action`, or a convex-helpers `migration(...)`),
+
+    invoked from the dashboard as `migrations/<file_stem>:<exportName>`. The Convex rendering of the
+
+    id-derived-name rule is therefore: the file stem is the snake_case form of the exported migration
+
+    function''s name (its id) — `backfillMatches` -> `backfill_matches.ts`. The detector derives the
+
+    expected stem from the exported name and flags any file whose actual stem is not snake_case or
+
+    does not match. WHICH per-stack rendering applies, and HOW the id maps to the filename, is
+
+    delegated to the per-stack detector; the Supabase rendering and python-pytest stay with their own
+
+    workspace packages, NOT with this Convex detector.
+
+    '
+  fix_hint: 'Rename the migration file to the snake_case rendering of its exported migration id, e.g.
+    a file
+
+    exporting `backfillMatches` -> `backfill_matches.ts`; a file exporting `fixStuff` -> `fix_stuff.ts`
+
+    (not `fix-stuff.ts`, not `fixStuff.ts`). Keep the file under `convex/migrations/` and keep the
+
+    exported function name and the file stem in lockstep so `migrations/<stem>:<export>` stays
+
+    derivable and the migration stays traceable to its test. This rule is `documentation-only`: the
+
+    detector emits the RAW mis-named-migration list as advisory guidance, not a hard gate; whether it
+
+    blocks is the downstream consumer''s disposition decision, never the detector''s.
+
+    '
+  exceptions:
+  - Files outside a `convex/migrations/**` subtree are out of scope — only migration artifacts are governed
+    by this rule.
+  - A module under `migrations/` that exports no migration function (a helper, a type module, an `index.*`
+    barrel/registry) is not a migration artifact and is not flagged.
+  - The agnostic "persistent contract requires a backing store" obligation is owned by CORE, not by this
+    node.
+  - Test files (`*.test.*` / `*.spec.*`), generated code under `convex/_generated/`, and vendored/build
+    dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+  - TESTER-CONVEX-MIGRATION-NAMING-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0

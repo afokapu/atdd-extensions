@@ -1,0 +1,7 @@
+{
+  "convex_quality_comments": "coder.convex.quality-comments",
+  "convex_quality_duplication": "coder.convex.quality-duplication",
+  "convex_quality_file_length": "coder.convex.quality-file-length",
+  "convex_quality_mi": "coder.convex.quality-mi",
+  "convex_quality_naming": "coder.convex.quality-naming"
+}

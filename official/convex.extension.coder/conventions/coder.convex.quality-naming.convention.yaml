@@ -1,0 +1,75 @@
+schema_version: 1.1.0
+rule_id: coder.convex.quality-naming
+kind: rule
+status: active
+name: Convex identifiers follow consistent naming conventions
+statement: Convex server identifiers MUST follow consistent TypeScript naming conventions — functions
+  in camelCase, types and interfaces in PascalCase, and module-level constants in SCREAMING_SNAKE_CASE
+  — so that the backend reads predictably during the REFACTOR phase. This is the Convex-stack realization
+  of Core's `coder.refactor.quality-naming` (which, for Python, requires PascalCase classes and UPPER_CASE
+  constants), re-expressed for TS/Convex. The stack-specific detector is a zero-dependency pattern scan
+  over source flagging mis-cased function, type/interface, and module-constant declarations; the obligation
+  is stack-bound, the detector is JS-specific.
+terms:
+- term_id: camel_case_function
+  text: a function name written `^[a-z][A-Za-z0-9]*$` (e.g. `computeTotal`); a `function` declaration
+    or module-level arrow const whose name starts uppercase or carries an underscore violates the rule.
+- term_id: pascal_case_type
+  text: a type or interface name written with a leading capital and internal capitals (e.g. `OrderRow`);
+    an `interface`/`type` whose name starts lowercase or is snake_case violates.
+- term_id: screaming_snake_constant
+  text: a module-level constant named in all caps with underscores (e.g. `MAX_RETRIES`); a lowercase underscore-bearing
+    module-level const assigned to a literal is flagged as a mis-cased constant.
+implementation:
+  type: validator
+  ref: convex_quality_metrics_detector
+content:
+  summary: 'An agnostic "names are consistent" obligation, the Convex sibling of coder.refactor.quality-naming.
+    The realization scans each Convex module for three concrete mis-casings: a function (declaration or
+    module-level arrow const) not in camelCase, an interface/type not in PascalCase, and a module-level
+    const that reads as a constant (snake_case name + literal RHS) not in SCREAMING_SNAKE_CASE. Skips
+    `_generated/` and `*.test.ts`/`*.spec.ts`.'
+  normative_text: "TS/Convex naming conventions: functions in camelCase, types and interfaces in\nPascalCase,\
+    \ module-level constants in SCREAMING_SNAKE_CASE. The detector flags three\nconcrete patterns:\n \
+    \ (1) FUNCTION not camelCase — a `function name(` declaration, or a module-level (non-\n      indented)\
+    \ `const name = (args) => ...` arrow function, whose name does not match\n      `^[a-z][A-Za-z0-9]*$`.\
+    \ (Convex builder bindings like\n      `export const sendMessage = mutation({...})` are camelCase\
+    \ const names bound to a\n      builder CALL, not arrow functions, so the arrow check does not touch\
+    \ them — only\n      their camelCase name matters, which this rule already requires.)\n  (2) TYPE/INTERFACE\
+    \ not PascalCase — an `interface Name` or `type Name =` declaration\n      whose name does not match\
+    \ `^[A-Z][A-Za-z0-9]*$`.\n  (3) MODULE CONSTANT should be SCREAMING — a module-level (non-indented)\
+    \ `const` whose\n      target is a lowercase name CONTAINING an underscore and whose right-hand side\
+    \ is a\n      literal (string / number / boolean / array / object): it reads as a constant and\n \
+    \     should be SCREAMING_SNAKE_CASE. (Directly mirrors Core's snake-name + literal\n      heuristic\
+    \ for mis-cased constants.)\nA lowercase camelCase const WITHOUT an underscore, or one bound to a\
+    \ non-literal\nexpression, is treated as an ordinary binding and is NOT flagged. WHICH identifier\
+    \ forms\nare checked and HOW is delegated to the per-stack detector. DISPOSITION BOUNDARY\n(PROVIDER-CONTRACT-v1.1\
+    \ §1): the detector emits only the RAW mis-cased call sites; the\nstrict verdict is a downstream consumer\
+    \ concern.\n"
+  fix_hint: 'Rename to the conventional case: `function ComputeTotal(` -> `function computeTotal(`;
+
+    `interface order {` -> `interface Order {`; `type order_row` -> `type OrderRow`; a
+
+    module-level `const max_retries = 5` that is really a constant -> `const MAX_RETRIES = 5`.
+
+    If a lowercase underscore-bearing module const is genuinely a variable rather than a
+
+    constant, move it into function scope or give it a non-literal shape. This rule is
+
+    `strict`: a newly mis-cased identifier is not suppressible and fails.
+
+    '
+  exceptions:
+  - Only module-level (non-indented) declarations are checked; locals inside functions are not flagged.
+  - A lowercase camelCase const without an underscore, or one bound to a non-literal expression (a call,
+    an identifier, member access), is not flagged by the constant check.
+  - Module-level SCREAMING_SNAKE_CASE constants, PascalCase types/interfaces, and camelCase functions
+    are already correct and pass.
+  - Test files (`*.test.*` / `*.spec.*`), generated code under `convex/_generated/`, and vendored/build
+    dirs are out of scope.
+metadata:
+  aliases:
+  - CONVEX-QUALITY-NAMING-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

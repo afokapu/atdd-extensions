@@ -1,0 +1,4 @@
+{
+  "smoke_no_collaborator_substitution": "tester.convex.smoke-no-collaborator-substitution",
+  "smoke_observable_assertion": "tester.convex.smoke-observable-assertion"
+}

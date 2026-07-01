@@ -1,0 +1,14 @@
+---
+const title = "Forge 100";
+---
+
+<h1>{title}</h1>
+
+<script>
+  // MISPLACED: imports + pure data computation, no DOM/browser API. This is
+  // build-time component logic that belongs in the --- frontmatter fence; in a
+  // <script> block it is shipped to and needlessly re-run in the browser.
+  import { computeTotal } from "@/lib/calc";
+  const total = computeTotal([1, 2, 3]);
+  const summary = `Total entrants: ${total}`;
+</script>

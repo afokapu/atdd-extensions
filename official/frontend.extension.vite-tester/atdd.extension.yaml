@@ -1,0 +1,48 @@
+schema_version: "1.0.0"
+extension_id: frontend.extension.vite-tester
+version: "0.1.0"
+kind: extension
+role: tester
+flow_wagon: validate-test-surface
+feature: vite-tester-conventions
+
+# Test-surface (tester) conventions for the Vite/React + Playwright stack — the
+# frontend E2E / journey / smoke / a11y / visual surface that was never built as a
+# frontend concern (and was partly mis-scoped into convex.extension.tester; see
+# docs/mirror-classification/WT.md "Relocate from convex.extension.tester"). Each
+# convention is the stack-bound OBLIGATION; the detector that realizes it lives in
+# the frontend.workspace.runtime provider (two-layer model). Astro folds in — apps/web
+# has no Playwright surface (WT.md "Astro decision"). This extension owns ZERO runtime.
+owns:
+  conventions:
+    - conventions/tester.vite.a11y-harness.convention.yaml
+    - conventions/tester.vite.e2e-names-valid-train.convention.yaml
+    - conventions/tester.vite.interlocking-route-e2e-coverage.convention.yaml
+    - conventions/tester.vite.interlocking-station-master-smoke.convention.yaml
+    - conventions/tester.vite.journey-layer-assembly.convention.yaml
+    - conventions/tester.vite.journey-no-acceptance-marker.convention.yaml
+    - conventions/tester.vite.journey-train-header.convention.yaml
+    - conventions/tester.vite.journey-urn-format.convention.yaml
+    - conventions/tester.vite.presentation-smoke-coverage.convention.yaml
+    - conventions/tester.vite.train-e2e-coverage.convention.yaml
+    - conventions/tester.vite.visual-harness.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  workspaces:
+    - id: frontend.workspace.runtime
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

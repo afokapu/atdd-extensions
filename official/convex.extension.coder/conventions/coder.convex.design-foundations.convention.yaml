@@ -1,0 +1,78 @@
+schema_version: 1.1.0
+rule_id: coder.convex.design-foundations
+kind: rule
+status: active
+name: A Convex feature must rest on its domain foundation
+statement: A Convex feature directory that ships an upper layer (presentation `api.ts`, `application.ts`,
+  or `integration.ts` — or a promoted `api/`/`application/`/ `integration/` layer dir) MUST also provide
+  its `domain.ts` (or promoted `domain/`) foundation directly under the feature directory, so that the
+  feature's pure rules, types, and value objects live in one Convex-free core the upper layers compose
+  FROM rather than being scattered or inlined. This is the Convex-stack realization of the agnostic "the
+  system is built on its own foundations" obligation (the python-pytest sibling is `coder.design.foundations`,
+  which checks that design-system primitives compose foundations rather than embedding raw values). The
+  detector that enforces it — a directory scan that classifies feature dirs and asserts the foundation
+  file/dir is present — is the atdd.workspace.convex implementation referenced below; the obligation is
+  stack-bound, the detector is JS-specific.
+terms:
+- term_id: feature_directory
+  text: a directory that directly holds at least one upper-layer marker — an `api.ts`, `application.ts`,
+    or `integration.ts` file, or a promoted `api/`/`application/`/ `integration/` layer dir. The unit
+    that must carry a domain foundation.
+- term_id: domain_foundation
+  text: the feature's pure `domain` layer — `domain.ts` (or a promoted `domain/` dir) holding rules, types,
+    and value objects with zero Convex imports — that every upper layer in the feature composes from.
+- term_id: upper_layer
+  text: a layer that rests on the domain foundation — presentation (`api.ts`), application (`application.ts`),
+    or integration (`integration.ts`), in file or promoted-dir form.
+implementation:
+  type: validator
+  ref: convex_design_detector
+content:
+  summary: A "every Convex feature rests on a domain foundation" obligation, the Convex sibling of coder.design.foundations.
+    The realization is a zero-dependency JS detector that walks the scanned tree, marks each FEATURE directory
+    (one directly holding an `api.ts`/`application.ts`/`integration.ts` layer file, or a promoted `api/`/
+    `application/`/`integration/` layer dir), and flags any feature directory missing its `domain.ts`
+    (or promoted `domain/`) foundation, skipping `_generated/` and vendored dirs.
+  normative_text: 'A Convex feature is a vertical slice: presentation (`api.ts`) adapts the Convex
+
+    runtime, `application.ts` orchestrates use cases, `integration.ts` reaches the db and
+
+    external clients, and they ALL compose from the `domain` foundation — the pure layer
+
+    of rules, types, and value objects that imports nothing from Convex. A feature that
+
+    ships an upper layer but no domain foundation has no shared core to rest on, so its
+
+    rules get inlined or duplicated across the upper layers — exactly the drift the layer
+
+    discipline exists to remove. The obligation: a feature directory with any upper layer
+
+    also provides its domain foundation. WHICH names mark a feature and WHAT counts as the
+
+    foundation is delegated to the per-stack detector; for Convex an upper layer is an
+
+    `api.ts`/`application.ts`/`integration.ts` file (or `api/`/`application/`/
+
+    `integration/` dir) and the foundation is `domain.ts` (or a `domain/` dir) directly
+
+    under the feature directory.
+
+    '
+  fix_hint: "Add the missing domain foundation, or move the misplaced rule into it:\n  convex/score-grid/score-closeness/api.ts\
+    \          (present)\n  convex/score-grid/score-closeness/application.ts  (present)\n  convex/score-grid/score-closeness/domain.ts\
+    \       <- ADD: pure rules/types, no Convex imports\nPull the feature's pure logic out of the upper\
+    \ layers and into `domain.ts` so every\nupper layer composes from one Convex-free foundation. This\
+    \ rule is `strict`: a feature\ndirectory with an upper layer but no domain foundation fails and is\
+    \ not suppressible.\n"
+  exceptions:
+  - A directory with NO upper layer (no api/application/integration file or dir) is not a feature and
+    is not required to have a foundation — wagon roots and grouping dirs are out of scope.
+  - A promoted `domain/` directory satisfies the foundation just as `domain.ts` does.
+  - Generated code under `convex/_generated/` and vendored/build dirs (`node_modules`, `dist`, `build`,
+    `.next`, `.nuxt`, `coverage`) are skipped during traversal.
+metadata:
+  aliases:
+  - CONVEX-DESIGN-FOUNDATIONS-001
+  severity: 2
+  disposition: strict
+  introduced_in: 0.1.0

@@ -1,0 +1,63 @@
+schema_version: 1.1.0
+rule_id: coder.astro.component-frontmatter-fence
+kind: rule
+status: active
+name: Build-time component logic belongs in the frontmatter fence
+statement: Build-time component logic — module imports and top-level data computation with NO DOM / browser
+  API usage — MUST live in an `.astro` component's `---` frontmatter fence, not in a `<script>` block.
+  A `<script>` block is for CLIENT-side behavior that runs in the browser; putting pure build-time logic
+  there ships and re-runs it client-side for no reason.
+terms:
+- term_id: frontmatter_fence
+  text: the leading `---...---` block of an `.astro` file — the component script that runs at build/SSR
+    time, where imports and data computation belong.
+- term_id: client_script_block
+  text: a `<script>` block in an `.astro` file; bundled and executed in the browser, it is for client
+    behavior (DOM wiring, event listeners), not build-time component logic.
+implementation:
+  type: validator
+  ref: astro_structure_detector
+content:
+  summary: A "component logic goes in the frontmatter fence, not a <script>" obligation. The realization
+    is a zero-dependency JS detector that inspects each `<script>` block (after the frontmatter fence,
+    excluding `type="application/json"`-style data carriers) and flags blocks that contain build-time
+    logic (an `import`, or a top-level `const`/`let`/`var`/ `function`) but reference NONE of the DOM/browser
+    APIs (`document`, `window`, `addEventListener`, `querySelector`, `fetch`, observers, …) that would
+    mark it as genuine client behavior.
+  normative_text: 'Astro components have two distinct layers. The `---` frontmatter fence is the component
+
+    script: it runs once at build/SSR time, can import modules and compute data, and ships
+
+    nothing to the browser by itself. A `<script>` block is the opposite — it is bundled and
+
+    executed in the browser to wire up client behavior. Build-time logic placed in a
+
+    `<script>` block is misfiled: it pays for a client bundle, runs again on every visitor''s
+
+    device, and cannot feed the template it was meant to produce. The obligation is "build-time
+
+    logic lives in the fence"; HOW such logic is recognized is delegated to the per-stack
+
+    detector. The detector''s heuristic: a block with declarations/imports but zero DOM or
+
+    browser-API references is build-time logic in the wrong layer.
+
+    '
+  fix_hint: "Move the import/computation up into the `---` frontmatter fence and let the template read\n\
+    the result:\n  * cut `import {...}` / `const x = compute(...)` from the `<script>` block;\n  * paste\
+    \ it into the `---` fence at the top of the file;\n  * reference the value in markup via `{x}` instead\
+    \ of recomputing it client-side.\nKeep in the `<script>` block only what genuinely needs the browser\
+    \ (event wiring, DOM\nqueries, observers). Disposition is `advisory` (severity 1): this is a layering\
+    \ nudge, not\na gate failure.\n"
+  exceptions:
+  - A `<script>` that uses any DOM/browser API (`document`, `window`, `addEventListener`, `querySelector`,
+    `fetch`, `IntersectionObserver`, …) is genuine client behavior — not flagged.
+  - Data-carrier scripts with a non-JS `type` (e.g. `type="application/json"`) are not logic.
+  - The frontmatter fence itself is the correct home for imports/logic and is never flagged.
+  - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`, `_generated`) are skipped.
+metadata:
+  aliases:
+  - ASTRO-FRONTMATTER-FENCE-001
+  severity: 1
+  disposition: advisory
+  introduced_in: 0.1.0

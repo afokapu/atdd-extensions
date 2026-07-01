@@ -1,0 +1,14 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: vite_commons_layering_detector
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.vite.commons-domain-no-outbound
+emits_rule_ids:
+- coder.vite.commons-domain-no-outbound
+- coder.vite.commons-application-no-integration
+- coder.vite.commons-cross-feature-imports-in
+- coder.vite.commons-domain-no-framework-import
+entrypoint: detect.mjs
+report: detect.mjs

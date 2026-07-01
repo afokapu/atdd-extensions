@@ -1,0 +1,12 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: astro_hardcoded_literal_detector
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.astro.no-hardcoded-color
+- coder.astro.i18n-no-hardcoded-ui-string
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention: coder.astro.no-hardcoded-color

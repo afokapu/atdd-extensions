@@ -1,0 +1,78 @@
+schema_version: 1.1.0
+rule_id: coder.convex.composition-root
+kind: rule
+status: active
+name: Dependency wiring is confined to a Convex composition root
+statement: Instantiation and wiring of a feature's dependencies (its repositories, clients, services,
+  adapters, gateways, stores, providers, factories) MUST be confined to a composition root — `composition.ts`
+  (feature wiring) or `wagon.ts` (wagon entry point). A non-root module that constructs one of these dependencies
+  is assembling the object graph in the wrong place, where it cannot be swapped, mocked, or tested in
+  isolation. This is the Convex-stack realization of the agnostic composition-root obligation owned by
+  the coder extension (the python-pytest sibling is `coder.refactor.composition-root`, which checks that
+  the DI root composes the whole vertical slice). The detector that enforces it — a scan for dependency-shaped
+  `new Xxx(` instantiations outside the composition roots — is the atdd.workspace.convex implementation
+  referenced below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: composition_root
+  text: the feature's dependency-injection entry point — `composition.ts` (feature wiring) or `wagon.ts`
+    (wagon entry point) — the only place allowed to instantiate and wire a feature's collaborators.
+- term_id: dependency_instantiation
+  text: a `new <PascalName>(` whose class name ends in a dependency suffix (`Repository`/ `Client`/`Service`/`Adapter`/`Gateway`/`Store`/`Manager`/`Provider`/`Factory`);
+    this is wiring and belongs only in a composition root.
+- term_id: leaked_wiring
+  text: dependency instantiation found in a non-root module (presentation/application/ integration), where
+    the object graph cannot be re-composed for testing or reuse.
+implementation:
+  type: validator
+  ref: convex_composition_detector
+content:
+  summary: An agnostic "wiring lives only in the composition root" obligation, the Convex sibling of coder.refactor.composition-root.
+    The realization is a zero-dependency JS detector that flags any dependency-shaped class instantiation
+    (`new XxxRepository(`/`new XxxClient(`/`new XxxService(`/`new XxxAdapter(`/`new XxxGateway(`/`new
+    XxxStore(`/`new XxxManager(`/`new XxxProvider(`/`new XxxFactory(`) occurring in a module other than
+    `composition.ts`/`wagon.ts`, skipping `_generated/`, test files, and vendored dirs.
+  normative_text: 'The composition root is the single place a feature assembles its object graph:
+
+    `composition.ts` wires one feature''s layers, `wagon.ts` is the wagon entry point. When
+
+    a presentation (`api.ts`), application, or integration module instantiates a dependency
+
+    itself, the wiring is scattered — the graph can no longer be re-composed for a test or a
+
+    different runtime, and the dependency direction leaks. The obligation: dependency
+
+    instantiation/wiring happens only in a composition root; every other module RECEIVES
+
+    its collaborators. WHICH instantiations count as wiring is delegated to the per-stack
+
+    detector; for Convex it matches `new <PascalName>(` where the class name ends in a
+
+    dependency suffix (`Repository`/`Repo`/`Client`/`Service`/`Adapter`/`Gateway`/`Store`/
+
+    `Manager`/`Provider`/`Factory`) — so constructing a value object, a `Map`, or a `Date`
+
+    is not wiring and is not flagged. Files named `composition.ts`/`wagon.ts` are the
+
+    allowed roots and are never flagged.
+
+    '
+  fix_hint: "Move the instantiation into the composition root and inject the result:\n  convex/.../api.ts\
+    \  ->  const ledger = new LedgerRepository(ctx)   ->  FORBIDDEN here\n  convex/.../composition.ts:\n\
+    \    const ledger = new LedgerRepository(ctx)        // wire HERE...\n    return makePayoutUseCase(ledger)\
+    \                // ...and inject downstream\nConstruct dependencies in `composition.ts`/`wagon.ts`\
+    \ and pass them to the consumers\nthat need them. This rule is `strict`: dependency instantiation\
+    \ outside a composition\nroot is not suppressible and fails. (Its sibling `coder.convex.composition-consumer`\n\
+    looks at the same fault from the consumer's side — a consumer that builds its own\ndependency instead\
+    \ of receiving it.)\n"
+  exceptions:
+  - Composition roots (`composition.ts`, `wagon.ts`) may instantiate and wire freely — that is their job
+    — and are never flagged.
+  - Only dependency-suffixed class instantiations are matched; constructing value objects, `Map`/`Set`/`Date`,
+    or other non-collaborator classes is not wiring and is allowed.
+  - Test files (`*.test.*` / `*.spec.*`), `_generated/`, and vendored/build dirs are out of scope.
+metadata:
+  aliases:
+  - CONVEX-COMPOSITION-ROOT-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

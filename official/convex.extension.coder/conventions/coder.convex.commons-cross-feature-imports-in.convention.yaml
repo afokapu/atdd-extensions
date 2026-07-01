@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.convex.commons-cross-feature-imports-in
+kind: rule
+status: active
+name: Convex commons features must not import sibling features peer-to-peer
+statement: >-
+  A module that lives inside a feature subdirectory of a Convex/TS commons layer (a
+  non-test, non-generated file at `commons/<layer>/<feature>/...` or
+  `shared/<layer>/<feature>/...`, where `<layer>` is `domain`/`application`/`integration`)
+  MUST NOT import directly from a *different* feature subdirectory in the *same* layer.
+  Cross-feature dependencies must go through the layer above (or the layer's public barrel),
+  not through a peer-to-peer edge that reaches into a sibling feature's internals. This is
+  the Convex-stack realization of the agnostic core obligation
+  `coder.commons.cross-feature-imports-in` ("Cross-feature imports in commons go through the
+  layer above (no peer-to-peer feature edges)"); the obligation is stack-neutral, the detector
+  is TS-specific. The detector — a lexical import scan resolving each import's target layer and
+  feature — is the convex.workspace.runtime family implementation referenced below.
+terms:
+- term_id: feature
+  text: >-
+    a named subdirectory grouping within a commons layer (e.g. `domain/scoring/`,
+    `application/auth/`, `integration/http/`) — the segment immediately after the layer
+    segment. Files directly at a layer root (e.g. `domain/errors.ts`) belong to no feature.
+- term_id: peer_to_peer_feature_edge
+  text: >-
+    an import from a module inside feature A that resolves directly into feature B's internals
+    within the same commons module and the same layer (A ≠ B) — the coupling this rule forbids.
+implementation:
+  type: validator
+  ref: convex_commons_layering_detector
+content:
+  summary: >-
+    A "commons features stay isolated within a layer" obligation, the Convex realization of
+    coder.commons.cross-feature-imports-in. The realization is a zero-dependency JS detector
+    (lexical import scan, no TS runtime) that, for each module inside a feature subdirectory,
+    flags every import that resolves into a different feature of the same layer.
+  normative_text: |
+    Within a commons layer, cohesive features (auth, query, http, scoring, ...) are grouped
+    into subdirectories. Features must not form a tangle of peer-to-peer edges: feature A
+    reaching directly into feature B's internal modules couples their implementations, defeats
+    independent evolution, and hides the true dependency graph. Shared needs are lifted up —
+    into the layer above, or exposed through the layer's public barrel — so that a feature
+    depends on an abstraction, not on a sibling's guts.
+
+    The obligation is "cross-feature imports go through the layer above, not peer-to-peer"; HOW
+    the offending imports are found is delegated to the per-stack detector. For Convex/TS the
+    detector determines the importing module's (layer, feature) from its path and resolves each
+    import specifier to a target (layer, feature); an import whose target is the same layer but
+    a different feature is a peer-to-peer edge and is reported. Imports of a layer-root module
+    (a file at the layer root, belonging to no feature) or of a different layer are allowed.
+  fix_hint: |
+    Break the peer-to-peer edge:
+      * promote the shared type/function to the layer root (belonging to no single feature) and
+        import it from there, or
+      * expose it through the layer's public barrel (`index.ts`) and import the barrel, or
+      * if the dependency is genuinely orchestration, move it up into the layer above.
+    A feature should never import another feature's internal file path directly.
+  exceptions:
+  - Layer-root modules (files directly under `<layer>/`, belonging to no feature) are out of scope.
+  - Imports that cross layers are governed by the domain/application layering rules, not this one.
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `_generated/` are skipped.
+metadata:
+  aliases:
+  - CONVEX-COMMONS-CROSS-FEATURE-001
+  - BOUNDARIES-COMMONS-003
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

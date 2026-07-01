@@ -1,0 +1,13 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_design_detector
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.convex.design-foundations
+- coder.convex.design-hierarchy-import
+- coder.convex.design-orphan-export
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention: coder.convex.design-foundations

@@ -1,0 +1,60 @@
+schema_version: 1.1.0
+rule_id: coder.convex.dto-mapper
+kind: rule
+status: active
+name: Convex DTO-to-domain mappers live in the integration layer
+statement: >-
+  A Convex module that maps between DTOs and domain entities MUST live in the `integration/` layer.
+  This is the Convex-stack realization of the agnostic core obligation "Mappers between domain
+  entities and DTOs live in the integration layer" (`coder.dto.mapper`, alias DTO-MAPPER-001). The
+  TypeScript variant fixes the mapper location as `{wagon}/src/integration/dtoMapping.ts`, and the
+  convention's mapper_requirements state "Mappers MUST live in integration layer, never in domain".
+  A mapper — a module named `*-mapper.ts` / `*mapping.ts` or declaring `dtoToDomain` / `domainToDto`
+  conversion functions — placed under `domain/` (or any layer other than integration) leaks
+  boundary-translation logic into the pure domain and inverts the layering. The detector that
+  enforces it — identifying mapper modules by basename or conversion-function names and checking
+  their layer directory — is the convex.workspace.runtime family implementation referenced below;
+  the obligation is stack-bound, the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: convex_dto_detector
+content:
+  summary: >-
+    A "DTO<->domain mappers live in the integration layer" obligation, the Convex sibling of
+    coder.dto.mapper. The realization is a zero-dependency Node ESM detector (basename + source
+    scan, no TS runtime) that flags any mapper module whose path lacks an `integration/` segment.
+  normative_text: |
+    Mapping between a contract DTO and a wagon's domain model is integration work: it parses/serializes
+    rich types, projects to the contract shape, and validates domain invariants at the boundary.
+    Placing that logic in `domain/` makes the pure business core depend on the contract surface and
+    on serialization concerns, inverting the dependency direction the layering exists to protect.
+    The obligation is that every DTO<->domain mapper sits in the `integration/` layer. HOW a mapper
+    is identified is delegated to the per-stack detector; for Convex a module is a mapper when its
+    basename ends in `-mapper`/`mapping` OR it declares a `dtoToDomain`/`domainToDto` function, and
+    the detector flags any such module whose path has no `integration` segment, anchoring the finding
+    at a conversion function line where one exists.
+  fix_hint: |
+    Move the mapper module into the integration layer:
+      * `orders/domain/order-mapper.ts`  ->  `orders/integration/order-mapper.ts`,
+      * keep both conversion directions together (`dtoToDomain` and `domainToDto`),
+      * the mapper may import both the contract DTO (from `contracts/`) and the wagon's domain model.
+  exceptions:
+    - Modules already under an `integration/` layer directory are correctly placed and never flagged.
+    - Modules that are neither named like a mapper nor declare `dtoToDomain`/`domainToDto` are out of scope.
+    - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - DTO-MAPPER-001
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+terms:
+  - term_id: dto_mapper
+    text: >-
+      a module that converts between a contract DTO and a wagon domain model — identified by a
+      `*-mapper.ts`/`*mapping.ts` basename or by declaring `dtoToDomain`/`domainToDto` functions.
+  - term_id: integration_layer
+    text: >-
+      the architecture layer that implements ports and adapts external/boundary concerns; the
+      required home for DTO<->domain mappers, keeping translation logic out of the pure domain.

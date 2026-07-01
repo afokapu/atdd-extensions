@@ -1,0 +1,13 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_commons_layering_detector
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.convex.commons-domain-no-outbound
+emits_rule_ids:
+- coder.convex.commons-domain-no-outbound
+- coder.convex.commons-application-no-integration
+- coder.convex.commons-cross-feature-imports-in
+entrypoint: detect.mjs
+report: detect.mjs

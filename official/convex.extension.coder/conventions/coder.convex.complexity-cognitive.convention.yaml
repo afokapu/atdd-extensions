@@ -1,0 +1,81 @@
+schema_version: 1.1.0
+rule_id: coder.convex.complexity-cognitive
+kind: rule
+status: active
+name: Convex server functions must keep cognitive complexity at or below 15
+statement: Every Convex server function (a function declaration or block-bodied arrow in a `*.ts`/`*.tsx`/`*.js`/`*.mjs`
+  module under the `convex/` function tree, excluding `_generated/` codegen and test files) MUST keep
+  its cognitive complexity at or below the threshold (default 15, SonarQube / G. Ann Campbell algorithm)
+  so that code which is hard to UNDERSTAND — penalising deeply nested structures more than flat ones —
+  is surfaced. This is the Convex-stack realization of the language-neutral `coder.refactor.complexity-cognitive`
+  obligation owned by the Core coder extension (threshold 15). The detector that enforces it — a zero-dependency
+  regex brace-tracking scan applying the Campbell increments (no AST/tree-sitter) — is the atdd.workspace.convex
+  implementation referenced below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: cognitive_complexity_convex
+  text: the SonarQube / Campbell measure of how hard a Convex function is to understand — a structural
+    increment per control construct and boolean/nullish operator, plus a nesting increment proportional
+    to control depth.
+- term_id: nesting_increment
+  text: the extra +N (N = current control depth) added for an if / for / while / do / switch / catch opened
+    inside another control block; else / else if and boolean operators are exempt.
+- term_id: cognitive_threshold
+  text: the configured maximum cognitive complexity a Convex function may have (SonarQube default 15);
+    the obligation is to stay at or below it.
+implementation:
+  type: validator
+  ref: convex_complexity_detector
+content:
+  summary: A "no cognitively heavy Convex server function" obligation, the Convex sibling of coder.refactor.complexity-cognitive.
+    The realization is a zero-dependency Node ESM detector (regex + brace tracking over source, no TS
+    runtime) that applies the SonarQube cognitive algorithm per function — +1 structural for each control
+    construct (if / else if / else / for / while / do / switch / catch) and boolean/nullish operator (&&
+    / || / ??), plus a +N nesting increment (N = current control depth) for an if / for / while / do /
+    switch / catch nested inside another control structure — flagging any function scoring above 15. Unlike
+    cyclomatic complexity it distinguishes flat if/else chains from deeply nested if(if(if)) structures.
+  normative_text: 'Cognitive complexity measures how hard code is to UNDERSTAND, not merely how many paths
+    it has:
+
+    it adds a flat structural increment for each control construct and an extra nesting increment
+
+    proportional to how deeply that construct sits, so a flat if/else-if chain scores low while a
+
+    deeply nested if(if(if)) scores high. The obligation: each Convex function''s cognitive complexity
+
+    stays at or below the configured threshold (SonarQube default <= 15). HOW the score is computed
+
+    is delegated to the per-stack detector; for the Convex/TS stack it masks strings/comments, then
+
+    walks the function body tracking control-block depth — +1 structural for each `if` / `else if` /
+
+    `else` / `for` / `while` / `do` / `switch` / `catch` block and each `&&` / `||` / `??` operator,
+
+    and +N (N = current control depth) when an `if` / `for` / `while` / `do` / `switch` / `catch`
+
+    opens inside another control block (`else` and `else if` take the structural increment without a
+
+    nesting penalty). This realization needs no TypeScript runtime; it runs under the
+
+    atdd.workspace.convex provider (`node` over the detector `.mjs`). The detector emits one RAW
+
+    violation per offending function, located at the function''s header line.
+
+    '
+  fix_hint: "Lower the flagged Convex function's cognitive load:\n  * flatten nesting with guard clauses\
+    \ / early returns (nesting increments dominate the score),\n  * extract nested control blocks into\
+    \ named helper functions,\n  * decompose compound boolean expressions into named predicates.\nThis\
+    \ rule's disposition is `strict`: a function over the cognitive threshold is not suppressible\nand\
+    \ fails. Pre-existing scores in a consumer repo are held flat by a downstream ratchet baseline\n(a\
+    \ consumer/coach concern), not the workspace detector — the detector always emits the RAW\nover-threshold\
+    \ function list.\n"
+  exceptions:
+  - else / else if and boolean operators take the structural increment but no nesting penalty.
+  - Brace-less single-statement control bodies are not counted (the detector tracks braced blocks).
+  - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+  - The threshold (default 15) is configurable; the obligation is "at or below the configured threshold".
+metadata:
+  aliases:
+  - CONVEX-COMPLEXITY-COGNITIVE-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

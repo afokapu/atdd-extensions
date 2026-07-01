@@ -1,0 +1,36 @@
+schema_version: "1.0.0"
+extension_id: frontend.extension.astro-coder
+version: "0.1.0"
+kind: extension
+role: coder
+flow_wagon: validate-source-surface
+feature: astro-coder-conventions
+# Front-end (Astro) coder conventions — native rules grounded in apps/web (no Core equivalent).
+# from the Convex wave. owns.conventions wired at assembly (workers are add-only).
+owns:
+  conventions:
+    - conventions/coder.astro.client-directive-explicit.convention.yaml
+    - conventions/coder.astro.component-frontmatter-fence.convention.yaml
+    - conventions/coder.astro.i18n-no-hardcoded-ui-string.convention.yaml
+    - conventions/coder.astro.logging-silent-swallow.convention.yaml
+    - conventions/coder.astro.no-hardcoded-color.convention.yaml
+    - conventions/coder.astro.no-secret-in-frontmatter.convention.yaml
+    - conventions/coder.astro.security-xss.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  workspaces:
+    - id: frontend.workspace.runtime
+      contract: "^1.0.0"
+removal_policy:
+  allowed_if_no_external_dependents: true

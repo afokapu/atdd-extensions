@@ -1,0 +1,70 @@
+schema_version: "1.0.0"
+extension_id: frontend.extension.vite-coder
+version: "0.1.0"
+kind: extension
+role: coder
+flow_wagon: validate-source-surface
+feature: vite-coder-conventions
+# Front-end (Vite/React) coder conventions — the 10 Core front-end rules deferred
+# from the Convex wave. owns.conventions wired at assembly (workers are add-only).
+owns:
+  conventions:
+    - conventions/coder.vite.boundaries-fe-imports.convention.yaml
+    - conventions/coder.vite.boundaries-fe-layers.convention.yaml
+    - conventions/coder.vite.boundaries-http-client.convention.yaml
+    - conventions/coder.vite.commons-application-no-integration.convention.yaml
+    - conventions/coder.vite.commons-cross-feature-imports-in.convention.yaml
+    - conventions/coder.vite.commons-domain-no-framework-import.convention.yaml
+    - conventions/coder.vite.commons-domain-no-outbound.convention.yaml
+    - conventions/coder.vite.design-dependency-flow.convention.yaml
+    - conventions/coder.vite.design-orphan-ui.convention.yaml
+    - conventions/coder.vite.design-primitives.convention.yaml
+    - conventions/coder.vite.design-token-color.convention.yaml
+    - conventions/coder.vite.design-token-hardcoded.convention.yaml
+    - conventions/coder.vite.design-tokens-pure.convention.yaml
+    - conventions/coder.vite.design-wagons-import.convention.yaml
+    - conventions/coder.vite.green-header-order.convention.yaml
+    - conventions/coder.vite.green-header-purpose.convention.yaml
+    - conventions/coder.vite.green-header-runtime.convention.yaml
+    - conventions/coder.vite.green-header-tested-by.convention.yaml
+    - conventions/coder.vite.green-urn-layer.convention.yaml
+    - conventions/coder.vite.green-urn-marker.convention.yaml
+    - conventions/coder.vite.green-urn-name-matches.convention.yaml
+    - conventions/coder.vite.green-urn-pattern.convention.yaml
+    - conventions/coder.vite.green-urn-side.convention.yaml
+    - conventions/coder.vite.green-urn-wagon-feature.convention.yaml
+    - conventions/coder.vite.logging-silent-swallow.convention.yaml
+    - conventions/coder.vite.presentation-gsap-commons.convention.yaml
+    - conventions/coder.vite.presentation-gsap-layer.convention.yaml
+    - conventions/coder.vite.presentation-i18n-config.convention.yaml
+    - conventions/coder.vite.presentation-i18n-switcher.convention.yaml
+    - conventions/coder.vite.presentation-nostub-allowlist-migration.convention.yaml
+    - conventions/coder.vite.presentation-nostub-arrow-literal.convention.yaml
+    - conventions/coder.vite.presentation-nostub-empty-element.convention.yaml
+    - conventions/coder.vite.presentation-nostub-empty-fragment.convention.yaml
+    - conventions/coder.vite.presentation-nostub-fn-return.convention.yaml
+    - conventions/coder.vite.presentation-nostub-guarded-negative.convention.yaml
+    - conventions/coder.vite.presentation-nostub-unconditional.convention.yaml
+    - conventions/coder.vite.refactor-coach-ratchet-pres.convention.yaml
+    - conventions/coder.vite.route-resolved-train-lists-wagon.convention.yaml
+    - conventions/coder.vite.route-trainid-expression-not-static.convention.yaml
+    - conventions/coder.vite.route-trainid-not-registered.convention.yaml
+    - conventions/coder.vite.security-xss.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  workspaces:
+    - id: frontend.workspace.runtime
+      contract: "^1.0.0"
+removal_policy:
+  allowed_if_no_external_dependents: true

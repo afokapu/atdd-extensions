@@ -1,0 +1,20 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_green_traceability_detector
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.convex.green-urn-marker
+- coder.convex.green-urn-pattern
+- coder.convex.green-urn-wagon-feature
+- coder.convex.green-urn-name-matches
+- coder.convex.green-urn-side
+- coder.convex.green-urn-layer
+- coder.convex.green-header-runtime
+- coder.convex.green-header-purpose
+- coder.convex.green-header-tested-by
+- coder.convex.green-header-order
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention: coder.convex.green-urn-marker

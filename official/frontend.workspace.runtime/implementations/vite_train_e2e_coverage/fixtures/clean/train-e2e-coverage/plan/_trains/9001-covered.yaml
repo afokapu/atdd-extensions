@@ -1,0 +1,4 @@
+train_id: 9001-covered
+title: Fixture train 9001-covered
+wagons:
+  - some-wagon

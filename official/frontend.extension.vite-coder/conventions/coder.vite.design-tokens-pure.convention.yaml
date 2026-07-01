@@ -1,0 +1,70 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-tokens-pure
+kind: rule
+status: active
+name: Design-system token files are pure values, not widgets or logic
+statement: A Vite/React design-system TOKEN file (a file in the `tokens/` layer of a `design_system/`
+  tree) MUST contain only pure values — spacing, radii, motion, palette scales — and MUST NOT import
+  `react`, render a widget/JSX element, or branch on control flow (`if`/`for`/`while`/`switch`). Tokens
+  sit at the bottom of the hierarchy (tokens <- primitives <- components <- templates); a token file
+  that pulls in React, renders markup, or carries behaviour has stopped being a pure value and has become
+  a component, collapsing the foundation the whole system rests on. This is the Vite-stack realization
+  of the agnostic "tokens are pure values (no widgets, no logic)" obligation owned by the coder extension
+  (the python-pytest sibling is `coder.design.tokens-are-pure-values`, alias DESIGN-HIERARCHY-001, principle
+  DS-01). The detector that enforces it — a per-line scan of design-system token files for a `react`
+  import, a JSX element, or a control-flow statement — is the frontend.workspace.runtime implementation
+  referenced below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: token_file
+  text: a source file in the `tokens/` layer of a `design_system/` (or `design/`) tree — identified by
+    a `tokens` path segment under a design-system segment — whose job is to export pure design values.
+- term_id: widget_in_token
+  text: a `react` import, a JSX element (`</tag`, `/>`, or `React.createElement`), or a control-flow
+    statement appearing inside a token file; the constructs this rule flags because a pure value carries
+    none of them.
+implementation:
+  type: validator
+  ref: vite_design_hierarchy_detector
+content:
+  summary: A "tokens are pure values" obligation, the Vite/React sibling of coder.design.tokens-are-pure-values.
+    The realization is a zero-dependency JS detector (one member of the vite_design_hierarchy_detector
+    family) that flags, inside a design-system token file, (a) an import of `react`, (b) a JSX/widget
+    element, or (c) a control-flow statement — the `layers.tokens.validation` no_widgets + no_logic checks
+    made concrete for the TSX stack.
+  normative_text: 'Tokens are the pure-value foundation of the design system: numbers, durations, and
+
+    palette scales that every higher layer consumes. The moment a token file imports
+
+    `react`, renders JSX, or branches on control flow, it stops being a value and becomes a
+
+    widget or behaviour — and the tokens layer, which primitives depend on, is no longer pure.
+
+    The obligation: token files export values only, with no widgets and no logic. WHICH
+
+    constructs count as a widget or logic is delegated to the per-stack detector; for the
+
+    Vite/React stack it flags a `react` import, a JSX element (`</tag`, `/>`,
+
+    `React.createElement`), or a `if`/`for`/`while`/`switch` statement inside a file in the
+
+    `tokens/` layer of a `design_system/` tree.
+
+    '
+  fix_hint: "Keep token files free of widgets and behaviour — move them UP the hierarchy:\n  design_system/tokens/theme.tsx\
+    \  ->  import React ... export function ThemeBadge() { return <span/> }  ->  FORBIDDEN\n  design_system/tokens/spacing.ts\
+    \  ->  export const spacing = { s: 8, m: 16 } as const                 ->  allowed\nA value that\
+    \ needs a widget belongs in the primitives layer; a value that needs a branch\nbelongs in a function\
+    \ outside tokens. This rule's disposition is `strict`: a widget or logic\nconstruct in a token file\
+    \ is not suppressible and fails the gate.\n"
+  exceptions:
+  - Only files in the `tokens/` layer of a `design_system/`/`design/` tree are in scope; primitives, components,
+    and templates legitimately render widgets and are not checked here.
+  - Comment lines (single-line and block) are skipped.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+metadata:
+  aliases:
+  - VITE-DESIGN-TOKENS-PURE-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

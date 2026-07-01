@@ -1,0 +1,7 @@
+{
+  "convex_complexity_cyclomatic": "coder.convex.complexity-cyclomatic",
+  "convex_complexity_length": "coder.convex.complexity-length",
+  "convex_complexity_nesting": "coder.convex.complexity-nesting",
+  "convex_complexity_cognitive": "coder.convex.complexity-cognitive",
+  "convex_complexity_params": "coder.convex.complexity-params"
+}
