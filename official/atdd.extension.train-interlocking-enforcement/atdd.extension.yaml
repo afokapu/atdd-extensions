@@ -47,16 +47,30 @@ feature: train-interlocking-enforcement
 # with atdd.implementation.yaml + src/tests/fixtures skeletons) so #25/#26 have a
 # concrete home; their decision modules are NotImplementedError stubs.
 owns:
-  conventions: []
+  conventions:
+    # union of #25 (coder) + #26 (tester) interlocking conventions
+    - conventions/coder.train.interlocking-runner-exists.convention.yaml
+    - conventions/coder.train.interlocking-resolution-model-exists.convention.yaml
+    - conventions/coder.train.station-master-interlocking-routing.convention.yaml
+    - conventions/coder.train.interlocking-delegates-to-trainrunner.convention.yaml
+    - conventions/coder.train.interlocking-does-not-carry-cargo.convention.yaml
+    - conventions/tester.interlocking.route-coverage.convention.yaml
+    - conventions/tester.interlocking.production-runner-used.convention.yaml
+    - conventions/tester.interlocking.smoke-coverage-for-station-master.convention.yaml
+    - conventions/tester.interlocking.trace-binds-declared-route.convention.yaml
+    # #27 bilateral declaration<->runtime<->station<->trace binding (the systemic-closure convention)
+    - conventions/coder.train.interlocking-bilateral-binding.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
     - implementations/interlocking-infrastructure
     - implementations/interlocking-coverage
+    - implementations/interlocking-binding
   schemas: []
   gates:
     - gates/interlocking-infrastructure.gate.yaml
     - gates/interlocking-coverage.gate.yaml
+    - gates/interlocking-binding.gate.yaml
   scopes:
     - scopes/interlocking-targets.scope.yaml
 
@@ -67,10 +81,11 @@ depends_on:
     - atdd.core.workspace-schema
     - atdd.core.implementation-schema
     - atdd.core.violation-output-schema
-  # The reusable runtime both implementations target. Both the infrastructure
-  # validator (scans python/ runtime code) and the coverage validator (scans
-  # e2e/ production tests) run inside the python-pytest provider. Referenced by
-  # id + contract range; never copied into the extension.
+  # The reusable runtime all three implementations target. The infrastructure
+  # validator (scans python/ runtime code), the coverage validator (scans e2e/
+  # production tests), and the bilateral-binding validator (#27; scans the
+  # declaration<->runtime<->station<->trace closure) all run inside the
+  # python-pytest provider. Referenced by id + contract range; never copied in.
   workspaces:
     - id: atdd.workspace.python-pytest
       contract: "^1.0.0"

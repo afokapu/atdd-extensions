@@ -9,18 +9,25 @@ implementation_id: tester.interlocking.route-coverage.impl
 targets_workspace: atdd.workspace.python-pytest
 contract_version: "1.1.0"
 
-# Back-reference to the agnostic obligation this detector realizes. The convention
-# node is authored by #26 in ../../conventions/; this is its python-pytest
-# realization (two-layer model). Dangling until #26 lands the node.
+# PRIMARY back-reference: the headline obligation this detector realizes (the
+# scaffold-pinned binding, kept stable per #24). The same detector also co-emits
+# three sibling tester rule_ids (see emits_rule_ids) — exactly the multi-rule
+# python-pytest pattern used by security_patterns_detector (one realizes_convention
+# + N emits_rule_ids). All four convention nodes live in ../../conventions/.
 realizes_convention: tester.interlocking.route-coverage
 
-# Single rule_id. Severity (strict vs advisory) is decided by #26's convention
-# node disposition; the detector only emits RAW facts.
+# One run surfaces FOUR rule_ids — all strict — over the v1.1 multi-rule output
+# channel. Declared so the resolver knows one run emits more than the primary
+# realizes_convention. Each maps to a convention node in ../../conventions/.
 emits_rule_ids:
-  - tester.interlocking.route-coverage   # disposition: TBD (#26)
+  - tester.interlocking.route-coverage                 # disposition: strict (uncovered admissible route)
+  - tester.interlocking.production-runner-used         # disposition: strict (mocked/patched/hand-built runner)
+  - tester.interlocking.smoke-coverage-for-station-master  # disposition: strict (exposed action w/o smoke test)
+  - tester.interlocking.trace-binds-declared-route     # disposition: strict (trace omits binding fields)
 
-# The pure detector module (#26 implements). Proves every admissible route in an
-# interlocking (core afokapu/atdd#1248 route space) has an e2e test exercising it.
+# The pure detector module. Realizes all four tester interlocking obligations:
+# route coverage (core afokapu/atdd#1248 route space), production-runner usage,
+# Station Master smoke coverage, and trace<->declared-route binding (core #1251).
 # Scans the scope's interlocking_yaml + e2e_tests selectors.
 entrypoint: src/interlocking_coverage.py
 
