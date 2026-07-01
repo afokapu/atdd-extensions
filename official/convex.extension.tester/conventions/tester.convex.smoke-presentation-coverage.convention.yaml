@@ -1,0 +1,66 @@
+schema_version: 1.1.0
+rule_id: tester.convex.smoke-presentation-coverage
+kind: rule
+status: active
+name: Every presentation component must have a smoke spec covering its wagon
+statement: >-
+  Every presentation component in a Convex/TypeScript consumer app (a `.tsx` file under a
+  `presentation/` path segment) MUST be covered by at least one smoke spec — a file whose basename
+  contains `smoke` and ends `.spec.ts`/`.test.ts`(x) — whose path references the component's wagon
+  (the path segment immediately before `presentation`) as a word-boundary token. A presentation
+  component with no smoke spec is a silent steady-state coverage gap. This is the Convex/TypeScript
+  realization of the CORE tester rule `tester.smoke.pres` (TESTER-SMOKE-PRES-001): "Every
+  web/src/*/presentation/*.tsx must have a sibling smoke test under e2e/*smoke*.spec.ts". The
+  motivating incident (#318): "63/63 R283 structural tests passed while the match page rendered
+  blank — 8 features had been removed during ratchet trim." The obligation is agnostic (any consumer
+  frontend's presentation must have smoke coverage); the file-shape (`.tsx` / `presentation/` /
+  `*smoke*.spec.ts`) is the per-stack rendering.
+implementation:
+  type: validator
+  ref: tester.convex.smoke-presentation-coverage
+content:
+  summary: >-
+    A "presentation components have smoke coverage" obligation, the Convex/TS sibling of CORE
+    `tester.smoke.pres` (TESTER-SMOKE-PRES-001). The realization is a zero-dependency JS detector (a
+    member of the `convex_smoke_fidelity_detector` FAMILY) that pairs each presentation `.tsx` with a
+    smoke spec whose path carries its wagon token, flagging any uncovered component.
+  normative_text: |
+    Structural tests (file exists, import present) can pass while the rendered feature is blank —
+    steady-state coverage (issue #293) closes that gap by requiring a smoke spec per presentation
+    component. Over the supplied scan roots the detector:
+      1. collects every presentation component — a `.tsx` under a `presentation/` path segment;
+      2. collects every smoke spec — a file whose basename contains `smoke` and ends
+         `.spec.ts`/`.test.ts`(x);
+      3. treats a component as COVERED iff some smoke spec's PATH contains the component's wagon
+         token (the segment immediately before `presentation`) at a word boundary.
+    Uncovered components are flagged (at line 1). This is the same wagon-token matching the CORE rule
+    uses ("whose path contains the wagon name as a kebab/snake/word-boundary token"). Whether a
+    mounted component actually renders non-empty content is a distinct RUNTIME concern (CORE
+    behavioral_render / TESTER-RENDER-00x), owned by a harness, not by this static coverage detector.
+  fix_hint: |
+    Add a smoke spec for the flagged presentation component's wagon, e.g. for
+    `leaderboard/presentation/LeaderboardPage.tsx` add
+    `leaderboard/e2e/leaderboard-page.smoke.spec.ts` (a Playwright spec that navigates to the page and
+    asserts it renders visible content). The spec's PATH must contain the wagon token so the
+    coverage pairing succeeds. This rule is `documentation-only`: the detector surfaces the gap so
+    teams can prioritize; critical user-facing wagons should be covered first.
+  exceptions:
+    - Non-presentation files (`.ts` logic, `.tsx` outside a `presentation/` segment) are out of scope.
+    - Smoke spec files are never themselves treated as uncovered presentation components.
+    - Generated code under `convex/_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-CONVEX-SMOKE-PRES-001
+    - TESTER-SMOKE-PRES-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: presentation_component
+    text: >-
+      a `.tsx` file located under a `presentation/` path segment — the frontend view layer a smoke
+      spec must cover.
+  - term_id: wagon_token
+    text: >-
+      the path segment immediately before `presentation`; a smoke spec covers a component iff the
+      spec's path contains this token at a word boundary (kebab/snake/word-boundary).

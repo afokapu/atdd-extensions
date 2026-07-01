@@ -1,0 +1,71 @@
+schema_version: 1.1.0
+rule_id: tester.convex.smoke-observable-assertion
+kind: rule
+status: active
+name: A state-mutating Convex/Vitest SMOKE test must assert observable state
+statement: >-
+  A SMOKE-phase Convex/Vitest test that performs a STATE-MUTATING call (`.post(`/`.put(`/`.patch(`/
+  `.delete(`, a Convex `.mutation(`, or `runMutation(`) MUST include at least one observable-state
+  assertion — a real read-back of the mutated state (`.query(`/`runQuery(`, `.select(`, `.get(`,
+  `.collect(`, `.first(`, `.unique(`) — not merely an assertion on the HTTP response shape. A smoke
+  that mutates but only checks the response proves nothing about persistence; it is false-positive
+  green. This is the Convex/TypeScript realization of the CORE tester rule
+  `tester.smoke.operator-observable-assertion` (#843) and of the convention's `db_assertion_present`
+  check ("Smoke tests that mutate state must verify database") and `response_only_assertions`
+  anti-pattern ("No database query after a POST/PUT/PATCH/DELETE call"). The obligation is agnostic
+  (any consumer's smoke that mutates must verify observable state); only the mutating/observable
+  call SYNTAX is stack-specific.
+implementation:
+  type: validator
+  ref: tester.convex.smoke-observable-assertion
+content:
+  summary: >-
+    A "state-mutating smoke asserts observable state, not response-only" obligation, the Convex
+    sibling of CORE `tester.smoke.operator-observable-assertion`. The realization is a
+    zero-dependency JS detector (a member of the `convex_smoke_fidelity_detector` FAMILY) that flags
+    any smoke test containing a state-mutating call but no observable/DB read-back anywhere in the
+    file.
+  normative_text: |
+    The lived incident behind the CORE rule: a launcher swallowed pty output while the smoke asserted
+    only on an intermediate artifact; the test passed and the operator saw nothing. The agnostic core
+    of that rule for a data-mutating consumer app is: after a mutation, assert on the persisted state,
+    not just the acknowledgement.
+
+    For the Convex/Vitest stack:
+      * a state-mutating call is `.post(` / `.put(` / `.patch(` / `.delete(` (HTTP), a Convex
+        `.mutation(`, or `runMutation(`;
+      * an observable-state assertion is a read-back — `.query(` / `runQuery(`, `.select(`, `.get(`,
+        `.collect(`, `.first(`, `.unique(` — whose result is asserted against.
+    A smoke file that mutates but contains none of the read-back forms is flagged at its first
+    mutating call. The response assertion (`expect(resp.status).toBe(200)`) may be retained as a
+    secondary assertion; it must not be the ONLY assertion.
+  fix_hint: |
+    Add an observable-state assertion alongside the response assertion:
+      - Query the mutated row back and assert on it, e.g.
+        `const row = await client.query('table:byId', { id }); expect(row.field).toBe(expected)`.
+      - For an HTTP smoke, follow the POST with a GET/query of the created resource and assert its
+        persisted shape.
+    This rule is `documentation-only`: the detector emits the RAW signal; whether it blocks is the
+    downstream consumer's disposition decision.
+  exceptions:
+    - Read-only smoke tests (no state-mutating call) are out of scope — there is nothing to verify
+      persisted.
+    - Non-smoke tests are out of scope (identified by basename / header as in
+      tester.convex.smoke-no-collaborator-substitution).
+    - Generated code under `convex/_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-CONVEX-SMOKE-OBSERVABLE-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: state_mutating_call
+    text: >-
+      a call that changes server state — `.post(`/`.put(`/`.patch(`/`.delete(` over HTTP, a Convex
+      `.mutation(`, or `runMutation(`.
+  - term_id: observable_assertion
+    text: >-
+      an assertion on real read-back state — a query/select/get of the mutated data (`.query(`/
+      `runQuery(`, `.select(`, `.get(`, `.collect(`, `.first(`, `.unique(`) — as opposed to a
+      response-shape-only assertion.

@@ -1,0 +1,64 @@
+schema_version: 1.1.0
+rule_id: tester.convex.red-fails-first
+kind: rule
+status: active
+name: A RED-phase Convex/Vitest test must contain a guaranteed-fail RED marker
+statement: >-
+  A RED-phase Convex/Vitest test (a `*.test.ts`/`*.spec.ts`(x) whose header declares `Phase: RED`)
+  MUST contain at least one guaranteed-fail RED marker so it cannot spuriously pass before the
+  implementation exists. Accepted TypeScript markers (from CORE red.convention.yaml →
+  red_patterns.typescript and its structural check "RED marker present"): `throw new Error('Not
+  implemented ...')`, `throw new UnimplementedError(...)`, `expect(false).toBe(true)`,
+  `expect(true).toBe(false)`, `expect.fail(...)`, `return Promise.reject(new Error(...))`,
+  `it.fails(`/`test.fails(`. This is the Convex/TypeScript realization of the CORE tester rule
+  `tester.red.fails-first` (TESTER-RED-FAILS-FIRST-001): "RED tests must fail on first run before
+  implementation begins." Whether a test ACTUALLY fails is a runtime property; CORE supplies the
+  decidable STRUCTURAL proxy (a RED marker must be present), which is what this per-stack detector
+  checks. The obligation is agnostic; the marker syntax is stack-specific.
+implementation:
+  type: validator
+  ref: tester.convex.red-fails-first
+content:
+  summary: >-
+    A "RED test is guaranteed to fail first" obligation, the Convex/Vitest sibling of CORE
+    `tester.red.fails-first`. The realization is a zero-dependency JS detector that flags any
+    `Phase: RED` Vitest test containing none of the CORE TypeScript RED markers.
+  normative_text: |
+    The RED phase of ATDD requires a test to fail BEFORE the implementation is written; a RED test
+    that already passes gives false confidence and violates the RED→GREEN discipline. Executing every
+    test to observe failure is a runtime check outside the static detector contract, so CORE gives the
+    structural proxy in red.convention.yaml (validation_levels.2_structure: "RED marker present";
+    red_patterns.typescript). This detector applies that proxy: a `Phase: RED` test file MUST contain
+    at least one guaranteed-fail marker. A RED test whose only assertions can pass today (e.g.
+    `expect(1 + 1).toBe(2)`) is flagged at its `Phase: RED` header line. WHICH markers count is the
+    per-stack rendering (python renders `assert False` / `pytest.fail`; this detector renders the
+    TypeScript set).
+  fix_hint: |
+    Add a guaranteed-fail RED marker to the flagged test so it fails on first run, e.g.
+    `throw new Error('Not implemented: <URN>')` or `expect(false).toBe(true)` before (or in place of)
+    the real assertion. Once the implementation lands, the test is promoted to GREEN by removing the
+    marker and asserting the real behavior. This rule is `documentation-only`: the detector surfaces
+    the signal; the disposition verdict is the downstream consumer's.
+  exceptions:
+    - Non-RED tests (`Phase GREEN` / `SMOKE` / `REFACTOR`, or no phase header) are out of scope —
+      only RED-phase tests must be guaranteed-failing.
+    - Non-test files and generated code under `convex/_generated/` are never scanned.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped.
+metadata:
+  aliases:
+    - TESTER-CONVEX-RED-FAILS-FIRST-001
+    - TESTER-RED-FAILS-FIRST-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: red_phase_test
+    text: >-
+      a `*.test.ts`/`*.spec.ts`(x) whose header declares `Phase: RED`; the file class this rule
+      governs.
+  - term_id: red_marker
+    text: >-
+      a guaranteed-fail statement that makes a RED test fail on first run — one of `throw new
+      Error('Not implemented ...')`, `throw new UnimplementedError(...)`, `expect(false).toBe(true)`,
+      `expect(true).toBe(false)`, `expect.fail(...)`, `return Promise.reject(new Error(...))`,
+      `it.fails(`/`test.fails(`.
