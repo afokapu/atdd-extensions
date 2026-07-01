@@ -1,0 +1,93 @@
+schema_version: 1.1.0
+rule_id: tester.convex.telemetry-emit
+kind: rule
+status: active
+name: Convex telemetry tests must assert the signal was emitted to the sink
+statement: >-
+  A Vitest test file under the Convex function tree (a `*.test.ts`/`*.spec.ts` file beneath a
+  `convex/` scan root, excluding `_generated/` codegen) that is a TELEMETRY test — one whose
+  `// URN: test:...-TELEMETRY|EVENT|METRIC-NNN` header, or whose URN-derived / telemetry-rendered
+  basename (`{wmbt_lower}-telemetry|event|metric-{nnn}[-slug].test.ts` or `*.telemetry.test.ts`),
+  marks it as covering a telemetry signal — MUST assert that the signal was EMITTED to the
+  configured sink: a spy assertion (`toHaveBeenCalled`/`toHaveBeenCalledWith`) or an `expect(...)`
+  whose subject is an emission (`.emit`/`.capture`/`.track`/`.emitted`). This is the Convex/Vitest
+  realization of the agnostic tester obligation `tester.telemetry.emit` ("Telemetry tests assert
+  that the validator emits the expected events to the configured sink") owned by the tester
+  extension; the python-pytest sibling asserts the same over `test_*.py`. The obligation is
+  stack-bound; the realizing detector — a scan over `convex/**` test files that flags each telemetry
+  test whose body makes no emission assertion — is the convex.workspace.runtime implementation
+  `convex_test_telemetry_emit` referenced below.
+implementation:
+  type: validator
+  ref: convex_test_telemetry_emit
+content:
+  summary: >-
+    A "telemetry tests actually assert emission" obligation, the Vitest sibling of the agnostic
+    `tester.telemetry.emit`. The realization is a zero-dependency JS detector that identifies each
+    telemetry test (TELEMETRY/EVENT/METRIC URN header, URN-derived basename, or `*.telemetry.test.ts`
+    colocation) and flags it when its body contains no emission assertion — a `toHaveBeenCalled[With]`
+    spy assertion or an `expect(...)` on `.emit`/`.capture`/`.track`/`.emitted`. A telemetry test that
+    only checks a return value proves nothing about whether the signal reached the sink: a silent
+    green gap.
+  normative_text: |
+    A telemetry signal is only actually covered when a test PROVES it was emitted — the configured
+    sink (an OpenTelemetry exporter, a PostHog client, or a test double standing in for one) must be
+    shown to have received the expected event/metric, not merely that the handler returned. The
+    IDENTITY of a test comes from its explicit `// URN: test:{wagon}:{feature}:{WMBT}-{HARNESS}-{NNN}
+    [-slug]` header (a CORE invariant, owned elsewhere); a test whose harness segment is `TELEMETRY`,
+    `EVENT` or `METRIC` is claiming telemetry coverage.
+
+    For the Convex/Vitest stack the detector treats a `*.test.ts`/`*.spec.ts` as a telemetry test
+    when its URN header carries a `-TELEMETRY-`/`-EVENT-`/`-METRIC-` harness, OR its basename renders
+    one (`m001-telemetry-001-selection-emitted.test.ts`, `…-event-001.test.ts`), OR it is a
+    `*.telemetry.test.ts` colocation. Such a file MUST contain an emission assertion: a
+    `toHaveBeenCalled`/`toHaveBeenCalledWith`/`toHaveBeenCalledTimes` spy assertion, or an
+    `expect(...)` whose subject is an emission verb (`.emit`/`.capture`/`.track`/`.emitted`). A
+    telemetry test with no such assertion is a violation. WHICH per-language pattern marks a
+    telemetry test, and HOW emission is recognized, is delegated to the per-stack detector.
+  fix_hint: |
+    Assert against the sink, not just the return value. Spy the configured sink and assert it
+    received the signal:
+
+      test('emits a selection event to the sink', async () => {
+        const sink = { capture: vi.fn() }
+        const t = convexTest(schema).withSink(sink)
+        await t.mutation(anyApi.dilemmas.selectDilemma, { sessionId: 's1', cell: 4 })
+        expect(sink.capture).toHaveBeenCalledWith(
+          expect.objectContaining({ event: 'dilemma.selected', cell: 4 }),
+        )
+      })
+
+    Assert the event/metric name, plane, and the payload fields the tracking plan requires. This
+    rule is `documentation-only`: the detector emits the RAW list of telemetry tests missing an
+    emission assertion as an advisory signal (no inline-suppression marker, no hard fail); whether it
+    blocks is the downstream consumer's disposition decision, never the detector's.
+  exceptions:
+    - Non-telemetry tests (no `-TELEMETRY-`/`-EVENT-`/`-METRIC-` URN harness, no telemetry-rendered
+      basename, not a `*.telemetry.test.ts` file) are out of scope.
+    - Generated code under `convex/_generated/` is never scanned; vendored/build dirs
+      (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+    - Non-test files (anything not `*.test.ts` / `*.spec.ts`) are not inspected.
+    - The telemetry-registry substrate (signal-file schema, `telemetry/` directory taxonomy,
+      `SPEC-TESTER-CONV-00xx` platform validators) is an ATDD-INTERNAL concern, not this rule.
+metadata:
+  aliases:
+    - TESTER-CONVEX-TELEMETRY-EMIT-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: telemetry_test
+    text: >-
+      a `*.test.ts`/`*.spec.ts` whose `// URN: test:...` header carries a `TELEMETRY`/`EVENT`/`METRIC`
+      harness segment, whose basename renders one, or that is a `*.telemetry.test.ts` colocation — a
+      test claiming to cover a telemetry signal.
+  - term_id: emission_assertion
+    text: >-
+      an assertion that the configured sink received the signal — a
+      `toHaveBeenCalled`/`toHaveBeenCalledWith`/`toHaveBeenCalledTimes` spy assertion, or an
+      `expect(...)` whose subject is an emission verb (`.emit`/`.capture`/`.track`/`.emitted`).
+  - term_id: telemetry_sink
+    text: >-
+      the destination a signal is emitted to — an OpenTelemetry exporter, a PostHog client, or a
+      test double substituted for one; the object a telemetry test spies to prove emission.

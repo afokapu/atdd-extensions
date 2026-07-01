@@ -1,0 +1,85 @@
+schema_version: 1.1.0
+rule_id: tester.convex.security-auth
+kind: rule
+status: active
+name: Convex security tests must assert an authentication/authorization outcome
+statement: >-
+  A Vitest test file under the Convex function tree (a `*.test.ts`/`*.spec.ts` file beneath a
+  `convex/` scan root, excluding `_generated/` codegen) that is a SECURITY test — one whose
+  `// URN: test:...-SEC|RLS|AUTH-NNN` header, or whose URN-derived basename
+  `{wmbt_lower}-sec|rls|auth-{nnn}[-slug].test.ts`, marks it as covering a security-sensitive
+  endpoint — MUST make at least one assertion tying an authentication/authorization outcome to a
+  test expectation (an `expect(...)` / `.rejects` / `.toThrow` co-located with an identity, auth,
+  permission, 401 or 403 signal). This is the Convex/Vitest realization of the agnostic tester
+  obligation `tester.security.auth` ("Security-sensitive endpoints are covered by tests asserting
+  auth and authorization") owned by the tester extension; the python-pytest sibling asserts the same
+  over `test_*.py`. The obligation is stack-bound; the realizing detector — a scan over `convex/**`
+  test files that flags each security test whose body carries no auth assertion — is the
+  convex.workspace.runtime FAMILY implementation `convex_test_security_detector` referenced below.
+implementation:
+  type: validator
+  ref: convex_test_security_detector
+content:
+  summary: >-
+    A "security tests actually assert on security" obligation, the Vitest sibling of the agnostic
+    `tester.security.auth`. The realization is a zero-dependency JS detector that identifies each
+    security test (SEC/RLS/AUTH URN header or URN-derived basename) and flags it when its body
+    contains no authentication/authorization assertion — an `expect`/`.rejects`/`.toThrow` tied to
+    an identity, auth, permission, 401 or 403 signal. A "security" test that only exercises the
+    happy path is a silent green gap: it passes CI without ever proving the endpoint refuses an
+    unauthenticated or unauthorized caller.
+  normative_text: |
+    A security-sensitive Convex endpoint (query/mutation/action gated on the caller's identity) is
+    only actually covered when a test PROVES the gate: that an unauthenticated or unauthorized
+    caller is refused, and/or that the authorized identity is honored. The IDENTITY of a test comes
+    from its explicit `// URN: test:{wagon}:{feature}:{WMBT}-{HARNESS}-{NNN}[-slug]` header (a CORE
+    invariant, owned elsewhere); a test whose harness segment is `SEC` (security), `RLS` (row-level
+    security) or `AUTH` is claiming security coverage.
+
+    For the Convex/Vitest stack the detector treats a `*.test.ts`/`*.spec.ts` as a security test
+    when its URN header carries a `-SEC-`/`-RLS-`/`-AUTH-` harness OR its basename renders one
+    (`d001-sec-001-token-validation.test.ts`). Such a file MUST contain an auth assertion: an
+    assertion verb (`expect`, `.rejects`, `.toThrow`, `assert`) co-located on a line with an
+    identity/auth token (`auth`, `identity`, `unauthenticated`, `unauthorized`, `forbidden`,
+    `permission`, `401`, `403`). A security test with no such assertion is a violation. WHICH
+    per-language pattern marks a security test, and HOW the auth outcome is recognized, is delegated
+    to the per-stack detector; other stacks own their own renderings.
+  fix_hint: |
+    Add an assertion that proves the security gate, not just the happy path. For an authenticated
+    Convex query/mutation:
+
+      test('rejects an unauthenticated caller', async () => {
+        const t = convexTest(schema)
+        await expect(t.query(anyApi.users.me, {})).rejects.toThrow(/unauthenticated/i)
+      })
+
+    and, where authorization (not just authentication) is the point, assert that a caller WITHOUT
+    the required permission is refused while the permitted identity succeeds. This rule is
+    `documentation-only`: the detector emits the RAW list of security tests missing an auth
+    assertion as an advisory signal (no inline-suppression marker, no hard fail); whether it blocks
+    is the downstream consumer's disposition decision, never the detector's.
+  exceptions:
+    - Non-security tests (no `-SEC-`/`-RLS-`/`-AUTH-` URN harness and no security-rendered basename)
+      are out of scope — a functional or journey test is not required to assert auth.
+    - Generated code under `convex/_generated/` is never scanned; vendored/build dirs
+      (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+    - Non-test files (anything not `*.test.ts` / `*.spec.ts`) are not inspected.
+    - Input-validation coverage is governed by the sibling rule `tester.convex.security-input`, not
+      this one.
+metadata:
+  aliases:
+    - TESTER-CONVEX-SECURITY-AUTH-001
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: security_test
+    text: >-
+      a `*.test.ts`/`*.spec.ts` whose `// URN: test:...` header carries a `SEC`/`RLS`/`AUTH` harness
+      segment, or whose basename renders one (`{wmbt}-sec|rls|auth-{nnn}[-slug].test.ts`) — a test
+      that claims to cover a security-sensitive endpoint.
+  - term_id: auth_assertion
+    text: >-
+      an assertion verb (`expect`, `.rejects`, `.toThrow`, `assert`) co-located on a line with an
+      identity/auth signal (`auth`, `identity`, `unauthenticated`, `unauthorized`, `forbidden`,
+      `permission`, `401`, `403`) — the proof that the test asserts on the security outcome.
