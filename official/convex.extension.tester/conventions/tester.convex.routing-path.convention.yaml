@@ -1,0 +1,62 @@
+schema_version: 1.1.0
+rule_id: tester.convex.routing-path
+kind: rule
+status: active
+name: A Convex/Vitest test file's path must be consistent with its declared runtime
+statement: >-
+  A `*.test.ts`/`*.spec.ts`(x) file is collected and executed by node/Vitest — a TypeScript runtime.
+  Therefore, if such a file DECLARES a runtime in its `// Runtime:` / `# Runtime:` header, that
+  runtime MUST be in the TypeScript family (`typescript`, `ts`, `convex`, `supabase`, `preact`,
+  `vite`, `astro`, `node`, `js`, `javascript`, `deno`). A `.test.ts` file declaring a
+  non-TypeScript runtime (`python`, `dart`, `go`, `kotlin`, `java`, `ruby`, `rust`) is mis-routed:
+  the FILE PATH contradicts the declared runtime, because a python-runtime test must be rendered as
+  `test_*.py`, a dart one as `*_test.dart`, etc. — never `.test.ts`. This is the Convex/TypeScript
+  realization of the CORE tester rule `tester.routing.path` (TESTER-ROUTING-PATH-001): "Test path
+  determines the runtime that executes it (python/ vs supabase/ vs web/)." The obligation is agnostic
+  (a test's location must be consistent with the runtime that runs it); the concrete path↔runtime
+  mapping is per-stack.
+implementation:
+  type: validator
+  ref: tester.convex.routing-path
+content:
+  summary: >-
+    A "test path must be consistent with its runtime" obligation, the Convex/Vitest sibling of CORE
+    `tester.routing.path`. The realization is a zero-dependency JS detector that flags any
+    `*.test.ts` file whose declared `Runtime:` header names a non-TypeScript runtime.
+  normative_text: |
+    CORE's principle: "Test path determines implementation runtime" — the path a test lives in is the
+    signal that selects the runtime and, downstream, where the coder implements. For a TypeScript
+    consumer the decidable invariant is: a file that is a `*.test.ts`/`*.spec.ts` (hence run by
+    Vitest/node) may only declare a TypeScript-family runtime. When the header instead names a
+    foreign runtime, the file is in the wrong tree — a python-runtime acceptance belongs at
+    `python/{wagon}/{feature}/tests/{layer}/test_*.py`, a supabase-edge one under
+    `supabase/functions/...`, a dart one under `test/...`. The detector reads the `Runtime:` header,
+    normalizes it, and flags any value outside the accepted TypeScript-family set at the header line.
+    Files with no `Runtime:` header are not flagged (nothing to contradict).
+  fix_hint: |
+    Either (a) move/rename the test to the tree its declared runtime demands — e.g. a
+    `# Runtime: python` test belongs at `python/.../tests/{layer}/test_<slug>.py`, not `<slug>.test.ts`
+    — or (b) if the test really is a TypeScript/Vitest test, correct the header to the actual runtime
+    (`convex`, `vite`, `supabase`, ...). This rule is `documentation-only`: the detector surfaces the
+    path↔runtime mismatch; the disposition verdict is the downstream consumer's.
+  exceptions:
+    - Test files with no `Runtime:` header are out of scope (no declared runtime to contradict).
+    - Non-test files are out of scope — only `*.test.ts`/`*.spec.ts`(x) are path-bound to Vitest.
+    - Generated code under `convex/_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-CONVEX-ROUTING-PATH-001
+    - TESTER-ROUTING-PATH-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: ts_family_runtime
+    text: >-
+      a runtime executed by node/Vitest — one of `typescript`, `ts`, `convex`, `supabase`, `preact`,
+      `vite`, `astro`, `node`, `js`, `javascript`, `deno`; the only runtimes a `*.test.ts` file may
+      declare.
+  - term_id: runtime_header
+    text: >-
+      the `// Runtime:` / `# Runtime:` line in a test file's URN header block declaring which runtime
+      executes the test; its value must agree with the file's path/extension.

@@ -1,0 +1,11 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_routing_path
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.convex.routing-path
+emits_rule_ids:
+- tester.convex.routing-path
+entrypoint: detect.mjs
+report: detect.mjs
