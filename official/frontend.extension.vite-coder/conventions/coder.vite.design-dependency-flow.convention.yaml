@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-dependency-flow
+kind: rule
+status: active
+name: Design-system layers depend inward only (tokens <- primitives <- components <- templates)
+statement: A Vite/React design-system file MUST import only from its own layer or a LOWER one in the
+  hierarchy tokens <- primitives <- components <- templates. Specifically forbidden are upward/outward
+  edges — `tokens` importing `primitives`/`components`/`templates`, `primitives` importing `components`/`templates`,
+  and `components` importing `templates` — because a lower layer that learns about a higher one inverts
+  the dependency flow and couples the foundation to what is built on top of it. This is the Vite-stack
+  realization of the agnostic "dependency flow is inward only" obligation owned by the coder extension
+  (the python-pytest sibling is `coder.design.dependency-flow-tokens-primitives`, alias DESIGN-HIERARCHY-002,
+  principle DS-05; it is the frontend sibling of the Convex `coder.convex.design-hierarchy-import`, a
+  DISTINCT rule_id). The detector that enforces it — a scan that ranks each design-system file to a layer
+  and flags every relative import whose target layer is higher — is the frontend.workspace.runtime implementation
+  referenced below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: layer_rank
+  text: the design-system dependency order tokens (0) <- primitives (1) <- components (2) <- templates
+    (3); a file may import its own rank or a LOWER one, never a higher one.
+- term_id: upward_edge
+  text: a relative import from a file in one layer to a target in a HIGHER layer (e.g. `primitives/Input.tsx`
+    importing `../components/Card`, or `tokens/scale.ts` importing `../primitives/Button`); the construct
+    this rule flags.
+implementation:
+  type: validator
+  ref: vite_design_hierarchy_detector
+content:
+  summary: An agnostic "the design-system dependency flow is one-directional (inward)" obligation, the
+    Vite/React sibling of coder.design.dependency-flow-tokens-primitives and frontend counterpart of the
+    Convex design-hierarchy-import. The realization is a zero-dependency JS detector (one member of the
+    vite_design_hierarchy_detector family) that classifies each file to a layer rank by its `tokens`/`primitives`/`components`/`templates`
+    path segment, resolves each relative import to a target layer, and flags any edge to a higher rank
+    — skipping external/npm imports and imports that leave the design-system tree.
+  normative_text: 'The design system is a strict hierarchy: tokens are pure values; primitives consume
+
+    tokens; components compose primitives and tokens; templates compose components,
+
+    primitives, and tokens. Dependencies flow one way — inward, toward tokens. An import
+
+    that points UP the hierarchy (a primitive reaching for a component, a token reaching for
+
+    a primitive) inverts that flow and couples the foundation to its consumers, so a change
+
+    low in the stack can no longer be reasoned about in isolation. The obligation: every
+
+    design-system import points to the same layer or a lower one. WHICH edges count as
+
+    upward is delegated to the per-stack detector; for the Vite stack it ranks a file by its
+
+    layer segment (tokens 0 < primitives 1 < components 2 < templates 3), resolves each
+
+    relative `./`/`../` specifier to a target layer, and flags every target of higher rank.
+
+    External (npm) imports and imports that leave the design-system tree are outside this
+
+    check (the design -> wagon direction is the separate `coder.vite.design-wagons-import`).
+
+    '
+  fix_hint: "Keep design-system imports flowing inward, and push shared code DOWN:\n  design_system/primitives/Input.tsx\
+    \  ->  import { Card } from '../components/Card'   ->  FORBIDDEN (1 -> 2)\n  design_system/components/Card.tsx\
+    \    ->  import { Button } from '../primitives/Button' ->  allowed (2 -> 1)\nIf a primitive needs\
+    \ something a component has, move that something down into the primitive\nor tokens layer; never import\
+    \ up. This rule is `strict`: an upward edge is not suppressible\nand fails the gate.\n"
+  exceptions:
+  - Same-layer and inward imports (templates -> components -> primitives -> tokens) are the intended flow
+    and are never flagged.
+  - External (npm) imports (`react`, `@tanstack/*`, ...) and imports that resolve outside the design-system
+    tree are not layer edges and are not checked here.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+metadata:
+  aliases:
+  - VITE-DESIGN-DEPENDENCY-FLOW-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
