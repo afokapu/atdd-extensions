@@ -1,0 +1,89 @@
+schema_version: 1.1.0
+rule_id: tester.convex.live-smoke-no-self-skip
+kind: rule
+status: active
+name: Convex/Vitest live-smoke tests must run-or-fail — never self-skip
+statement: >-
+  A Convex/Vitest test that carries a live-smoke identity — a `*.test.ts`/`*.spec.ts` under a
+  `convex/` scan root whose URN header declares `Phase: SMOKE`/`Phase: LIVE_SMOKE` (or
+  `execution_kind: live_smoke`), or whose basename is `*.smoke.test.ts` / `*.live.test.ts` /
+  `*.live-smoke.test.ts` — MUST run-or-fail against real infrastructure and MUST NOT contain a
+  self-skip mechanism (`describe.skip` / `it.skip` / `test.skip`, a conditional `.skipIf(...)` /
+  `.runIf(...)`, `it.todo` / `test.todo`, `ctx.skip()`, or a `liveSmokeAvailable()`-style
+  availability guard). A live-smoke test that can self-skip passes VACUOUSLY: SMOKE goes green
+  without ever exercising real infrastructure (a false green — cf. core #1076). This is the
+  Convex/Vitest realization of the agnostic tester obligation
+  `tester.acceptance-violation.live-smoke-acceptance-must-execute` (the python-pytest sibling
+  forbids `pytest.skip` / `pytest.importorskip` / `@pytest.mark.skip(if)`); the obligation is
+  stack-bound, the detector is TypeScript/Vitest-specific. The realizing detector — a scan over
+  `convex/**` test files that classifies live-smoke files by header/basename and flags each
+  self-skip call site — is the convex.workspace.runtime implementation referenced below.
+implementation:
+  type: validator
+  ref: tester.convex.live-smoke-no-self-skip
+content:
+  summary: >-
+    A "Convex/Vitest live-smoke tests may not self-skip" obligation, the Vitest sibling of the
+    core `tester.acceptance-violation.live-smoke-acceptance-must-execute`. The realization is a
+    zero-dependency JS detector that (1) classifies each `*.test.ts`/`*.spec.ts` under the supplied
+    Convex scan roots as live-smoke via its URN header (`Phase: SMOKE`/`LIVE_SMOKE`,
+    `execution_kind: live_smoke`) or basename (`*.smoke.test.ts` / `*.live.test.ts`), and (2)
+    flags every self-skip call site inside those files. Non-live-smoke tests (ordinary unit tests)
+    are out of scope — they may legitimately `it.skip`.
+  normative_text: |
+    A `live_smoke` acceptance asserts REAL-infrastructure behavior; its anchored test must run
+    against the real runtime and either pass or fail — it must never self-skip. A skipped
+    live-smoke test satisfies the SMOKE phase without ever executing, which is a false green: the
+    claim ("this works against real infra") was never verified, yet CI is green.
+
+    In the Convex/Vitest stack a self-skip is any of:
+      * a static skip:  `describe.skip(...)`, `it.skip(...)`, `test.skip(...)`, `suite.skip(...)`
+      * a conditional skip/run:  `it.skipIf(cond)(...)`, `test.skipIf(cond)`, `describe.runIf(cond)`,
+        `test.runIf(cond)` — a runtime condition that can silence the test
+      * a placeholder:  `it.todo(...)`, `test.todo(...)`, `describe.todo(...)`
+      * an in-body skip:  `ctx.skip()` / `context.skip()` (Vitest test-context skip)
+      * an availability guard:  a call to a `liveSmokeAvailable()` / `isLiveSmoke()` /
+        `smokeAvailable()`-style function used to gate execution (the JS analogue of the core's
+        `live_smoke_available()` guard)
+    WHICH files count as live-smoke, and WHICH primitives count as a self-skip, is delegated to
+    this per-stack detector. The python-pytest rendering (`pytest.skip` / `pytest.importorskip` /
+    `@pytest.mark.skip` / `@pytest.mark.skipif`) is owned by its own workspace package.
+  fix_hint: |
+    Remove the self-skip so the live-smoke test runs-or-fails inside the real Convex runtime:
+      * delete the `.skip` / `.skipIf` / `.runIf` / `.todo` modifier (run the test unconditionally), or
+      * remove the `liveSmokeAvailable()`-style guard and let the test connect to real infrastructure
+        (if the infra is unreachable the test SHOULD fail loudly, not skip), or
+      * if the claim is genuinely not inducible against real infra (e.g. "survives OS power-loss"),
+        it is NOT a live-smoke test — re-author it as a hermetic integration test (with a declared
+        fake-fidelity contract) or a plain unit test, and drop the live-smoke header/basename.
+    This rule's disposition is `strict`: there is no inline-suppression marker. The detector always
+    emits the RAW self-skip call-site list; whether pre-existing sites are held flat by a downstream
+    ratchet baseline is a consumer/coach concern, not the detector's.
+  exceptions:
+    - Non-live-smoke test files (no SMOKE/LIVE_SMOKE Phase header, no live_smoke execution_kind,
+      and no `*.smoke.test.ts`/`*.live.test.ts` basename) are out of scope — ordinary
+      unit/integration tests may `it.skip` / `it.todo` freely.
+    - Non-test files (anything not `*.test.ts` / `*.spec.ts`) are never scanned.
+    - Generated code under `convex/_generated/` is never scanned (codegen, never edited).
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+    - The word "skip" appearing inside a string literal or comment (rather than as a Vitest
+      modifier call) is not a self-skip and is not flagged.
+metadata:
+  aliases:
+    - TESTER-CONVEX-LIVE-SMOKE-EXEC-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: live_smoke_test
+    text: >-
+      a Convex/Vitest test carrying a live-smoke identity — a `*.test.ts`/`*.spec.ts` whose URN
+      header declares `Phase: SMOKE`/`Phase: LIVE_SMOKE` or `execution_kind: live_smoke`, or whose
+      basename is `*.smoke.test.ts` / `*.live.test.ts` / `*.live-smoke.test.ts`. It asserts real
+      infrastructure behavior and must run-or-fail.
+  - term_id: self_skip_mechanism
+    text: >-
+      any Vitest construct that can silence a test at collection/run time without failing —
+      `describe/it/test/suite.skip`, a conditional `.skipIf(...)` / `.runIf(...)`, `.todo`,
+      `ctx.skip()`, or a `liveSmokeAvailable()`-style availability guard. In a live-smoke test it
+      produces a vacuous pass (false green).

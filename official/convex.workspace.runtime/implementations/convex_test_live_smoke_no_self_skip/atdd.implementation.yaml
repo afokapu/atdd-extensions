@@ -1,0 +1,11 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_test_live_smoke_no_self_skip
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.convex.live-smoke-no-self-skip
+emits_rule_ids:
+- tester.convex.live-smoke-no-self-skip
+entrypoint: detect.mjs
+report: detect.mjs
