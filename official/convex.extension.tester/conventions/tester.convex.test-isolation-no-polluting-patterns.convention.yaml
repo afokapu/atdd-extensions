@@ -1,0 +1,97 @@
+schema_version: 1.1.0
+rule_id: tester.convex.test-isolation-no-polluting-patterns
+kind: rule
+status: active
+name: Convex/Vitest test files must not mutate shared git state outside a tmp scope
+statement: >-
+  A Vitest test file (`*.test.ts`/`*.spec.ts` beneath a scan root, excluding `_generated/` codegen)
+  that shells out to git MUST NOT mutate shared git state outside a tmp-scoped path. Two pattern
+  classes are forbidden: (A) an UNSCOPED bare init — `git init --bare` whose target is not derived
+  from a tmp path (`os.tmpdir()` / `mkdtempSync()` / a `tmpDir` fixture) — and (B) an UNSCOPED
+  `git config core.bare true` carrying no isolation flag (`--worktree`, `-C <tmp>`, or a `cwd` tmp
+  option). This is the Convex/Vitest (Node `child_process`) realization of the agnostic tester
+  obligation `tester.test-isolation.no-polluting-patterns` owned by the tester extension; the
+  python-pytest sibling AST-detects the same bare-mode-init and unscoped-core-bare-config classes in
+  `test_*.py`. The obligation is stack-neutral test hygiene; the realizing detector — a line scan
+  over `*.test.ts`/`*.spec.ts` that flags each unscoped git-mutating call — is the
+  convex.workspace.runtime implementation `convex_test_isolation_patterns` referenced below.
+implementation:
+  type: validator
+  ref: convex_test_isolation_patterns
+content:
+  summary: >-
+    A "test files must not pollute shared git state" obligation, the Vitest/Node sibling of the
+    agnostic `tester.test-isolation.no-polluting-patterns` (born of the Wave 12 contamination
+    incident, 2026-05-12, where validator tests set `core.bare=true` on the live worktree's shared
+    `.git/config` and pushed 220,000-line deletions). The realization is a zero-dependency JS
+    detector that scans each `*.test.ts`/`*.spec.ts` for an unscoped `git init --bare` (target not
+    tmp-derived) or an unscoped `git config core.bare true` (no `--worktree`/`-C`/`cwd` isolation).
+    Safe, tmp-scoped equivalents are not flagged.
+  normative_text: |
+    A test that shells out to git can corrupt the developer's or CI's live worktree if its git
+    mutations are not confined to a throwaway tmp directory. Two structurally-detectable patterns
+    are the contamination class this rule prevents — independent of whether anyone remembers the
+    incident:
+
+      A. BARE-MODE INIT with an unscoped target. `git init --bare <path>` where `<path>` is not
+         derived from a tmp scope (`os.tmpdir()`, `mkdtempSync()`, a `tmpDir`/`tmp` fixture var, a
+         `/tmp` path) can point the bare repo at the live tree.
+
+      B. UNSCOPED core.bare CONFIG. `git config core.bare true` with no isolation flag rewrites the
+         SHARED `.git/config`. The safe forms scope it: `git --worktree config core.bare true`
+         (per-worktree), `git -C <tmpDir> config core.bare true`, or a `cwd: <tmpDir>` option.
+
+    For the Convex/Vitest stack the detector scans each test file line-by-line: it flags a line that
+    invokes git with `init` + `--bare` and carries no tmp-scope token, and a line that sets
+    `core.bare` to `true` and carries none of `--worktree` / `-C` / `cwd`. Both the string form
+    (`execSync('git init --bare ' + dir)`) and the array form
+    (`execFileSync('git', ['init', '--bare', dir])`) are recognized. WHICH shell-out shapes and HOW
+    a tmp scope is recognized is delegated to the per-stack detector; python and other stacks own
+    their own renderings.
+  fix_hint: |
+    Scope every git mutation to a tmp directory the test creates and tears down:
+
+      WRONG (unscoped bare init):
+        execFileSync('git', ['init', '--bare', 'origin.git'])
+      RIGHT (tmp-derived target):
+        const tmpDir = mkdtempSync(join(tmpdir(), 'atdd-git-'))
+        execFileSync('git', ['init', '--bare', join(tmpDir, 'origin.git')])
+
+      WRONG (unscoped core.bare):
+        execSync('git config core.bare true')
+      RIGHT (scoped to the tmp dir, or per-worktree):
+        execSync(`git -C ${tmpDir} config core.bare true`)
+        execSync('git --worktree config core.bare true')
+
+    Reference: CLAUDE.md worktree_config convention (#634 — use `--worktree` for per-worktree git
+    config to avoid shared `.git/config` contamination). This rule's disposition is `strict`: an
+    added unscoped bare-init or core.bare config is not suppressible and fails.
+  exceptions:
+    - A `git init --bare` whose target is derived from a tmp scope (`os.tmpdir()`, `mkdtempSync()`, a
+      `tmpDir`/`tmp` fixture, a `/tmp` path) is safe and not flagged.
+    - A `git config core.bare true` scoped via `--worktree`, `-C <tmp>`, or a `cwd` tmp option is
+      safe and not flagged.
+    - Non-test files (anything not `*.test.ts` / `*.spec.ts`) are out of scope — this rule governs
+      test-file hygiene specifically.
+    - Generated code under `_generated/` is never scanned; vendored/build dirs (`node_modules`,
+      `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - TESTER-CONVEX-TEST-ISOLATION-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: bare_mode_init
+    text: >-
+      a `git init --bare <path>` shell-out; safe only when `<path>` is derived from a tmp scope
+      (`os.tmpdir()`/`mkdtempSync()`/a `tmpDir` fixture). An unscoped target can rewrite shared
+      `.git` state.
+  - term_id: unscoped_core_bare_config
+    text: >-
+      a `git config core.bare true` with no isolation flag (`--worktree`, `-C <tmp>`, or a `cwd` tmp
+      option) — it mutates the shared worktree `.git/config`; the Wave 12 contamination class.
+  - term_id: tmp_scope
+    text: >-
+      a throwaway directory a test derives its git mutations into — `os.tmpdir()` + `mkdtempSync()`,
+      a `tmpDir`/`tmp` fixture variable, or a `/tmp` path — so nothing touches the live worktree.
