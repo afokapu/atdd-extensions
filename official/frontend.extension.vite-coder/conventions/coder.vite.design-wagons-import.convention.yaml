@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: coder.vite.design-wagons-import
+kind: rule
+status: active
+name: The design system never imports from feature wagons
+statement: A Vite/React design-system file (a file under a `design_system/`/`design/` tree) MUST NOT
+  import from a feature wagon — it may reach other design-system code and external packages, but never
+  app feature code. Feature wagons import FROM the design system, never the reverse; a design-system file
+  that reaches OUT into a wagon (`../../features/checkout/…`, `@/features/…`, `src/play-grid/…`) is a
+  leaky abstraction that couples the shared, reusable system to one consumer and makes it un-reusable.
+  This is the Vite-stack realization of the agnostic "wagons import from design_system, design_system
+  never imports from wagons" obligation owned by the coder extension (the python-pytest sibling is `coder.design.wagons-import-from-design`,
+  alias DESIGN-HIERARCHY-003, principle DS-06, anti-pattern AP-DS-02 "Leaky abstraction"). The detector
+  that enforces it — a scan that flags every import from a design-system file whose specifier escapes
+  the design-system root into non-design app code — is the frontend.workspace.runtime implementation referenced
+  below; the obligation is stack-bound, the detector is JS-specific.
+terms:
+- term_id: design_system_root
+  text: the `design_system/`/`design-system/`/`design/` directory tree that holds the shared, wagon-agnostic
+    tokens, primitives, components, and templates.
+- term_id: wagon_import
+  text: an import, from a file inside the design-system root, whose specifier resolves OUTSIDE that root
+    into a feature wagon — a relative path that climbs above the design-system tree, or an app-internal
+    alias (`@/…`, `~/…`, `src/…`) whose first segment is not a design segment; the construct this rule
+    flags.
+implementation:
+  type: validator
+  ref: vite_design_hierarchy_detector
+content:
+  summary: An agnostic "the design system is wagon-agnostic (never imports from wagons)" obligation, the
+    Vite/React sibling of coder.design.wagons-import-from-design. The realization is a zero-dependency
+    JS detector (one member of the vite_design_hierarchy_detector family) that, for each file under a
+    design-system tree, flags any import whose specifier escapes the design-system root — a relative path
+    resolving to a non-design location, or an app-internal alias (`@/`, `~/`, `src/`) whose first segment
+    is not a design segment. Bare/npm imports are out of scope.
+  normative_text: 'The design system is shared and wagon-agnostic: many feature wagons import its tokens,
+
+    primitives, components, and templates, and it must know about none of them. The
+
+    dependency arrow points one way — wagon -> design_system. A design-system file that
+
+    imports a feature wagon reverses that arrow, coupling the shared system to a single
+
+    consumer so it can no longer be reused or reasoned about on its own. The obligation:
+
+    design-system code imports only other design-system code (and external packages), never
+
+    a wagon. WHICH specifiers count as a wagon import is delegated to the per-stack detector;
+
+    for the Vite stack it flags, inside a file under a `design_system/` tree, a relative
+
+    import that resolves outside that tree, or an app-internal alias (`@/`, `~/`, `src/`)
+
+    whose first path segment is not a design segment. Bare npm specifiers are outside scope.
+
+    '
+  fix_hint: "Keep the design system free of wagon imports; invert the dependency instead:\n  design_system/components/Card.tsx\
+    \  ->  import { fetchCart } from '../../features/checkout/api'  ->  FORBIDDEN\n  design_system/components/Card.tsx\
+    \  ->  import { Button } from '../primitives/Button'            ->  allowed\nIf the design system\
+    \ seems to need feature data, lift the data into a prop the wagon\npasses in, or move the shared piece\
+    \ down into the design system. This rule is `strict`:\na design -> wagon import is not suppressible\
+    \ and fails the gate.\n"
+  exceptions:
+  - Only files under a `design_system/`/`design/` tree are governed; feature wagons importing FROM the
+    design system (the allowed direction) are not scanned.
+  - Imports that stay within the design-system tree (`../tokens/…`, `../primitives/…`) are the intended
+    reuse and are never flagged.
+  - Bare/npm specifiers (`react`, `@tanstack/query`, ...) are external and out of scope; only relative
+    escapes and app-internal aliases (`@/`, `~/`, `src/`) are checked.
+  - Test files (`*.test.*` / `*.spec.*`) are out of scope.
+  - Vendored/build directories (`node_modules`, `dist`, `build`, `.next`) are skipped during the walk.
+metadata:
+  aliases:
+  - VITE-DESIGN-WAGONS-IMPORT-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0

@@ -1,0 +1,5 @@
+{
+  "vite_design_tokens_pure": "coder.vite.design-tokens-pure",
+  "vite_design_dependency_flow": "coder.vite.design-dependency-flow",
+  "vite_design_wagons_import": "coder.vite.design-wagons-import"
+}
