@@ -1,0 +1,4 @@
+train_id: 9001-uncovered
+title: Fixture train 9001-uncovered
+wagons:
+  - some-wagon

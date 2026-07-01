@@ -1,0 +1,14 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: vite_journey_test_detector
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: tester.vite.journey-train-header
+emits_rule_ids:
+- tester.vite.journey-train-header
+- tester.vite.journey-urn-format
+- tester.vite.journey-layer-assembly
+- tester.vite.journey-no-acceptance-marker
+entrypoint: detect.mjs
+report: detect.mjs

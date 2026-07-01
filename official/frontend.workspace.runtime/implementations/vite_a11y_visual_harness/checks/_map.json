@@ -1,0 +1,4 @@
+{
+  "a11y-harness": "tester.vite.a11y-harness",
+  "visual-harness": "tester.vite.visual-harness"
+}
