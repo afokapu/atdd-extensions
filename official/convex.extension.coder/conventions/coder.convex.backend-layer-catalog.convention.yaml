@@ -1,0 +1,67 @@
+schema_version: 1.1.0
+rule_id: coder.convex.backend-layer-catalog
+kind: rule
+status: active
+name: Convex feature code is organized into the four canonical architecture layers
+statement: >-
+  Backend code in a Convex feature MUST be organized into the four canonical architecture
+  layers — `presentation`, `application`, `domain`, `integration` — expressed as the only
+  layer-level directory names. This is the Convex-stack realization of the agnostic core
+  obligation "Backend code is organized into 4 layers: presentation, application, integration,
+  domain" (`coder.backend.code-is-organized`, alias BOUNDARIES-LAYER-001). In this
+  architecture the many component_types the layer catalog enumerates (controllers, repositories,
+  services, …) are carried as file SUFFIXES within a layer, never as their own directories, so a
+  source module that sits in a directory named after a component_type (`.../services/`,
+  `.../controllers/`, `.../repositories/`) is organized by component type instead of by the
+  4-layer catalog — the reader can no longer read the layer off the path. The detector that
+  enforces it — a path scan flagging any module under a component-type directory segment — is the
+  convex.workspace.runtime family implementation referenced below; the obligation is stack-bound,
+  the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: convex_backend_layout_detector
+content:
+  summary: >-
+    A "feature code is organized into the four canonical layers" obligation, the Convex sibling of
+    coder.backend.code-is-organized. The realization is a zero-dependency Node ESM detector (path
+    scan, no TS runtime) that flags any Convex source module whose path contains a component-type
+    directory segment (`services/`, `controllers/`, `repositories/`, …) instead of one of the four
+    canonical layer directories.
+  normative_text: |
+    The four-layer catalog (presentation / application / domain / integration) is the vocabulary a
+    reader uses to place any module and to read dependency direction off its location. The
+    obligation is that the ONLY layer-level directories a feature uses are those four; each layer's
+    component_types (a controller, a repository, a service, …) are distinguished by the file's
+    SUFFIX within its layer, not by a per-component directory. A directory named after a component
+    type — `orders/services/…`, `orders/controllers/…`, `orders/repositories/…` — means the feature
+    is sliced by component type instead of by layer, which hides where each module sits in the
+    architecture. HOW mis-organized modules are found is delegated to the per-stack detector; for
+    Convex it scans the module paths supplied as scan roots and flags any component-type directory
+    segment.
+  fix_hint: |
+    Move the module into one of the four canonical layer directories and express its component type
+    as the file suffix instead:
+      * `orders/services/pricing.ts`     -> `orders/domain/pricing-service.ts`
+      * `orders/controllers/order.ts`    -> `orders/presentation/order-controller.ts`
+      * `orders/repositories/order.ts`   -> `orders/integration/order-repository.ts`
+    See coder.convex.backend-suffix-matches for the suffix-per-layer catalog.
+  exceptions:
+    - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+    - The four canonical layer directory names themselves (`presentation`/`application`/`domain`/`integration`) are always allowed.
+metadata:
+  aliases:
+    - BOUNDARIES-LAYER-001
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+terms:
+  - term_id: canonical_layer_directory
+    text: >-
+      one of the four architecture-layer directory names — `presentation`, `application`, `domain`,
+      `integration` — that are the only layer-level directories a Convex feature may use.
+  - term_id: component_type_directory
+    text: >-
+      a directory named after a layer's component_type (`services/`, `controllers/`, `repositories/`,
+      `handlers/`, …) used as a structural layer; a signal the feature is sliced by component type
+      instead of by the 4-layer catalog. Component types belong in the file suffix, not a directory.

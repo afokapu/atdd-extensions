@@ -1,0 +1,58 @@
+schema_version: 1.1.0
+rule_id: coder.convex.dto-purity
+kind: rule
+status: active
+name: Convex DTOs are pure immutable data structures
+statement: >-
+  A Convex `*DTO` type MUST be a pure, immutable data structure — no method members and no mutable
+  (non-`readonly`) fields. This is the Convex-stack realization of the agnostic core obligation that
+  "DTOs MUST be pure data structures with NO methods (except serialization)" and "DTOs MUST be
+  immutable (… readonly in TS)" (`coder.dto.purity`, alias DTO-PURITY-001). A `*DTO` carrying a
+  method member couples behaviour into what must be a flat serializable payload; a non-`readonly`
+  field makes the contract boundary mutable and unsafe to share. The detector that enforces it —
+  extracting each `interface|type <Name>DTO { … }` body and flagging top-level method members and
+  non-readonly properties — is the convex.workspace.runtime family implementation referenced below;
+  the obligation is stack-bound, the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: convex_dto_detector
+content:
+  summary: >-
+    A "DTOs are pure, immutable data" obligation, the Convex sibling of coder.dto.purity. The
+    realization is a zero-dependency Node ESM detector (brace-matched interface body scan, no TS
+    runtime) that flags any method member or non-`readonly` field inside a `*DTO` type body.
+  normative_text: |
+    A DTO crosses boundaries and must serialize/deserialize cleanly: it carries data, nothing else.
+    Behaviour (methods) belongs in the domain model or the mapper, never in the DTO; mutability
+    (non-`readonly` fields) lets a shared contract object be altered after it is handed across a
+    boundary. The obligation is that a `{Resource}DTO` type contains only `readonly` data fields.
+    HOW impurity is detected is delegated to the per-stack detector; for Convex it locates each
+    `interface`/`type` named `*DTO`, brace-matches its body, and — at the top level of that body —
+    flags every method signature (a member name followed by `(`) and every data property not
+    declared `readonly`. Rich types (Date, custom classes) that imply behaviour should also be kept
+    out of DTOs in favour of serializable primitives, per the core type-mapping guidance.
+  fix_hint: |
+    Make the DTO a flat, readonly record:
+      * remove method members — move the logic to the domain model or the DTO<->domain mapper,
+      * mark every field `readonly` (`readonly amount: number`),
+      * keep field types serializable (string/number/boolean and nested DTOs), not rich objects.
+  exceptions:
+    - Types not named `*DTO` are out of scope — this rule targets the DTO naming convention.
+    - Nested members (fields of an inline object type) are only checked at the top level of the DTO body.
+    - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - DTO-PURITY-001
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+terms:
+  - term_id: pure_dto
+    text: >-
+      a `*DTO` type whose members are exclusively `readonly` data fields — no method signatures and
+      no mutable properties — so it serializes cleanly and is safe to share across a boundary.
+  - term_id: method_member
+    text: >-
+      a member declared as a callable (a name immediately followed by a parameter list `(`) inside a
+      DTO body; a sign of behaviour that belongs in the domain model or mapper, not the DTO.
