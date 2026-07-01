@@ -1,0 +1,41 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-empty-element
+kind: rule
+status: active
+name: Presentation component must not return an empty host element
+statement: A Vite/React presentation component MUST NOT render, as its whole body, an empty host element —
+  a self-closing or empty lowercase HTML tag with zero children, zero static attributes, and zero spreads
+  (e.g. `<div />`, `<span></span>`). This is the Vite-stack realization of the agnostic no-stub-presentation
+  obligation (rule family PRESENTATION-NOSTUB, incident 318; the python-pytest sibling is
+  `coder.frontend.self-closing-or-empty`). The detector is the frontend.workspace.runtime family
+  implementation referenced below.
+terms:
+- term_id: empty_host_element
+  text: a lowercase HTML element (`<div/>`, `<span></span>`) with no children, no static attributes, and no
+    spread expressions; a render that produces an empty DOM node.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: A "presentation component renders a non-empty element" obligation, the Vite/React sibling of
+    coder.frontend.self-closing-or-empty. The realization flags a component whose sole render is an empty
+    lowercase host element with no attributes or children.
+  normative_text: 'A childless, attribute-free `<div />` is an empty DOM node — visually nothing, but enough
+    to satisfy a "returns JSX" check. The obligation: the rendered element must carry content or attributes.
+    To stay conservative and avoid false positives on real code, the Vite/React detector scopes this to
+    LOWERCASE host elements only (`<div/>`, `<span></span>`); a childless PascalCase component element
+    (`<Outlet/>`, `<Spinner/>`) is a legitimate delegation and is NOT flagged.
+
+    '
+  fix_hint: "Give the element content or attributes, or render a real component:\n  return <div />                    \
+    \      ->  FORBIDDEN\n  return <div className=\"panel\">{body}</div>   ->  allowed\n"
+  exceptions:
+  - A childless PascalCase component element (`<Outlet />`) is a delegation, not a stub, and is not flagged.
+  - An element with static attributes or children is not flagged.
+  - Files outside a `presentation/` path segment, and test files, are skipped.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-004
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0

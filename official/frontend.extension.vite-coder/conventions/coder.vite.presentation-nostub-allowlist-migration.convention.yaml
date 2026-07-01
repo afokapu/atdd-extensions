@@ -1,0 +1,43 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-allowlist-migration
+kind: rule
+status: active
+name: Stub-presentation allowlist entry must reference a migration
+statement: Every `no_stub_presentation.allowlist` entry in a consumer's `.atdd/config.yaml` MUST include a
+  non-empty `migration:` field referencing the issue that will eliminate the exemption. This is the
+  Vite-stack realization of the agnostic obligation (rule family PRESENTATION-NOSTUB; the python-pytest
+  sibling is `coder.frontend.allowlist-entry-must-include`). The detector is the frontend.workspace.runtime
+  family implementation referenced below.
+terms:
+- term_id: allowlist_entry
+  text: an item under `no_stub_presentation.allowlist` in `.atdd/config.yaml`, exempting a specific
+    presentation file from the stub-body checks.
+- term_id: migration_reference
+  text: the `migration:` field on an allowlist entry, naming the issue (e.g. `owner/repo#NNN`) that tracks
+    de-stubbing the exempted component.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: A "no permanent stub exemptions" obligation, the Vite/React sibling of
+    coder.frontend.allowlist-entry-must-include. The realization scans `.atdd/config.yaml` and flags every
+    `no_stub_presentation.allowlist` entry that lacks a non-empty `migration:` field.
+  normative_text: 'An allowlist without an expiry becomes permanent debt. Requiring a `migration:` reference
+    on every stub exemption keeps each suppression tied to a tracked issue that will remove it. The
+    obligation: an allowlist entry that suppresses a stub-presentation finding must name the migration issue.
+    WHERE the allowlist lives (`.atdd/config.yaml -> no_stub_presentation.allowlist`) and HOW entries are
+    read is delegated to the per-stack detector; an entry missing `migration:` is flagged at severity 2.
+
+    '
+  fix_hint: "Add a migration reference to every allowlist entry:\n  allowlist:\n    - path: apps/game/src/shared/presentation/LegacyShell.tsx\
+    \   ->  FORBIDDEN (no migration)\n    - path: apps/game/src/shared/presentation/LegacyShell.tsx\n      migration:\
+    \ owner/repo#411                             ->  allowed\n"
+  exceptions:
+  - Entries with a non-empty `migration:` value are compliant.
+  - When no `.atdd/config.yaml` is present, there is no allowlist to check and nothing is emitted.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-010
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0

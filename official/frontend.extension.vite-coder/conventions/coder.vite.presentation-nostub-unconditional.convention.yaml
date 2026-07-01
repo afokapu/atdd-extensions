@@ -1,0 +1,39 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-unconditional
+kind: rule
+status: active
+name: Presentation component conditional must not resolve to all stubs
+statement: A Vite/React presentation component MUST NOT render a conditional whose every branch resolves to
+  a stub (e.g. a ternary with a null literal in both branches). This is the Vite-stack realization of the agnostic no-stub-presentation
+  obligation (rule family PRESENTATION-NOSTUB, incident 318; the python-pytest sibling is
+  `coder.frontend.conditional-whose-every-branch`). The detector is the frontend.workspace.runtime family
+  implementation referenced below.
+terms:
+- term_id: all_stub_conditional
+  text: a ternary (or nested ternary) whose every branch is a stub literal (`null`/`undefined`); it renders
+    nothing regardless of the condition.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: A "a conditional render must have a visible branch" obligation, the Vite/React sibling of
+    coder.frontend.conditional-whose-every-branch. The realization flags a component whose body is a
+    conditional with all-stub branches.
+  normative_text: 'A conditional that returns null in every branch is unconditionally blank — the condition
+    is theatre. It defeats a naive "renders a conditional, so it renders something" heuristic. The
+    obligation: at least one branch of a rendered conditional must produce visible content. WHICH conditional
+    shapes are analysed is delegated to the per-stack detector; a ternary with a JSX branch
+    (`flag ? <A/> : null`) is a legitimate guard and is NOT flagged.
+
+    '
+  fix_hint: "Give at least one branch real content:\n  const Toggle = ({ on }) => (on ? null : null)          \
+    \    ->  FORBIDDEN\n  const Toggle = ({ on }) => (on ? <On/> : <Off/>)            ->  allowed\n"
+  exceptions:
+  - A conditional with at least one meaningful-JSX branch (`flag ? <A/> : null`) is a guard, not a stub.
+  - Files outside a `presentation/` path segment, and test files, are skipped.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-005
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0

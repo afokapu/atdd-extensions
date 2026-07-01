@@ -1,0 +1,48 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-guarded-negative
+kind: rule
+status: active
+name: Guarded null with a sibling JSX return is NOT a stub
+statement: NEGATIVE RULE. A guarded null return paired with a sibling meaningful-JSX return path
+  (e.g. `if (loading) return null; return <Panel/>;`) is NOT a stub and MUST NOT be flagged by any
+  no-stub-presentation check. This is the Vite-stack realization of the agnostic negative guarantee owned by
+  the coder extension (rule family PRESENTATION-NOSTUB; the python-pytest sibling is
+  `coder.frontend.negative-rule-a-guarded`). It is a correctness property of the detector, not a positive
+  finding — the frontend.workspace.runtime family implementation referenced below satisfies it by emitting
+  ZERO violations for such components.
+terms:
+- term_id: guarded_null
+  text: an early `return null` under a condition (`if (loading) return null`) used to short-circuit render
+    while a later path returns real JSX.
+- term_id: sibling_jsx_return
+  text: a return path in the same component that renders meaningful JSX (with attributes and/or children);
+    its presence proves the component is not a stub.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: A negative guarantee, the Vite/React sibling of coder.frontend.negative-rule-a-guarded. It asserts
+    that the no-stub family MUST NOT flag a component that has a guarded `return null` alongside a sibling
+    meaningful-JSX return. Enforced by construction — the detector classifies a block as a stub only when
+    EVERY return operand is a stub literal, so any meaningful-JSX return path clears the whole component.
+  normative_text: 'Over-eager stub detection is worse than none: flagging the ubiquitous
+    `if (loading) return null; return <Real/>;` pattern would train teams to disable the rule. This negative
+    rule fixes the boundary — a guarded null with a sibling JSX return is legitimate and must pass. In the
+    Vite/React detector this is guaranteed by the block classifier: it collects all return operands and
+    returns "not a stub" the moment any operand is a meaningful-JSX return, so guarded-null components are
+    never emitted. This node has no positive detector output; it is verified by the family clean fixtures and
+    by the W6 conformance negative assertion.
+
+    '
+  fix_hint: "No fix required — this pattern is correct and must remain unflagged:\n  if (loading) return null;\n\
+    \  return <Panel data={data} />;   ->  allowed (guarded null + real JSX sibling)\nIf a no-stub check ever\
+    \ flags this shape, that is a detector defect, not a code defect.\n"
+  exceptions:
+  - Not applicable — this rule defines an exemption; it is itself the negative boundary of the family.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-020
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0
+  negative_rule: true

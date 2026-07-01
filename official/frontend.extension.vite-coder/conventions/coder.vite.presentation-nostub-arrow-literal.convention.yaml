@@ -1,0 +1,48 @@
+schema_version: 1.1.0
+rule_id: coder.vite.presentation-nostub-arrow-literal
+kind: rule
+status: active
+name: Arrow presentation component must not have a bare null/undefined body
+statement: A Vite/React presentation component defined as an arrow function MUST NOT have a bare
+  null/undefined expression body (`() => null`, `() => undefined`). This is the Vite-stack realization of
+  the agnostic no-stub-presentation obligation owned by the coder extension (rule family PRESENTATION-NOSTUB,
+  incident 318; the python-pytest sibling is `coder.frontend.arrow-function-with-a`). The detector — a
+  conservative zero-dep scanner over PascalCase components under `presentation/` paths — is the
+  frontend.workspace.runtime family implementation referenced below.
+terms:
+- term_id: presentation_component
+  text: a PascalCase functional component whose file lives under a `presentation/` path segment; the unit
+    this rule inspects.
+- term_id: stub_body
+  text: a render body that is statically provable to produce no visible DOM (bare `null`/`undefined`, empty
+    fragment/element, or an all-stub conditional); the construct this family flags.
+implementation:
+  type: validator
+  ref: vite_no_stub_presentation
+content:
+  summary: An "arrow presentation component renders something" obligation, the Vite/React sibling of
+    coder.frontend.arrow-function-with-a. The realization flags every PascalCase arrow component under a
+    `presentation/` path whose expression body is a bare `null` or `undefined`.
+  normative_text: 'Path-based and import-based validators cannot see a component render body. The motivating
+    incident shipped `export const AuthGateShell = () => null;` to production with a fully green suite — the
+    gate never read the body. The obligation: an arrow presentation component must render visible content,
+    not a bare null/undefined. WHICH files are in scope (PascalCase components under `presentation/`) and HOW
+    the body is classified is delegated to the per-stack detector; for the Vite/React stack it reads the
+    expression after `=>` and flags a bare `null`/`undefined` operand.
+
+    '
+  fix_hint: "Render content, or allowlist the component with a migration reference:\n  export const AuthGateShell\
+    \ = () => null            ->  FORBIDDEN\n  export const AuthGateShell = () => <GateContent />   ->  allowed\n\
+    If the blank render is intentional and temporary, add an allowlist entry with a migration ref (see\n\
+    coder.vite.presentation-nostub-allowlist-migration).\n"
+  exceptions:
+  - A guarded null paired with a sibling meaningful-JSX return is NOT a stub (see
+    coder.vite.presentation-nostub-guarded-negative).
+  - Non-component helpers/hooks (lowercase or `useX` names) are out of scope.
+  - Files outside a `presentation/` path segment, and test files (`*.test.tsx` / `*.spec.tsx`), are skipped.
+metadata:
+  aliases:
+  - PRESENTATION-NOSTUB-001
+  severity: 4
+  disposition: documentation-only
+  introduced_in: 0.1.0
