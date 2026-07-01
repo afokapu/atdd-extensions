@@ -106,16 +106,20 @@ function splitSegs(p) {
 }
 
 function resolveTarget(spec, sourceFile) {
-  const aliasM = /^@(commons|shared)\/(.+)$/.exec(spec);
-  if (aliasM) {
-    const segs = [aliasM[1], ...splitSegs(aliasM[2])];
-    return locFromSegs(segs, false);
-  }
+  // Relative forms resolve against the source file's directory (leaf is a filename).
   if (spec.startsWith(".")) {
     const resolved = posix.normalize(
       posix.join(splitSegs(dirname(sourceFile)).join("/"), spec),
     );
     return locFromSegs(splitSegs(resolved), true);
+  }
+  // Non-relative (path-aliased) forms — `@commons/...`, `@shared/...`, `@game/shared/...`,
+  // etc. Resolve ONLY when the specifier names an exact `commons`/`shared` path segment;
+  // everything else is an external package. The leading scope `@` is dropped so
+  // `@commons` matches the `commons` segment. leafIsFile is false: aliases carry no filename.
+  const segs = splitSegs(spec.replace(/^@/, ""));
+  if (segs.some((s) => COMMONS_NAMES.has(s))) {
+    return locFromSegs(segs, false);
   }
   return null;
 }

@@ -109,20 +109,23 @@ function splitSegs(p) {
 // Resolve an import specifier from a source file into a commons location, or null
 // when it does not resolve into a commons module (bare packages, foreign paths).
 function resolveTarget(spec, sourceFile) {
-  // Alias forms: @commons/<...> or @shared/<...>
-  const aliasM = /^@(commons|shared)\/(.+)$/.exec(spec);
-  if (aliasM) {
-    const segs = [aliasM[1], ...splitSegs(aliasM[2])];
-    return locFromSegs(segs, /* leafIsFile */ false);
-  }
-  // Relative forms resolve against the source file's directory.
+  // Relative forms resolve against the source file's directory (leaf is a filename).
   if (spec.startsWith(".")) {
     const resolved = posix.normalize(
       posix.join(splitSegs(dirname(sourceFile)).join("/"), spec),
     );
     return locFromSegs(splitSegs(resolved), /* leafIsFile */ true);
   }
-  return null; // bare package specifier — not a commons edge
+  // Non-relative (path-aliased) forms — `@commons/...`, `@shared/...`, `@game/shared/...`,
+  // etc. Resolve ONLY when the specifier names a commons-module segment (an exact
+  // `commons`/`shared` path segment); everything else is an external package, not a
+  // commons edge. The leading scope `@` is dropped so `@commons` matches the `commons`
+  // segment. leafIsFile is false: aliases carry no filename.
+  const segs = splitSegs(spec.replace(/^@/, ""));
+  if (segs.some((s) => COMMONS_NAMES.has(s))) {
+    return locFromSegs(segs, /* leafIsFile */ false);
+  }
+  return null; // external package specifier — not a commons edge
 }
 
 const IMPORT_RES = [
