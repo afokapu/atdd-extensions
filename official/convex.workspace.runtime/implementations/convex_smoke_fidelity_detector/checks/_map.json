@@ -1,5 +1,4 @@
 {
   "smoke_no_collaborator_substitution": "tester.convex.smoke-no-collaborator-substitution",
-  "smoke_observable_assertion": "tester.convex.smoke-observable-assertion",
-  "smoke_presentation_coverage": "tester.convex.smoke-presentation-coverage"
+  "smoke_observable_assertion": "tester.convex.smoke-observable-assertion"
 }

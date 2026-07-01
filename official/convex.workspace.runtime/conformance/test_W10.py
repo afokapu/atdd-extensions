@@ -1,7 +1,7 @@
 """W10 conformance (tester: smoke + red + routing).
 
 Scoped to the three implementations W10 added to convex.workspace.runtime:
-  * convex_smoke_fidelity_detector  (FAMILY → 3 rule_ids)
+  * convex_smoke_fidelity_detector  (FAMILY → 2 rule_ids; presentation-coverage relocated to vite-tester)
   * convex_red_fails_first          (SINGLETON)
   * convex_routing_path             (SINGLETON)
 

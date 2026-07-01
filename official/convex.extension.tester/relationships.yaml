@@ -10,10 +10,6 @@ nodes:
   - tester.convex.interlocking-route-coverage
   - tester.convex.interlocking-smoke-coverage-for-station-master
   - tester.convex.interlocking-trace-binds-declared-route
-  - tester.convex.journey-layer-assembly
-  - tester.convex.journey-no-acceptance-marker
-  - tester.convex.journey-train-header
-  - tester.convex.journey-urn-format
   - tester.convex.live-smoke-no-self-skip
   - tester.convex.migration-naming
   - tester.convex.red-fails-first
@@ -22,10 +18,8 @@ nodes:
   - tester.convex.security-input
   - tester.convex.smoke-no-collaborator-substitution
   - tester.convex.smoke-observable-assertion
-  - tester.convex.smoke-presentation-coverage
   - tester.convex.telemetry-emit
   - tester.convex.test-isolation-no-polluting-patterns
-  - tester.convex.train-coverage
 
 edges:
   - source_ref: tester.convex.filename-urn
@@ -45,22 +39,6 @@ edges:
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.interlocking-trace-binds-declared-route
-    target_ref: tester.convex.journey-layer-assembly
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: tester.convex.journey-layer-assembly
-    target_ref: tester.convex.journey-no-acceptance-marker
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: tester.convex.journey-no-acceptance-marker
-    target_ref: tester.convex.journey-train-header
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: tester.convex.journey-train-header
-    target_ref: tester.convex.journey-urn-format
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: tester.convex.journey-urn-format
     target_ref: tester.convex.live-smoke-no-self-skip
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
@@ -93,18 +71,10 @@ edges:
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.smoke-observable-assertion
-    target_ref: tester.convex.smoke-presentation-coverage
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: tester.convex.smoke-presentation-coverage
     target_ref: tester.convex.telemetry-emit
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.telemetry-emit
     target_ref: tester.convex.test-isolation-no-polluting-patterns
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: tester.convex.test-isolation-no-polluting-patterns
-    target_ref: tester.convex.train-coverage
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'

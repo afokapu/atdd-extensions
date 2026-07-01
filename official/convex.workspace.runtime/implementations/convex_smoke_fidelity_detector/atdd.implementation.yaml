@@ -8,6 +8,5 @@ realizes_convention: tester.convex.smoke-no-collaborator-substitution
 emits_rule_ids:
 - tester.convex.smoke-no-collaborator-substitution
 - tester.convex.smoke-observable-assertion
-- tester.convex.smoke-presentation-coverage
 entrypoint: detect.mjs
 report: detect.mjs

@@ -19,22 +19,17 @@ _WS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_WS / "adapter"))
 import run as run_mod  # noqa: E402
 
-# The three implementations W2 authored (add-only allow-list).
+# The coder train family W2 authored (add-only allow-list). The tester journey +
+# train-coverage detectors were relocated to frontend.extension.vite-tester
+# (frontend Playwright/journey concerns); see docs/mirror-classification/WT.md.
 _W2_IMPLS = [
     "convex_train_composition_detector",   # coder train family (3 rule_ids)
-    "convex_journey_test_detector",        # tester journey family (4 rule_ids)
-    "convex_train_coverage_detector",      # tester train-coverage singleton (1 rule_id)
 ]
 
 _EXPECTED_RULE_IDS = {
     "coder.convex.train-is-a-production",
     "coder.convex.train-wagons-communicate-via-cargo",
     "coder.convex.train-yaml-source-of-truth",
-    "tester.convex.journey-train-header",
-    "tester.convex.journey-urn-format",
-    "tester.convex.journey-layer-assembly",
-    "tester.convex.journey-no-acceptance-marker",
-    "tester.convex.train-coverage",
 }
 
 
