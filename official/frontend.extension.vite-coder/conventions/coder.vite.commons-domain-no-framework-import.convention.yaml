@@ -1,0 +1,70 @@
+schema_version: 1.1.0
+rule_id: coder.vite.commons-domain-no-framework-import
+kind: rule
+status: active
+name: Vite commons domain layer must not import a UI framework
+statement: >-
+  A module in the domain layer of a Vite/React commons module (a non-test file under a
+  `commons/domain/` or `shared/domain/` tree) MUST NOT import a UI/rendering framework —
+  `preact`, `react`, `@tanstack`, `@maintain-ux`, or `gsap`/`@gsap` (including their
+  sub-paths, e.g. `preact/hooks`, `@tanstack/react-query`). The domain layer holds
+  framework-agnostic types, value objects, and errors; coupling it to a rendering framework
+  makes it un-portable and un-testable without that framework. This is the Vite-stack
+  realization of the agnostic domain-purity obligation captured by
+  `SPEC-CODER-COMMONS-0006` ("Frontend domain layer has no framework imports") and
+  `layers.domain.forbidden_imports.frontend` in the core commons convention (the Python
+  sibling `SPEC-CODER-COMMONS-0011` forbids flask/fastapi/django; the Convex sibling is
+  `coder.convex.domain-no-convex-import`). The obligation is stack-neutral (the domain layer
+  is framework-agnostic in every stack); the detector — a lexical scan of each domain module's
+  imports against the forbidden-framework list — is the frontend.workspace.runtime family
+  implementation referenced below.
+terms:
+- term_id: commons_domain_module
+  text: >-
+    a non-test source file under a `commons/domain/` or `shared/domain/` tree — the innermost,
+    framework-agnostic layer of the frontend commons.
+- term_id: ui_framework_import
+  text: >-
+    a bare-package import whose specifier is (or is a sub-path of) `preact`, `react`,
+    `@tanstack`, `@maintain-ux`, `gsap`, or `@gsap` — a rendering/framework dependency the
+    domain layer must not carry.
+implementation:
+  type: validator
+  ref: vite_commons_layering_detector
+content:
+  summary: >-
+    A "the frontend commons domain layer stays framework-agnostic" obligation. The realization
+    is a zero-dependency JS detector (lexical import scan, no TS runtime) that, for each
+    domain-layer module under the scan roots, flags every import of a forbidden UI framework
+    (`preact`/`react`/`@tanstack`/`@maintain-ux`/`gsap`/`@gsap`, including sub-paths).
+  normative_text: |
+    The commons domain layer expresses business types and rules in plain TypeScript and must
+    depend on no rendering framework. Importing `preact`, `react`, `@tanstack`, `@maintain-ux`,
+    or `gsap` into the domain couples pure model code to a specific UI runtime: the domain can
+    no longer be unit-tested without that framework, cannot be shared across a differently-
+    rendered surface, and the layer-first purity guarantee (domain audited to have no framework
+    imports) is broken. Framework use is legitimate in the application layer (`preact/hooks` in
+    a hook) and the integration layer — but never in the domain.
+
+    The obligation is "the commons domain layer imports no UI framework"; HOW the offending
+    imports are found is delegated to the per-stack detector. For Vite/React the detector
+    identifies a domain module by location and reports each import whose specifier equals, or is
+    a sub-path of, a framework on the forbidden list.
+  fix_hint: |
+    Remove the framework dependency from the domain:
+      * express the type in plain TypeScript (no `preact`/`react` types in the domain),
+      * move rendering/animation concerns to the presentation or application layer,
+      * if you need a hook or signal, put it in the application layer and pass plain domain
+        values across the boundary.
+  exceptions:
+  - Non-domain commons modules (`application/*`, `integration/*`) may import frameworks and are out of scope.
+  - Test files (`*.test.*` / `*.spec.*`) are skipped; vendored/build dirs are not walked.
+  - The check is lexical over the import specifier; only the listed frameworks (and their
+    sub-paths) are matched — other packages are not this rule's concern.
+metadata:
+  aliases:
+  - VITE-COMMONS-DOMAIN-FRAMEWORK-001
+  - SPEC-CODER-COMMONS-0006
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
