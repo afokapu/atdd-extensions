@@ -1,0 +1,12 @@
+---
+// Dirty: renders attacker-controllable HTML through Astro's set:html directive.
+interface Props {
+  bodyHtml: string;
+}
+const { bodyHtml } = Astro.props;
+---
+
+<article>
+  <!-- the directive below renders the raw string as markup — XSS sink. -->
+  <div set:html={bodyHtml} />
+</article>

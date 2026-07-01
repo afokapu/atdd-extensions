@@ -1,0 +1,87 @@
+schema_version: 1.1.0
+rule_id: coder.convex.security-sql-injection
+kind: rule
+status: active
+name: Convex code must not build raw SQL by string concatenation/interpolation
+statement: >-
+  Convex source (`*.ts`/`*.tsx`/`*.js`/`*.mjs` under the `convex/` function tree, excluding
+  `_generated/` codegen and test files) MUST NOT pass raw SQL that was assembled by string
+  concatenation or template-literal interpolation to a SQL execution sink — a `pg`/`mysql2` `.query()`,
+  a Prisma `$queryRawUnsafe`/`$executeRawUnsafe`, or an `.execute()`/`.raw()`/`.unsafe()` call from a
+  `"use node"` action reaching an external SQL store — because interpolating user input straight into
+  the query text is the classic SQL-injection vector. Values MUST be bound as parameters
+  (`$1`/placeholders / a tagged parameterized API), never spliced into the SQL string. This is the
+  Convex-stack realization of the agnostic "no raw SQL string concatenation in execute calls"
+  obligation owned by the coder extension (the python-pytest sibling is `coder.security.sql-injection`).
+  The obligation is stack-bound; the detector that enforces it — a regex/paren-scan that flags a sink
+  call whose argument carries a SQL keyword AND is dynamically built — is the convex.workspace.runtime
+  implementation referenced below.
+terms:
+- term_id: sql_sink
+  text: >-
+    a SQL execution call — `execute`/`executemany`/`execute_sql`, `query`/`queryRaw`/`queryRawUnsafe`,
+    `executeRaw`/`executeRawUnsafe`, `raw`, or `unsafe` — the TS/ORM analogue of the core Python-DBAPI
+    sink set (`execute`/`executemany`/`raw`/`execute_sql`). Convex actions reach these when talking to
+    an external SQL store from a `"use node"` runtime.
+- term_id: sql_keyword_gate
+  text: >-
+    the argument to the sink must contain a SQL statement keyword (`SELECT`/`INSERT`/`UPDATE`/`DELETE`/`DROP`/`ALTER`/`CREATE`)
+    for it to count as raw SQL. This gate is what makes `query` safe to include in the sink set:
+    Convex's own `ctx.db.query("messages")` passes a table name with no SQL keyword and is never flagged.
+- term_id: dynamic_build
+  text: >-
+    the SQL argument is assembled from non-constant parts — a template literal with `${…}` interpolation
+    or a string-literal concatenation (`"…" +` / `+ "…"`) — as opposed to a single static string
+    literal or a parameterized call with bound placeholders. Only dynamically-built SQL is flagged.
+- term_id: parameterized_form
+  text: >-
+    the prescribed correct form — the SQL text is a constant and user values are passed as bound
+    parameters (`pool.query("… WHERE id = $1", [id])`), so no user input is ever concatenated into the
+    query string and the detector's dynamic-build test never fires.
+implementation:
+  type: validator
+  ref: coder.convex.security-sql-injection
+content:
+  summary: >-
+    A Convex-stack "no raw SQL string concatenation in execute calls" obligation, the sibling of
+    coder.security.sql-injection. The realization is a zero-dependency JS detector (no TS runtime) that
+    masks strings/templates/comments to find each SQL-sink call structurally, then inspects the original
+    argument text: a violation is a sink whose argument BOTH contains a SQL keyword AND was built by
+    `${…}` interpolation or `+` concatenation. Static SQL and parameterized calls are never flagged.
+  normative_text: |
+    Splicing user input into a SQL string — `` `SELECT … WHERE id = '${userId}'` `` or
+    `"DELETE FROM t WHERE r = '" + region + "'"` — lets an attacker terminate the intended statement
+    and inject their own, reading or destroying data the query never meant to touch. The fix is
+    universal: keep the SQL text constant and bind values as parameters. The obligation is "no raw SQL
+    assembled by concatenation reaches an execution sink"; WHICH sinks count and HOW dynamic building is
+    recognized is delegated to the per-stack detector. For Convex the detector scans `convex/**` modules
+    supplied as scan roots, locates each sink call (`execute`/`query`/`raw`/`unsafe` and the Prisma
+    `$…Raw`/`$…RawUnsafe` variants) by structural paren matching over a string-masked copy, and flags it
+    only when its argument contains a SQL statement keyword AND shows template interpolation or string
+    concatenation. A parameterized call (`query(sql, [id])`) and Convex's own document API
+    (`ctx.db.query("messages")`) carry no SQL keyword in a dynamically-built argument and are never
+    flagged.
+  fix_hint: |
+    Bind values as parameters; never concatenate user input into the SQL text:
+      await pool.query(`SELECT * FROM votes WHERE voter_id = '${voterId}'`);   // ❌ injectable
+      await pool.query("SELECT * FROM votes WHERE voter_id = $1", [voterId]);  // ✅ parameterized
+      await db.$executeRawUnsafe("DELETE FROM t WHERE r = '" + region + "'");  // ❌ injectable
+      await db.$executeRaw`DELETE FROM t WHERE r = ${region}`;                 // ✅ tagged/bound
+    Prefer a query builder or the driver's parameter binding for every user-supplied value. This rule's
+    disposition is `strict`: a newly introduced concatenated/interpolated SQL sink fails the gate.
+  exceptions:
+  - A static SQL string with no interpolation/concatenation is not flagged (the rule targets
+    concatenation specifically, per the core sibling).
+  - A parameterized call whose SQL text is a constant and whose values are bound (`$1`/placeholders) is
+    the correct form and never matches.
+  - Convex's document API (`ctx.db.query("table")`, `ctx.runQuery(...)`) carries no SQL keyword and is
+    never flagged.
+  - Test code is out of scope — `*.test.*` / `*.spec.*` files are excluded; `_generated/` codegen and
+    vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are never scanned.
+metadata:
+  aliases:
+  - CONVEX-SECURITY-SQL-INJECTION-001
+  - SECURITY-SQL-INJECTION-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0

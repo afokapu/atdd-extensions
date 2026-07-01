@@ -1,0 +1,78 @@
+schema_version: 1.1.0
+rule_id: coder.vite.security-xss
+kind: rule
+status: active
+name: Vite/React frontend must not inject unsanitized HTML into the DOM
+statement: >-
+  Vite/React frontend source (`*.ts`/`*.tsx`/`*.jsx` under the app's source tree, excluding
+  `_generated/` codegen and test files) MUST NOT write an unsanitized HTML string into the
+  document through an XSS sink — React's `dangerouslySetInnerHTML` prop, an `.innerHTML =`
+  assignment, or an `.outerHTML =` assignment — because any of these renders attacker-controllable
+  markup as live DOM, the canonical cross-site-scripting vector. Untrusted content MUST be rendered
+  as text (JSX children / `textContent`) or passed through a dedicated sanitizer before it reaches
+  the DOM. This is the Vite-stack realization of the agnostic "no unsanitized HTML injection in
+  frontend code" obligation owned by the coder extension (the python-pytest sibling is
+  `coder.security.xss`). The obligation is stack-bound; the detector that enforces it — a
+  regex-over-source scan reporting each sink site — is the frontend.workspace.runtime implementation
+  referenced below.
+terms:
+- term_id: xss_sink
+  text: >-
+    one of the three DOM/React HTML-injection points the rule forbids — the React
+    `dangerouslySetInnerHTML` prop, a `.innerHTML =` assignment, or a `.outerHTML =` assignment.
+    Each takes an HTML string and materializes it as live DOM, so a value derived from user input
+    becomes executable markup.
+- term_id: assignment_not_read
+  text: >-
+    only an *assignment* to `innerHTML`/`outerHTML` is a sink; a *read* (`el.innerHTML.length`) does
+    not inject anything and is not flagged. The detector matches `innerHTML`/`outerHTML` followed by a
+    single `=` (not `==`/`===`).
+- term_id: sanitizer_boundary
+  text: >-
+    the one place a raw HTML-injection sink is permitted — a dedicated sanitizer module (a file whose
+    basename contains `sanitize`) that scrubs markup before insertion. Mirrors the core convention's
+    `**/sanitize*.ts(x)` exclusion.
+implementation:
+  type: validator
+  ref: coder.vite.security-xss
+content:
+  summary: >-
+    A "no unsanitized HTML injection in Vite/React frontend code" obligation, the Vite sibling of
+    coder.security.xss. The realization is a zero-dependency JS detector (regex over source, no TS
+    runtime) that flags every `dangerouslySetInnerHTML`, `.innerHTML =`, and `.outerHTML =` site in
+    each scanned `*.ts`/`*.tsx`/`*.jsx` file, skipping tests, comment lines, sanitizer modules, and
+    vendored/build/`_generated` dirs.
+  normative_text: |
+    Writing an HTML string into the DOM through `dangerouslySetInnerHTML`, `element.innerHTML =`, or
+    `element.outerHTML =` renders that string as markup. If any part of it is derived from user input
+    — a message body, a URL parameter, a profile field — an attacker can inject `<script>` or event
+    handlers that run in the victim's session. That is cross-site scripting. The obligation is
+    "frontend code does not inject unsanitized HTML"; HOW the sinks are recognized is delegated to the
+    per-stack detector. For the Vite/React stack the detector matches the `dangerouslySetInnerHTML`
+    prop token, an `innerHTML =` assignment, and an `outerHTML =` assignment (a `==`/`===` comparison
+    and a plain read are not matched), scanning non-test `*.ts`/`*.tsx`/`*.jsx` files. The correct form
+    is to render untrusted content as text (JSX children escape by default) or to route it through a
+    sanitizer first.
+  fix_hint: |
+    Render untrusted content as text, or sanitize before injecting:
+      <div dangerouslySetInnerHTML={{ __html: userHtml }} />   // ❌ XSS sink
+      <div>{userText}</div>                                     // ✅ JSX escapes text
+      el.innerHTML = userHtml;                                  // ❌ XSS sink
+      el.textContent = userText;                                // ✅ no markup parsed
+    When rich HTML is genuinely required, pass it through a vetted sanitizer (e.g. DOMPurify) in a
+    dedicated `sanitize*.ts` module — that module is the sole place the sink is allowed. This rule's
+    disposition is `strict`: a new sink is not suppressible by default.
+  exceptions:
+  - Sanitizer modules (basename contains `sanitize`, e.g. `sanitizeHtml.ts`) legitimately wrap the
+    sink and are out of scope — mirrors the core `**/sanitize*.ts(x)` exclusion.
+  - A *read* of `innerHTML`/`outerHTML` (no `=` assignment) is not a sink and is not flagged.
+  - Test code is out of scope — `*.test.*` / `*.spec.*` files are excluded.
+  - Comment lines (single-line and block) are skipped; vendored/build dirs (`node_modules`, `dist`,
+    `build`, `.next`) and `_generated/` codegen are never scanned.
+metadata:
+  aliases:
+  - VITE-SECURITY-XSS-001
+  - SECURITY-XSS-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.1.0

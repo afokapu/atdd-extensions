@@ -1,0 +1,11 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: coder.convex.security-sql-injection
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.convex.security-sql-injection
+emits_rule_ids:
+- coder.convex.security-sql-injection
+entrypoint: detect.mjs
+report: detect.mjs
