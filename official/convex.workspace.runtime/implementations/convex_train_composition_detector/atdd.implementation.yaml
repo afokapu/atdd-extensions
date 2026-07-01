@@ -1,0 +1,13 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: convex_train_composition_detector
+targets_workspace: convex.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.convex.train-is-a-production
+emits_rule_ids:
+- coder.convex.train-is-a-production
+- coder.convex.train-wagons-communicate-via-cargo
+- coder.convex.train-yaml-source-of-truth
+entrypoint: detect.mjs
+report: detect.mjs

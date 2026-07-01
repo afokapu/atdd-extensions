@@ -1,0 +1,65 @@
+schema_version: 1.1.0
+rule_id: coder.convex.train-wagons-communicate-via-cargo
+kind: rule
+status: active
+name: Wagons communicate via cargo, never via direct cross-wagon imports
+statement: >-
+  A Convex wagon module MUST NOT directly import from another wagon. Wagons communicate only
+  through cargo (contract artifacts passed by the composition root). A cross-wagon import — a
+  `@<other-wagon>/wagon` scoped import, or a relative import (`../<other-wagon>/…`) that escapes
+  the importing file's own wagon directory into a sibling wagon — is forbidden from every module
+  EXCEPT the wagon's own composition root (`wagon.ts`), which is the single sanctioned place a
+  wagon may reach across a boundary. This is the Convex-stack realization of the agnostic
+  "Wagons NEVER import from other wagons" boundary (the Python sibling is
+  `coder.train.wagons-communicate-via-cargo`). The detector — an import scan flagging cross-wagon
+  specifiers outside the composition root — is the convex.workspace.runtime implementation below.
+implementation:
+  type: validator
+  ref: convex_train_composition_detector
+content:
+  summary: >-
+    A "wagons talk via cargo, not direct imports" boundary, the Convex sibling of
+    coder.train.wagons-communicate-via-cargo. The realization is a zero-dependency JS detector
+    that flags a cross-wagon import (`@<other-wagon>/wagon`, or `../<sibling-wagon>/…`) in any
+    module that is NOT the wagon's `wagon.ts` composition root. Imports of shared layers
+    (`shared`, `lib`, `commons`, `design`, `contracts`) are always allowed.
+  normative_text: |
+    Trains keep wagons decoupled: a wagon exposes a public surface, and the train's composition
+    root injects one wagon's surface into another's pipeline AS DATA (cargo). A direct
+    `import { x } from "@other-wagon/wagon"` inside domain/application/presentation code welds two
+    wagons together at build time, defeating the contract boundary and making the wagon order
+    live in import statements instead of the train definition. The obligation is "no cross-wagon
+    import survives outside the composition root". The composition root (`wagon.ts`) is exempt: it
+    is precisely where the sanctioned cross-boundary wiring lives. Shared/common layers are not
+    wagons and are always importable. HOW a cross-wagon specifier is recognized is delegated to
+    the per-stack detector.
+  fix_hint: |
+    Remove the cross-wagon import and route the collaboration through cargo:
+      * expose the needed surface from the OTHER wagon's public `wagon.ts`, and
+      * inject it at THIS wagon's composition root (`wagon.ts`), passing results as cargo
+        artifacts, so no domain/application module names another wagon.
+    If the import genuinely belongs at a composition boundary, move it into `wagon.ts`.
+    This rule's disposition is `strict`: there is no inline-suppression marker.
+  exceptions:
+    - The wagon's own composition root (`wagon.ts`) is exempt — the sanctioned cross-boundary seam.
+    - Imports of shared layers (`shared`, `lib`, `commons`, `design`, `contracts`, `_generated`,
+      `migrations`) are never cross-wagon and are always allowed.
+    - Test files (`*.test.ts`/`*.spec.ts`) are out of scope — tests may import any wagon surface.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - COACH-TRAIN-COMPOSITION-002
+    - CONVEX-TRAIN-WAGON-CARGO-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: cross_wagon_import
+    text: >-
+      an import specifier that targets a different wagon's code — a `@<other-wagon>/wagon` scoped
+      import, or a relative import that escapes the importing file's own top-level wagon directory
+      into a sibling wagon directory (not a shared/common layer).
+  - term_id: composition_root
+    text: >-
+      the wagon's `wagon.ts` entrypoint — the ONE module allowed to reach across a wagon boundary,
+      where the train's wagon order is wired as data (cargo), never scattered across imports.
