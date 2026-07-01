@@ -1,16 +1,15 @@
-schema_version: "1.1.0"
+schema_version: 1.1.0
 kind: implementation
+subtype: validator
 implementation_id: convex_complexity_detector
 targets_workspace: convex.workspace.runtime
-contract_version: "1.1.0"
-# Validator FAMILY (Core pattern): one detector realizes a family of related
-# convention nodes, emitting multiple rule_ids from one run. Members live under
-# checks/ and run verbatim; detect.mjs aggregates their RAW reports.
+contract_version: 1.1.0
 emits_rule_ids:
-  - coder.convex.complexity-cyclomatic
-  - coder.convex.complexity-length
-  - coder.convex.complexity-nesting
-  - coder.convex.complexity-cognitive
-  - coder.convex.complexity-params
+- coder.convex.complexity-cyclomatic
+- coder.convex.complexity-length
+- coder.convex.complexity-nesting
+- coder.convex.complexity-cognitive
+- coder.convex.complexity-params
 entrypoint: detect.mjs
 report: detect.mjs
+realizes_convention: coder.convex.complexity-cyclomatic

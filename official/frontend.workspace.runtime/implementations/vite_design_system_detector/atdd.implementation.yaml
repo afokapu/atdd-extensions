@@ -1,15 +1,14 @@
-schema_version: "1.1.0"
+schema_version: 1.1.0
 kind: implementation
+subtype: validator
 implementation_id: vite_design_system_detector
 targets_workspace: frontend.workspace.runtime
-contract_version: "1.1.0"
-# Validator FAMILY (Core pattern): one detector realizes a family of related
-# convention nodes, emitting multiple rule_ids from one run. Members live under
-# checks/ and run verbatim; detect.mjs aggregates their RAW reports.
+contract_version: 1.1.0
 emits_rule_ids:
-  - coder.vite.design-primitives
-  - coder.vite.design-token-color
-  - coder.vite.design-token-hardcoded
-  - coder.vite.design-orphan-ui
+- coder.vite.design-primitives
+- coder.vite.design-token-color
+- coder.vite.design-token-hardcoded
+- coder.vite.design-orphan-ui
 entrypoint: detect.mjs
 report: detect.mjs
+realizes_convention: coder.vite.design-primitives

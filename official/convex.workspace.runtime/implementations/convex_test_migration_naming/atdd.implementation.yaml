@@ -1,28 +1,11 @@
-schema_version: "1.1.0"
+schema_version: 1.1.0
 kind: implementation
+subtype: validator
 implementation_id: tester.convex.migration-naming
 targets_workspace: convex.workspace.runtime
-contract_version: "1.1.0"
-
-# Back-reference to the agnostic obligation this detector realizes. The convention
-# node is authored in atdd.extension.convex-tester; this implementation is the
-# convex-workspace realization of it (two-layer model). It is the Convex/TypeScript
-# sibling of Core's tester.migration.naming (which renders Supabase
-# `<timestamp>_<slug>.sql`); the IDENTITY/backing-store invariant stays in CORE,
-# the per-stack FILENAME-from-migration-id rendering lives here.
+contract_version: 1.1.0
 realizes_convention: tester.convex.migration-naming
-
-# Single rule_id (disposition documentation-only). The detector emits RAW
-# violations; the advisory verdict is a downstream consumer concern.
 emits_rule_ids:
-  - tester.convex.migration-naming   # disposition: documentation-only
-
-# The detector module. It scans ATDD_SCAN_ROOTS — restricted to the
-# `convex/migrations/**` subtree — and writes the RAW
-# {rule_id,file,line,col,evidence,source_line} report to ATDD_VIOLATIONS_REPORT
-# (v1.1 channel). No disposition.
+- tester.convex.migration-naming
 entrypoint: detect.mjs
-
-# The runnable v1.1 report-emitting unit the provider command executes. Declared
-# (not hardcoded) so the provider CLI runs THIS detector.
 report: detect.mjs

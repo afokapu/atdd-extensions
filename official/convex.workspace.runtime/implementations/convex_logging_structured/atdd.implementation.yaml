@@ -1,22 +1,11 @@
-schema_version: "1.1.0"
+schema_version: 1.1.0
 kind: implementation
+subtype: validator
 implementation_id: coder.convex.logging-structured
 targets_workspace: convex.workspace.runtime
-contract_version: "1.1.0"
-
-# Convex realization of the agnostic coder.logging.structured obligation ("log with
-# structured context, not a bare string"). The convention node is authored in
-# atdd.extension.convex-coder; this is its convex-workspace detector.
+contract_version: 1.1.0
 realizes_convention: coder.convex.logging-structured
-
-# Single rule_id (disposition suppress-and-clean). The detector emits RAW
-# violations; the suppress-and-clean verdict is a downstream consumer concern.
 emits_rule_ids:
-  - coder.convex.logging-structured   # disposition: suppress-and-clean
-
-# The detector module. Scans ATDD_SCAN_ROOTS for Convex server source and writes
-# RAW {rule_id,file,line,col,evidence,source_line} to ATDD_VIOLATIONS_REPORT.
+- coder.convex.logging-structured
 entrypoint: detect.mjs
-
-# The runnable v1.1 report-emitting unit the provider runs with `node`.
 report: detect.mjs
