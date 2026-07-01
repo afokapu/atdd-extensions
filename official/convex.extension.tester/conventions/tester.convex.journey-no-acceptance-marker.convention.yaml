@@ -1,0 +1,48 @@
+schema_version: 1.1.0
+rule_id: tester.convex.journey-no-acceptance-marker
+kind: rule
+status: active
+name: Convex journey tests do not carry Acceptance or WMBT markers
+statement: >-
+  A Convex/Vitest journey test — a `*.test.ts`/`*.spec.ts` with a `test:train:` URN or a `Train:`
+  marker — MUST NOT contain an `// Acceptance:` or `// WMBT:` header line. Journey tests and
+  acceptance tests are mutually exclusive: journey tests bind to a `Train:`, acceptance tests bind
+  to `Acceptance:`/`WMBT:`; a single file carrying both header families is ambiguous. This is the
+  Convex/Vitest realization of the agnostic `mutual_exclusion` rule ("Journey tests: MUST have
+  Train:, MUST NOT have Acceptance: or WMBT:") in `tester/conventions/train.convention.yaml`. The
+  detector is the convex.workspace.runtime implementation referenced below.
+implementation:
+  type: validator
+  ref: convex_journey_test_detector
+content:
+  summary: >-
+    A "journey tests have no Acceptance:/WMBT: markers" mutual-exclusion obligation, the
+    Convex/Vitest sibling of the core rule. The realization is a zero-dependency JS detector that,
+    for any journey test, flags an `Acceptance:` or `WMBT:` header line.
+  normative_text: |
+    A test's identity is single: it is EITHER a journey (assembly) test bound to a `Train:`, OR an
+    acceptance test bound to an `Acceptance:` criterion and a `WMBT:` behavior. Mixing the two
+    header families in one file makes the test's binding and disposition ambiguous — traceability
+    tooling cannot decide whether it belongs to a train's coverage or an acceptance criterion's.
+    The gate for "is this a journey test" is a `test:train:` URN or a `Train:` marker; flagging any
+    `Acceptance:`/`WMBT:` line inside such a file is delegated to the per-stack detector.
+  fix_hint: |
+    Remove the `Acceptance:`/`WMBT:` lines from the journey test (it binds via `Train:` only). If
+    the file is really an acceptance test, remove its `Train:`/`test:train:` markers instead and
+    keep the `Acceptance:`/`WMBT:` binding. Disposition is `documentation-only`: the detector emits
+    the RAW offending-marker list.
+  exceptions:
+    - Non-journey tests (no `test:train:` URN and no `Train:` marker) are out of scope — an
+      acceptance test legitimately carries `Acceptance:`/`WMBT:`.
+    - Generated/vendored/build dirs are skipped during traversal.
+metadata:
+  aliases:
+    - TESTER-CONVEX-JOURNEY-MUTUAL-EXCLUSION-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: acceptance_marker
+    text: >-
+      an `// Acceptance:` or `// WMBT:` header line that binds a test to an acceptance criterion /
+      minimal behavior — the header family a journey test MUST NOT carry.

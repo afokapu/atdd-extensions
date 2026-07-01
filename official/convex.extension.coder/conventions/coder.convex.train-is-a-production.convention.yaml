@@ -1,0 +1,63 @@
+schema_version: 1.1.0
+rule_id: coder.convex.train-is-a-production
+kind: rule
+status: active
+name: Train composition roots are production code, not test infrastructure
+statement: >-
+  A Convex train orchestration composition root — a module that DEFINES a train runner
+  (`class TrainRunner`, `export function runTrain`, `export const …TrainRunner =`) or a
+  `run_train`/journey entrypoint — MUST live in production source, NOT in test
+  infrastructure. It MUST NOT be authored as a `*.test.ts`/`*.spec.ts` file, and MUST NOT
+  live under a test tree (`e2e/`, `tests/`, `__tests__/`). This is the Convex-stack
+  realization of the agnostic "trains are PRODUCTION orchestration, not test infrastructure"
+  obligation (the Python sibling is `coder.train.is-a-production`, whose rendering is
+  `python/trains/`). The detector — a source scan that flags a train-runner DEFINITION found
+  in test infrastructure — is the convex.workspace.runtime implementation referenced below;
+  the obligation is stack-bound, the detector is TypeScript/JS-specific.
+implementation:
+  type: validator
+  ref: convex_train_composition_detector
+content:
+  summary: >-
+    A "train composition roots are production, not test-only" obligation, the Convex sibling of
+    coder.train.is-a-production. The realization is a zero-dependency JS detector that flags any
+    file DEFINING a train runner (not merely testing one) whose path is test infrastructure — a
+    `*.test.ts`/`*.spec.ts` file or a module under `e2e/`/`tests/`/`__tests__/`.
+  normative_text: |
+    A train is a PRODUCTION composition root: it loads a journey definition and orchestrates
+    wagons through cargo. Production and its tests both consume the SAME runner (zero drift), so
+    the runner cannot be a test-only artifact. If a `TrainRunner`/`runTrain` DEFINITION is placed
+    in a test file or a test directory, the production journey has no production home — tests
+    would be exercising a fork of the orchestration, re-introducing exactly the drift trains
+    exist to remove. The obligation is "the runner DEFINITION lives in production source"; a
+    `*.test.ts` that merely IMPORTS and exercises a production runner is correct and is never
+    flagged (it carries no runner definition). HOW a definition is recognized is delegated to the
+    per-stack detector.
+  fix_hint: |
+    Move the train-runner definition into production source (e.g. `convex/trains/<train>.ts` or
+    the wagon's `wagon.ts` composition root), and leave only its *exercise* in the test file:
+      * keep `class TrainRunner` / `export function runTrain` in a non-test module, and
+      * import that production runner from the `*.test.ts` smoke/journey test.
+    This rule's disposition is `strict`: there is no inline-suppression marker.
+  exceptions:
+    - A test file that only IMPORTS/exercises a production runner (no runner DEFINITION) is
+      correct and never flagged.
+    - Generated code under `convex/_generated/` is never scanned.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - COACH-TRAIN-COMPOSITION-001
+    - CONVEX-TRAIN-IS-A-PRODUCTION-001
+  severity: 3
+  disposition: strict
+  introduced_in: 0.1.0
+terms:
+  - term_id: train_runner_definition
+    text: >-
+      a module that DEFINES the train orchestration entrypoint — `class TrainRunner`,
+      `export function runTrain`, `export const …TrainRunner =`, or a module-level
+      `run_train`/journey composition root — as opposed to a module that merely imports one.
+  - term_id: test_infrastructure
+    text: >-
+      a `*.test.ts`/`*.spec.ts` file, or any module under an `e2e/`, `tests/`, or `__tests__/`
+      directory segment; the place production orchestration must NOT be defined.
