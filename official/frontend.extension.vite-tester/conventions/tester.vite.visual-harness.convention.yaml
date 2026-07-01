@@ -1,0 +1,55 @@
+schema_version: 1.1.0
+rule_id: tester.vite.visual-harness
+kind: rule
+status: active
+name: Visual specs assert a screenshot
+statement: >-
+  A visual-regression spec — a `*.spec.ts`/`*.test.ts` identified as visual by a `visual` or
+  `.vis.` token in its basename or a `VIS` journey-URN harness code (`test:train:...:VIS-...`) —
+  MUST assert a screenshot via `toHaveScreenshot(` (or `toMatchSnapshot(` on a page image). A
+  visual spec that navigates a page but never captures/compares a screenshot performs no visual
+  regression at all. This is the Vite/Playwright realization of the CORE visual harness template
+  (`visual.tmpl.json`: `await expect(page).toHaveScreenshot('{snapshot_name}.png', { threshold })`).
+  The detector is the frontend.workspace.runtime family below.
+implementation:
+  type: validator
+  ref: vite_a11y_visual_harness
+content:
+  summary: >-
+    A "visual specs assert a screenshot" obligation, the Vite/Playwright rendering of the CORE
+    `visual.tmpl.json` harness. A member of the `vite_a11y_visual_harness` FAMILY flags a visual
+    spec that lacks a `toHaveScreenshot(`/`toMatchSnapshot(` assertion.
+  normative_text: |
+    A visual-regression test exists to compare the rendered page against a baseline image. Over
+    the supplied scan roots the detector identifies visual specs (basename contains `visual` or
+    `.vis.`, or the file carries a `VIS` journey-URN harness code) and requires each to contain a
+    screenshot assertion — a `toHaveScreenshot(` call (Playwright's visual comparison) or a
+    `toMatchSnapshot(` on a page image. A visual spec with no such assertion renders a page and
+    throws the pixels away, so no regression can ever be detected. WHICH files are visual specs is
+    decided by the basename/harness-code identification; the screenshot-assertion check is this
+    member's job.
+  fix_hint: |
+    Follow the visual harness template:
+      await page.goto(url)
+      await page.waitForLoadState('networkidle')
+      await expect(page).toHaveScreenshot('home.png', { threshold: 0.2 })
+    Disposition is `documentation-only`: the detector emits the RAW list of visual specs missing
+    a screenshot assertion.
+  exceptions:
+    - Non-visual specs (no `visual`/`.vis.` basename token, no `VIS` harness code) are out of scope.
+    - Generated code under `_generated/` and vendored/build dirs are never scanned.
+metadata:
+  aliases:
+    - TESTER-VITE-VISUAL-HARNESS-001
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: visual_spec
+    text: >-
+      a `*.spec.ts`/`*.test.ts` identified as a visual-regression test by a `visual`/`.vis.`
+      basename token or a `VIS` journey-URN harness code.
+  - term_id: screenshot_assertion
+    text: >-
+      a `toHaveScreenshot(` (or `toMatchSnapshot(` on a page image) call — the baseline
+      comparison a visual spec must perform.
