@@ -1,0 +1,79 @@
+schema_version: 1.1.0
+rule_id: coder.vite.logging-silent-swallow
+kind: rule
+status: active
+name: Vite/React catch blocks must not silently swallow exceptions
+statement: >-
+  A `catch` block in Vite/React frontend source (`*.ts`/`*.tsx`/`*.jsx`, excluding `_generated/`
+  codegen and test files) MUST observably react to the caught error — log it, rethrow it, or take an
+  otherwise visible action — and MUST NOT silently swallow it: an empty `catch (e) {}` (or comment-only
+  handler), or a handler that just `return`s a fallback value with no log and no rethrow, is forbidden.
+  Silently swallowing turns a loud failure into an invisible broken UI state, exactly the incident the
+  core convention was written against. This is the Vite-stack realization of the agnostic
+  "an exception handler must observably react" obligation owned by the coder extension (the python-pytest
+  sibling is `coder.logging.coach-silent-swallow`, whose scan_scope explicitly includes the frontend
+  `web/src/`; the Convex/backend sibling is `coder.convex.logging-silent-swallow`). The obligation is
+  stack-bound; the detector — a brace-matched scan over a string/comment-masked copy — is the
+  frontend.workspace.runtime implementation referenced below.
+terms:
+- term_id: silent_swallow
+  text: >-
+    a `catch` handler that neither logs (a `console`/`logger`/`log`/`logging`/`this.logger` call) nor
+    rethrows (`throw`), and is either empty/comment-only OR returns a fallback value. Such a handler
+    absorbs the error with no observable trace.
+- term_id: observable_reaction
+  text: >-
+    the prescribed correct behavior — the handler logs the error (with context) and then rethrows, or
+    logs and returns a documented fallback. Either makes the failure visible; the detector treats a log
+    call or a `throw` in the handler body as satisfying the obligation.
+- term_id: comment_only_is_empty
+  text: >-
+    the masker blanks comments before the body is inspected, so a handler whose only content is a
+    comment reads as empty — a comment is documentation, not an observable runtime reaction.
+implementation:
+  type: validator
+  ref: coder.vite.logging-silent-swallow
+content:
+  summary: >-
+    A "no silently-swallowed exceptions in Vite/React frontend code" obligation, the frontend sibling of
+    coder.logging.coach-silent-swallow. The realization is a zero-dependency JS detector that masks
+    strings/templates/comments, finds each `catch (...) { … }` by brace matching, and flags the handler
+    when its body has NO log call and NO `throw` AND is either empty or contains a `return`.
+  normative_text: |
+    A `catch` that quietly discards the error — `catch (e) {}` or `catch (e) { return fallback; }` with
+    no logging and no rethrow — is the frontend form of the canonical silent-swallow incident: a failed
+    request or a bad parse becomes an empty list, a `false`, or a blank component, and the real fault is
+    masked for weeks. The obligation is "an exception handler observably reacts"; HOW handlers are found
+    and judged is delegated to the per-stack detector. For the Vite/React stack the detector masks
+    strings/templates/comments (so a `catch` token or a log call inside a string never counts), locates
+    each `catch` block by brace matching, and reports it when the (comment-stripped) body contains no
+    `console`/`logger`/`log`/`logging`/`this.logger` call and no `throw`, and is either empty or has a
+    `return`. A handler that logs-and-rethrows or logs-and-returns-a-fallback is not flagged.
+  fix_hint: |
+    Make the handler observably react — log with context, then rethrow or return a documented fallback:
+      try { return await load(); } catch (e) { return null; }               // ❌ silent swallow
+      try {
+        return await load();
+      } catch (e) {
+        logger.error("load failed", { id, error: e });                      // ✅ log …
+        throw e;                                                            // … then rethrow
+      }
+    When a fallback is intended, still log first so the failure is observable. This rule's disposition is
+    `suppress-and-clean`: existing swallows are held flat by a downstream ratchet baseline while they are
+    cleaned up; the detector always emits the RAW handler list.
+  exceptions:
+  - A handler that logs (`console`/`logger`/`log`/`logging`/`this.logger` call) or rethrows (`throw`) is
+    an observable reaction and is not flagged.
+  - A handler that does other work but neither returns a value nor is empty is not flagged (core parity —
+    the canonical incident is the empty or returning handler).
+  - Test code is out of scope — `*.test.*` / `*.spec.*` files are excluded (assertion patterns
+    legitimately suppress exceptions).
+  - Comment lines are masked (a comment-only handler reads as empty); vendored/build dirs (`node_modules`,
+    `dist`, `build`, `.next`) and `_generated/` codegen are never scanned.
+metadata:
+  aliases:
+  - VITE-SILENT-SWALLOW-001
+  - COACH-SILENT-SWALLOW-001
+  severity: 4
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0

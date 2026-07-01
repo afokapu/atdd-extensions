@@ -1,0 +1,22 @@
+---
+// Clean: the frontmatter fetch's catch logs and rethrows — observable reaction.
+interface Scenario {
+  id: string;
+  title: string;
+}
+
+const logger = console;
+let scenario: Scenario | null = null;
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/scenarios/featured`);
+  scenario = await res.json();
+} catch (e) {
+  logger.error("failed to load featured scenario", { error: e });
+  throw e;
+}
+---
+
+<main>
+  <h1>{scenario?.title ?? "Untitled"}</h1>
+</main>

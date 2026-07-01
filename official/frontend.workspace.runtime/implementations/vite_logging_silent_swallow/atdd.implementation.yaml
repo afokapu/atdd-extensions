@@ -1,0 +1,11 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: coder.vite.logging-silent-swallow
+targets_workspace: frontend.workspace.runtime
+contract_version: 1.1.0
+realizes_convention: coder.vite.logging-silent-swallow
+emits_rule_ids:
+- coder.vite.logging-silent-swallow
+entrypoint: detect.mjs
+report: detect.mjs
