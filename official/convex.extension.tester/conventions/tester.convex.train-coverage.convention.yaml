@@ -1,0 +1,58 @@
+schema_version: 1.1.0
+rule_id: tester.convex.train-coverage
+kind: rule
+status: active
+name: Every train wagon has a smoke test exercising its composition root
+statement: >-
+  Every wagon declared in a Convex train definition MUST have a smoke test exercising its
+  composition root. A train spec (a `*.train.ts`/`*.train.json` module, or a module under a
+  `trains/` directory, that declares a `wagons` list) whose declared wagon has no corresponding
+  `*smoke*.test.ts` referencing that wagon is a coverage gap. This is the Convex/Vitest
+  realization of the agnostic `tester.train.coverage` obligation ("Each train wagon has a smoke
+  test exercising its composition root") in `tester/conventions/train.convention.yaml`. The
+  detector is the convex.workspace.runtime implementation referenced below.
+implementation:
+  type: validator
+  ref: convex_train_coverage_detector
+content:
+  summary: >-
+    A "each declared train wagon has a smoke test" coverage obligation, the Convex/Vitest sibling
+    of the core tester.train.coverage rule. The realization is a zero-dependency JS detector that
+    reads a train spec's declared `wagons` and flags any wagon with no `*smoke*.test.ts`
+    exercising it in the scanned roots.
+  normative_text: |
+    A train orchestrates a sequence of wagons; if a participating wagon has no smoke test, the
+    train can regress that wagon's composition root without any test turning red. The obligation is
+    that for every wagon named in a train definition there exists at least one smoke test — a
+    `*.test.ts` file whose name/body marks it a smoke test and references the wagon — that
+    exercises that wagon's composition root. WHICH files are train specs and HOW wagon names are
+    matched to smoke tests is delegated to the per-stack detector: it recognizes a `wagons: [...]`
+    (or `wagons = [...]`) declaration in a `*.train.*` / `trains/` module and a smoke test as a
+    `*.test.ts` whose basename or body contains `smoke` and the wagon token.
+  fix_hint: |
+    Add a smoke test for the uncovered wagon that drives its composition root, e.g.
+    `run-match.smoke.test.ts` exercising the `run-match` wagon's entrypoint. Name the file (or
+    mark its body) as a smoke test and reference the wagon so the coverage is traceable. This
+    rule's disposition is `documentation-only`: the detector emits the RAW uncovered-wagon list;
+    whether it blocks is the downstream consumer's decision.
+  exceptions:
+    - A wagon that is not declared in any train spec is out of scope (nothing to cover here).
+    - Non-train modules (no `wagons` declaration under a `*.train.*` / `trains/` path) are ignored.
+    - Generated code under `convex/_generated/` is never scanned.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - TESTER-TRAIN-COVERAGE-001
+    - TESTER-CONVEX-TRAIN-COVERAGE-001
+  severity: 2
+  disposition: documentation-only
+  introduced_in: 0.1.0
+terms:
+  - term_id: train_spec
+    text: >-
+      a Convex module that declares a train's wagon sequence — a `*.train.ts`/`*.train.json` file
+      or a module under a `trains/` directory carrying a `wagons: [...]` (or `wagons = [...]`) list.
+  - term_id: wagon_smoke_test
+    text: >-
+      a `*.test.ts` file, marked a smoke test by its basename or body containing `smoke`, that
+      references a wagon token and exercises that wagon's composition root.
