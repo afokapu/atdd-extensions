@@ -1,0 +1,68 @@
+schema_version: 1.1.0
+rule_id: coder.convex.backend-dependency-edges
+kind: rule
+status: active
+name: Convex layer imports respect the allowed dependency edges
+statement: >-
+  A Convex module in one architecture layer MUST only import from layers permitted by the backend
+  dependency graph. This is the Convex-stack realization of the agnostic core obligation "Imports
+  respect dependency.allowed_edges (presentation->application->domain; integration->application->
+  domain)" (`coder.backend.imports-respect-dependency-allowed`, alias BOUNDARIES-LAYER-003). The
+  allowed edges are: presentation -> {application, domain}; application -> {domain}; integration ->
+  {application, domain}; domain -> {} (domain imports no other layer). Same-layer imports are always
+  allowed. A disallowed edge — a `domain/` module importing from `../application/…`, or a
+  `presentation/` module reaching into `../integration/…` (bypassing application) — inverts the
+  dependency direction and couples the layers. The detector that enforces it — reading the importing
+  file's layer from its path and each import specifier's target layer from its path segments — is
+  the convex.workspace.runtime family implementation referenced below; the obligation is
+  stack-bound, the detector is Convex-specific.
+implementation:
+  type: validator
+  ref: convex_backend_layout_detector
+content:
+  summary: >-
+    A "layer imports respect the allowed dependency edges" obligation, the Convex sibling of
+    coder.backend.imports-respect-dependency-allowed. The realization is a zero-dependency Node ESM
+    detector (import-specifier scan, no TS runtime) that infers each module's layer from its path
+    and flags every import whose source->target layer edge is not in the allowed set.
+  normative_text: |
+    Clean layering requires dependencies to point inward toward the domain: presentation and
+    integration may depend on application and domain; application may depend on domain; domain
+    depends on nothing outside itself. The forbidden inversions the core convention lists —
+    "domain -> application", "domain -> presentation", "application -> presentation",
+    "presentation -> integration (bypass application)" — all couple a lower layer to a higher one or
+    skip the application seam. The obligation is that every cross-layer import obeys the allowed
+    edge set. HOW target layers are resolved is delegated to the per-stack detector; for Convex it
+    infers the importing file's layer from its nearest canonical-layer ancestor directory, resolves
+    each import specifier's target layer from the last canonical-layer segment in the path
+    (relative `../application/…` or aliased `@shared/domain/…`), and emits one violation per
+    disallowed edge at the import line. Same-layer imports and imports whose target layer cannot be
+    resolved are not flagged.
+  fix_hint: |
+    Re-point the import to respect the dependency direction:
+      * domain must not import application/presentation/integration — invert the dependency (have
+        the higher layer depend on domain), or move the shared type into domain,
+      * presentation must not reach into integration directly — route through an application
+        use-case or a domain port,
+      * application must not import presentation.
+  exceptions:
+    - Same-layer imports are always allowed and never flagged.
+    - Imports whose specifier names no canonical layer segment (third-party packages, `@shared/contracts/…`) are out of scope.
+    - Test files (`*.test.*` / `*.spec.*`) and generated code under `convex/_generated/` are out of scope.
+    - Vendored/build dirs (`node_modules`, `dist`, `build`, `.next`) are skipped during traversal.
+metadata:
+  aliases:
+    - BOUNDARIES-LAYER-003
+  severity: 3
+  disposition: advisory
+  introduced_in: 0.1.0
+terms:
+  - term_id: allowed_edge
+    text: >-
+      a permitted source->target layer dependency: presentation->application, presentation->domain,
+      application->domain, integration->application, integration->domain (plus every same-layer
+      import). Any other cross-layer import is a disallowed edge.
+  - term_id: target_layer
+    text: >-
+      the architecture layer an import specifier resolves into, taken from the last canonical-layer
+      segment (`presentation`/`application`/`domain`/`integration`) in the import path.
