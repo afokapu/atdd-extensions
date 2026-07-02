@@ -47,6 +47,29 @@ ENV_SCAN_ROOTS = "ATDD_SCAN_ROOTS"        # JSON list[str] — code-under-inspec
 ENV_SCAN_EXCLUDES = "ATDD_SCAN_EXCLUDES"  # JSON list[str] — exclusion globs
 ENV_REPORT = "ATDD_VIOLATIONS_REPORT"     # path the detector writes its JSON report to
 
+# The consumer's ATDD *package-install* substrate — ALWAYS excluded from every
+# provider scan. When these extensions are installed into a consumer repo, the
+# packages (with their deliberately-dirty test fixtures) land under the consumer's
+# ``.atdd/workspaces/**`` and ``.atdd/extensions/**``. Without this the extensions'
+# OWN fixtures get counted as consumer violations (in one FRG trial: 1731 of 2204
+# = 78% pure noise). Injected here — the single chokepoint both the CLI path
+# (cli/scan.py) and the direct adapter path cross — so every detector inherits it
+# via ATDD_SCAN_EXCLUDES (they match it as a path substring).
+#
+# NOTE: we exclude the two install dirs, NOT all of ``.atdd/``: the consumer's own
+# ``.atdd/config.yaml`` is legitimate scan input for config-reading detectors
+# (e.g. the no-stub allowlist-migration check) and must stay visible.
+ALWAYS_EXCLUDE = (".atdd/workspaces", ".atdd/extensions")
+
+
+def _merge_always_excluded(exclude_globs: list[str] | None) -> list[str]:
+    """Merge caller excludes with the always-excluded substrate dir(s), order-preserving."""
+    merged = [str(g) for g in exclude_globs] if exclude_globs else []
+    for ex in ALWAYS_EXCLUDE:
+        if ex not in merged:
+            merged.append(ex)
+    return merged
+
 # Run-health exit codes the contract distinguishes. node exits 0 on success and 1
 # on an uncaught throw — the detector itself exits 0 even when it FINDS violations
 # (it writes them to the report; finding violations is not a run error).
@@ -143,8 +166,9 @@ def run_implementation(
     base_env = dict(env if env is not None else os.environ)
     if scan_roots is not None:
         base_env[ENV_SCAN_ROOTS] = json.dumps([str(r) for r in scan_roots])
-    if exclude_globs is not None:
-        base_env[ENV_SCAN_EXCLUDES] = json.dumps([str(g) for g in exclude_globs])
+    # ALWAYS forward the substrate exclude, merged with any caller-supplied globs,
+    # so the consumer's ``.atdd/`` is never self-scanned even on the direct path.
+    base_env[ENV_SCAN_EXCLUDES] = json.dumps(_merge_always_excluded(exclude_globs))
 
     with tempfile.TemporaryDirectory(prefix="atdd-convex-report-") as tmp:
         report_path = Path(tmp) / "violations.json"
