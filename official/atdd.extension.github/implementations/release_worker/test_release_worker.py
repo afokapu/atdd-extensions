@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -352,6 +353,84 @@ def test_real_publish_refuses_without_env_guard():
     with pytest.raises(rw.PublishError) as exc:
         rw.real_publish("3.150.0", "v3.150.0", env={})  # guard absent
     assert rw.PUBLISH_ENV_GUARD in str(exc.value)
+
+
+# --------------------------------------------------------------------------- #
+# real_publish — driven with an INJECTED runner so no real process/network/git
+# is ever spawned (the double-gate stays honest). These prove the hardening the
+# CI incident (run 28564058581) demanded: a diagnosable, idempotent, tag-pushing
+# publish.
+# --------------------------------------------------------------------------- #
+class _FakeProc:
+    def __init__(self, stdout="", stderr="", returncode=0):
+        self.stdout, self.stderr, self.returncode = stdout, stderr, returncode
+
+
+def _classify(cmd):
+    """Bucket a command so the fake runner can key canned responses off it."""
+    if "build" in cmd:
+        return "build"
+    if "upload" in cmd:
+        return "upload"
+    if "tag" in cmd and "--list" in cmd:
+        return "taglist"
+    if cmd[:2] == ["git", "tag"]:
+        return "tag"
+    if cmd[:2] == ["git", "push"]:
+        return "push"
+    return "other"
+
+
+class _RecordingRunner:
+    """A subprocess.run stand-in: records commands, returns canned procs, and can
+    raise a CalledProcessError on a chosen command class — never spawns a real
+    process, so the no-network / no-git honesty is preserved."""
+
+    def __init__(self, raise_on=None, cpe=None, procs=None):
+        self.commands = []
+        self._raise_on = raise_on
+        self._cpe = cpe
+        self._procs = procs or {}
+
+    def __call__(self, cmd, **kwargs):
+        self.commands.append(list(cmd))
+        tok = _classify(cmd)
+        if self._raise_on == tok:
+            raise self._cpe
+        return self._procs.get(tok, _FakeProc())
+
+    def classes(self):
+        return [_classify(c) for c in self.commands]
+
+
+_ARMED = {rw.PUBLISH_ENV_GUARD: "1"}  # arms the gate; runner is still fake
+
+
+# --- Fix #1: surface BOTH stdout and stderr ------------------------------- #
+def test_format_publish_error_combines_both_streams():
+    cpe = subprocess.CalledProcessError(2, ["c"], output="out-msg", stderr="err-msg")
+    m = rw._format_publish_error("v1.2.3", cpe)
+    assert "out-msg" in m and "err-msg" in m and "exited 2" in m
+
+
+def test_format_publish_error_handles_empty_output():
+    cpe = subprocess.CalledProcessError(1, ["c"], output="", stderr="")
+    m = rw._format_publish_error("v1.2.3", cpe)
+    assert "no output" in m.lower()  # never a bare, silent "exited N: "
+
+
+def test_publish_error_surfaces_stdout_the_incident_hid():
+    # twine prints "File already exists" / 403 to STDOUT; the failed CI run
+    # surfaced only stderr → an EMPTY error nobody could diagnose.
+    cpe = subprocess.CalledProcessError(
+        returncode=1, cmd=["python", "-m", "twine", "upload", "dist/*"],
+        output="ERROR: HTTPError: 403 Forbidden / File already exists", stderr="")
+    runner = _RecordingRunner(raise_on="upload", cpe=cpe)
+    with pytest.raises(rw.PublishError) as ei:
+        rw.real_publish("3.152.0", "v3.152.0", env=_ARMED, runner=runner)
+    msg = str(ei.value)
+    assert "File already exists" in msg and "403" in msg
+    assert "exited 1" in msg
 
 
 # --------------------------------------------------------------------------- #

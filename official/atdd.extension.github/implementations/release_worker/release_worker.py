@@ -133,8 +133,21 @@ def git_tag_exists(tag: str, *, cwd: Optional[str] = None) -> bool:
     return tag in proc.stdout.split()
 
 
+def _format_publish_error(tag: str, exc: subprocess.CalledProcessError) -> str:
+    """Compose a *diagnosable* PublishError message from a failed subprocess.
+
+    The CI incident (run 28564058581) surfaced only ``exc.stderr`` — but twine
+    prints its 403 / "File already exists" to **stdout**, so the recorded error
+    was an empty ``exited N: ``. We include BOTH streams (and a non-empty
+    fallback) so the next failure can always be told apart.
+    """
+    parts = [s for s in ((exc.stdout or "").strip(), (exc.stderr or "").strip()) if s]
+    detail = " | ".join(parts) if parts else "(no output captured)"
+    return f"publish of {tag} failed: {exc.cmd} exited {exc.returncode}: {detail}"
+
+
 def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None,
-                 cwd: Optional[str] = None) -> None:
+                 cwd: Optional[str] = None, runner: Callable = subprocess.run) -> None:
     """Create the annotated git tag and upload to PyPI. **Double-gated.**
 
     Refuses to run unless ``ATDD_RELEASE_ALLOW_PUBLISH=1`` — so this can never be
@@ -142,6 +155,10 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
     *before* the caller records the ``external_ref`` (the ref is the durable
     completion marker), so a failed upload leaves nothing recorded and the next
     drain retries cleanly.
+
+    ``runner`` (default :func:`subprocess.run`) is injectable so the command
+    orchestration and its error surfacing can be exercised without spawning a
+    real process/network/git — the double-gate stays honest either way.
     """
     env = os.environ if env is None else env
     if env.get(PUBLISH_ENV_GUARD) != "1":
@@ -150,23 +167,20 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
             f"(refusing to tag/publish {tag} without an explicit opt-in)"
         )
     try:
-        subprocess.run(
+        runner(
             ["git", "tag", "-a", tag, "-m", f"Release {tag}"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
-        subprocess.run(
+        runner(
             ["python", "-m", "build"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
-        subprocess.run(
+        runner(
             ["python", "-m", "twine", "upload", "dist/*"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
     except subprocess.CalledProcessError as exc:
-        raise PublishError(
-            f"publish of {tag} failed: {exc.cmd} exited {exc.returncode}: "
-            f"{(exc.stderr or '').strip()}"
-        ) from exc
+        raise PublishError(_format_publish_error(tag, exc)) from exc
 
 
 def _default_publisher(env: Optional[Dict[str, str]] = None,
