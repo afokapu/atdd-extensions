@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -352,6 +353,193 @@ def test_real_publish_refuses_without_env_guard():
     with pytest.raises(rw.PublishError) as exc:
         rw.real_publish("3.150.0", "v3.150.0", env={})  # guard absent
     assert rw.PUBLISH_ENV_GUARD in str(exc.value)
+
+
+# --------------------------------------------------------------------------- #
+# real_publish — driven with an INJECTED runner so no real process/network/git
+# is ever spawned (the double-gate stays honest). These prove the hardening the
+# CI incident (run 28564058581) demanded: a diagnosable, idempotent, tag-pushing
+# publish.
+# --------------------------------------------------------------------------- #
+class _FakeProc:
+    def __init__(self, stdout="", stderr="", returncode=0):
+        self.stdout, self.stderr, self.returncode = stdout, stderr, returncode
+
+
+def _classify(cmd):
+    """Bucket a command so the fake runner can key canned responses off it."""
+    if "build" in cmd:
+        return "build"
+    if "upload" in cmd:
+        return "upload"
+    if "tag" in cmd and "--list" in cmd:
+        return "taglist"
+    if cmd[:2] == ["git", "tag"]:
+        return "tag"
+    if cmd[:2] == ["git", "push"]:
+        return "push"
+    return "other"
+
+
+class _RecordingRunner:
+    """A subprocess.run stand-in: records commands, returns canned procs, and can
+    raise a CalledProcessError on a chosen command class — never spawns a real
+    process, so the no-network / no-git honesty is preserved."""
+
+    def __init__(self, raise_on=None, cpe=None, procs=None):
+        self.commands = []
+        self._raise_on = raise_on
+        self._cpe = cpe
+        self._procs = procs or {}
+
+    def __call__(self, cmd, **kwargs):
+        self.commands.append(list(cmd))
+        tok = _classify(cmd)
+        if self._raise_on == tok:
+            raise self._cpe
+        return self._procs.get(tok, _FakeProc())
+
+    def classes(self):
+        return [_classify(c) for c in self.commands]
+
+
+_ARMED = {rw.PUBLISH_ENV_GUARD: "1"}  # arms the gate; runner is still fake
+
+
+# --- Fix #1: surface BOTH stdout and stderr ------------------------------- #
+def test_format_publish_error_combines_both_streams():
+    cpe = subprocess.CalledProcessError(2, ["c"], output="out-msg", stderr="err-msg")
+    m = rw._format_publish_error("v1.2.3", cpe)
+    assert "out-msg" in m and "err-msg" in m and "exited 2" in m
+
+
+def test_format_publish_error_handles_empty_output():
+    cpe = subprocess.CalledProcessError(1, ["c"], output="", stderr="")
+    m = rw._format_publish_error("v1.2.3", cpe)
+    assert "no output" in m.lower()  # never a bare, silent "exited N: "
+
+
+def test_publish_error_surfaces_stdout_the_incident_hid():
+    # twine prints "File already exists" / 403 to STDOUT; the failed CI run
+    # surfaced only stderr → an EMPTY error nobody could diagnose.
+    cpe = subprocess.CalledProcessError(
+        returncode=1, cmd=["python", "-m", "twine", "upload", "dist/*"],
+        output="ERROR: HTTPError: 403 Forbidden / File already exists", stderr="")
+    runner = _RecordingRunner(raise_on="upload", cpe=cpe)
+    with pytest.raises(rw.PublishError) as ei:
+        rw.real_publish("3.152.0", "v3.152.0", env=_ARMED, runner=runner)
+    msg = str(ei.value)
+    assert "File already exists" in msg and "403" in msg
+    assert "exited 1" in msg
+
+
+# --- Fix #2: --skip-existing + skipped_idempotent ------------------------- #
+def test_upload_command_uses_skip_existing():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    upload = [c for c in runner.commands if "upload" in c][0]
+    assert "--skip-existing" in upload  # never hard-fails on an existing version
+
+
+@pytest.mark.parametrize("stdout,stderr,expected", [
+    ("Skipping v3.150.0 because it appears to already exist", "", True),
+    ("Uploading dist/atdd-3.150.0-py3-none-any.whl\nView at ...", "", False),
+    ("", "some file already exists on the index", True),
+])
+def test_twine_skipped_detection(stdout, stderr, expected):
+    assert rw._twine_skipped(stdout, stderr) is expected
+
+
+def test_real_publish_reports_skipped_when_twine_skips():
+    runner = _RecordingRunner(procs={
+        "upload": _FakeProc(stdout="Skipping v3.152.0 because it already exists")})
+    assert rw.real_publish("3.152.0", "v3.152.0", env=_ARMED,
+                           runner=runner) == rw.SKIPPED_EXISTING
+
+
+def test_real_publish_reports_published_on_fresh_upload():
+    runner = _RecordingRunner(procs={
+        "upload": _FakeProc(stdout="Uploading atdd-3.153.0.tar.gz")})
+    assert rw.real_publish("3.153.0", "v3.153.0", env=_ARMED,
+                           runner=runner) == rw.PUBLISHED
+
+
+def test_drain_maps_skipped_existing_to_skipped_idempotent(store):
+    # A version published out-of-band (manually, like 3.152.0 in the incident):
+    # the store has NO external_ref, but PyPI already has it. --skip-existing
+    # makes twine SUCCEED-by-skipping; the drain must count it skipped_idempotent,
+    # NOT published and NOT failed, while still recording the ref + draining.
+    mid = _enqueue(store, "3.152.0")
+
+    def skipping_publisher(version, tag):
+        return rw.SKIPPED_EXISTING
+
+    res = rw.drain_version_decided(store, dry_run=False, publisher=skipping_publisher)
+
+    assert res.skipped_idempotent == 1 and res.published == 0 and res.failed == 0
+    assert res.tags == ["v3.152.0"]
+    assert store.external_refs.resolve("github", "tag", "v3.152.0") is not None
+    assert store.sync.pending_outbox() == []  # drained, not left pending
+    _ = mid
+
+
+# --- Fix #3: build BOTH sdist and wheel; upload glob covers both ---------- #
+def test_build_produces_both_sdist_and_wheel():
+    # `python -m build` with NO --wheel/--sdist flag emits BOTH; regression lock
+    # against the wheel-only builds that #1310 had to graft an sdist shim for.
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    build = [c for c in runner.commands if "build" in c][0]
+    assert build == ["python", "-m", "build"]  # no --wheel → sdist + wheel
+
+
+def test_upload_glob_covers_sdist_and_wheel():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    upload = [c for c in runner.commands if "upload" in c][0]
+    assert "dist/*" in upload  # not dist/*.whl — the sdist ships too
+
+
+def test_provider_push_marks_idempotent_when_publisher_skips():
+    def skipping_publisher(version, tag):
+        return rw.SKIPPED_EXISTING
+
+    prov = rw.GithubReleaseProvider(publisher=skipping_publisher,
+                                    tag_exists=lambda t: False)
+    out = prov.push(rw.VERSION_DECIDED_OPERATION, {"version": "3.152.0"})
+    assert out.records_ref and out.ref_data.get("idempotent") is True
+
+
+# --- Fix #4: the annotated tag is actually PUSHED (was created but orphaned) - #
+def test_real_publish_pushes_the_tag():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    pushes = [c for c in runner.commands if c[:2] == ["git", "push"]]
+    assert pushes == [["git", "push", "origin", "v3.150.0"]]
+
+
+def test_real_publish_pushes_to_configured_remote():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, remote="upstream", runner=runner)
+    assert ["git", "push", "upstream", "v3.150.0"] in runner.commands
+
+
+def test_real_publish_reuses_existing_local_tag_and_still_pushes():
+    # Retry after a prior failed run left the local tag behind: creating it again
+    # would 'already exists'-crash and mask the real error. Skip create, push.
+    runner = _RecordingRunner(procs={"taglist": _FakeProc(stdout="v3.150.0\n")})
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    creates = [c for c in runner.commands if c[:2] == ["git", "tag"] and "-a" in c]
+    pushes = [c for c in runner.commands if c[:2] == ["git", "push"]]
+    assert creates == []                       # not re-created (idempotent)
+    assert pushes == [["git", "push", "origin", "v3.150.0"]]  # still pushed
+
+
+def test_real_publish_creates_tag_when_absent():
+    runner = _RecordingRunner()  # taglist returns empty → tag absent
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    creates = [c for c in runner.commands if c[:2] == ["git", "tag"] and "-a" in c]
+    assert creates == [["git", "tag", "-a", "v3.150.0", "-m", "Release v3.150.0"]]
 
 
 # --------------------------------------------------------------------------- #
