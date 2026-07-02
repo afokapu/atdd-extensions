@@ -483,14 +483,20 @@ def test_drain_maps_skipped_existing_to_skipped_idempotent(store):
     _ = mid
 
 
-# --- Fix #3: build BOTH sdist and wheel; upload glob covers both ---------- #
-def test_build_produces_both_sdist_and_wheel():
-    # `python -m build` with NO --wheel/--sdist flag emits BOTH; regression lock
-    # against the wheel-only builds that #1310 had to graft an sdist shim for.
+# --- Fix #3: build BOTH sdist and wheel FROM SOURCE (no sdist→wheel chain) - #
+def test_build_produces_both_sdist_and_wheel_from_source():
+    # Regression lock for the `atdd-0.0.0+local` publish bug. `python -m build`
+    # with NO flags builds the sdist, then builds the wheel FROM THE UNPACKED
+    # SDIST in a temp dir. Core's dynamic version resolves from the git-ignored
+    # `.atdd/state/state.sqlite`, which is NOT in the sdist — so the temp-dir
+    # wheel build finds no store and falls back to `0.0.0+local`, which PyPI
+    # 400s. Passing `--sdist --wheel` builds BOTH from source in-tree (where the
+    # store resolves), so the wheel carries the real version. The flags must be
+    # present and explicit — asserting on the exact command is the lock.
     runner = _RecordingRunner()
     rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
     build = [c for c in runner.commands if "build" in c][0]
-    assert build == ["python", "-m", "build"]  # no --wheel → sdist + wheel
+    assert build == ["python", "-m", "build", "--sdist", "--wheel"]
 
 
 def test_upload_glob_covers_sdist_and_wheel():

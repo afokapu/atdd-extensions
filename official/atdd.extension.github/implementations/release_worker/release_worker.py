@@ -219,8 +219,16 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
             ["git", "push", remote, tag],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
+        # Build BOTH the sdist and the wheel FROM SOURCE. `python -m build` with
+        # NO flags builds the sdist, then builds the wheel FROM the unpacked
+        # sdist in a temp dir. Core's dynamic version (#1172) resolves from the
+        # git-ignored `.atdd/state/state.sqlite`, which is NOT shipped in the
+        # sdist — so the temp-dir wheel build finds no store and falls back to
+        # `0.0.0+local`, which PyPI rejects with a 400 (publish run 28587233528).
+        # `--sdist --wheel` builds each artifact in-tree at `cwd`, where the
+        # store resolves, so the wheel carries the real version_decided value.
         runner(
-            ["python", "-m", "build"],
+            ["python", "-m", "build", "--sdist", "--wheel"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
         upload = runner(
