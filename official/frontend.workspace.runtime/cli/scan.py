@@ -108,15 +108,34 @@ def _report_module_name(manifest_path: Path) -> str | None:
     return str(name) if name else None
 
 
-def _exclude_globs() -> list[str] | None:
+# The consumer's ATDD *package-install* substrate — ALWAYS excluded from the
+# provider scan. Installing these extensions into a consumer drops the packages
+# (with their deliberately-dirty fixtures) under ``.atdd/workspaces/**`` and
+# ``.atdd/extensions/**``; without this the extensions' OWN fixtures get miscounted
+# as consumer violations. Merged in below so it holds even when the caller supplies
+# no ATDD_SCAN_EXCLUDES. ``run.py`` re-asserts the same invariant for the direct
+# adapter path. We exclude the two install dirs, NOT all of ``.atdd/`` — the
+# consumer's own ``.atdd/config.yaml`` stays visible for config-reading detectors.
+ALWAYS_EXCLUDE = (".atdd/workspaces", ".atdd/extensions")
+
+
+def _exclude_globs() -> list[str]:
+    """Caller-supplied excludes (ATDD_SCAN_EXCLUDES) merged with the always-excluded
+    substrate dir. Never drops caller globs; always contains ``.atdd``."""
+    caller: list[str] = []
     raw = os.environ.get("ATDD_SCAN_EXCLUDES")
-    if not raw:
-        return None
-    try:
-        globs = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
-    return [str(g) for g in globs] if isinstance(globs, list) else None
+    if raw:
+        try:
+            globs = json.loads(raw)
+        except json.JSONDecodeError:
+            globs = None
+        if isinstance(globs, list):
+            caller = [str(g) for g in globs]
+    merged = list(caller)
+    for ex in ALWAYS_EXCLUDE:
+        if ex not in merged:
+            merged.append(ex)
+    return merged
 
 
 def main(argv: list[str] | None = None) -> int:
