@@ -8,6 +8,13 @@
 // applies uniformly. This detector flags every raw `fetch(` / `axios.`|`axios(`
 // call site in a non-client `*.ts`/`*.tsx` source file.
 //
+// SELF-SCOPING (defense-in-depth to the consumer scope map). Vite/React detector.
+// SCOPES TO: the React-extension whitelist `*.ts`/`*.tsx` only; it explicitly SKIPS
+// `.astro` files (Astro-stack artifacts a Vite React rule must never lint). RESIDUE the
+// extension cannot decide: a `.tsx` file is legal in both a Vite app and an Astro
+// island, so in a MIXED tree this still scans Astro-island `.tsx` — the last-mile split
+// is the consumer scope map's job, not this guard's.
+//
 // CONTRACT (frontend.workspace.runtime v1.1 — the JS sibling of the
 // python-pytest provider contract). The provider (adapter/run.py) shells out to
 // `node` over THIS file and communicates ONLY through env + a JSON report file:
@@ -81,6 +88,8 @@ function* walk(root, excludes) {
     }
     if (cst.isDirectory()) {
       yield* walk(full, excludes);
+    } else if (extname(full) === ".astro") {
+      continue; // SELF-SCOPING: never lint an Astro-stack `.astro` file (see header)
     } else if (SRC_EXT.has(extname(full)) && !TEST_RE.test(full)) {
       yield full;
     }

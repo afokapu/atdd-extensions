@@ -22,6 +22,13 @@
 //           a domain module MUST NOT import a UI framework (preact/react/@tanstack/
 //           @maintain-ux/gsap) — the domain layer stays framework-agnostic.
 //
+// SELF-SCOPING (defense-in-depth to the consumer scope map). Vite/React detector.
+// SCOPES TO: the React/TS-extension whitelist (`*.ts`/`*.tsx`/`*.js`/`*.jsx`/`*.mjs`/
+// `*.cjs`) only; it explicitly SKIPS `.astro` files (Astro-stack artifacts a Vite rule
+// must never lint). RESIDUE the extension cannot decide: a `.tsx` module is legal in
+// both a Vite app and an Astro island, so in a MIXED tree this still scans Astro-island
+// `.tsx` — the last-mile split is the consumer scope map's job, not this guard's.
+//
 // CONTRACT (frontend.workspace.runtime v1.1): reads ATDD_SCAN_ROOTS /
 // ATDD_SCAN_EXCLUDES, writes RAW {rule_id,file,line,col,evidence,source_line}
 // violations to ATDD_VIOLATIONS_REPORT, exits 0 regardless of violation count.
@@ -83,6 +90,8 @@ function* walk(root, excludes) {
     }
     if (cst.isDirectory()) {
       yield* walk(full, excludes);
+    } else if (extname(full) === ".astro") {
+      continue; // SELF-SCOPING: never lint an Astro-stack `.astro` file (see header)
     } else if (TS_EXT.has(extname(full)) && !TEST_RE.test(full)) {
       yield full;
     }

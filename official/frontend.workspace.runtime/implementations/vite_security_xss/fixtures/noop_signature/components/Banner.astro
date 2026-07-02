@@ -1,0 +1,12 @@
+---
+// An Astro-stack `.astro` component (no `.tsx`/`.ts` sibling in this tree). It DOES
+// contain HTML sinks — `dangerouslySetInnerHTML` and `.innerHTML =` — that the Vite
+// security-xss detector's SINK patterns match on text. Because a Vite React detector
+// must SKIP `.astro` files, it emits ZERO here (the astro.security-xss sibling owns
+// this). A non-zero count would mean the Vite detector wrongly linted an Astro file.
+const { markup } = Astro.props;
+const el = document.createElement("div");
+el.innerHTML = markup;
+---
+<div set:html={markup} />
+<Fragment dangerouslySetInnerHTML={{ __html: markup }} />

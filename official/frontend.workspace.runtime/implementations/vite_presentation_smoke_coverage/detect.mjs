@@ -8,6 +8,14 @@
 // component's wagon (the segment immediately before `presentation`) at a word boundary.
 // Sibling of tester.convex.smoke-presentation-coverage.
 //
+// SELF-SCOPING (defense-in-depth to the consumer scope map). Vite/React detector. The
+// unit of coverage is a `.tsx` presentation component — the matcher keys strictly on
+// `.tsx` (`path.endsWith(".tsx")`), so `.astro` files are structurally out of scope and
+// never counted as components (a Vite React rule must never treat an Astro component as
+// its subject). RESIDUE the extension cannot decide: a `.tsx` presentation component is
+// legal in both a Vite app and an Astro island, so in a MIXED tree Astro-island `.tsx`
+// is still measured — the last-mile split is the consumer scope map's job.
+//
 // CONTRACT (frontend.workspace.runtime v1.1): env ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES /
 // ATDD_VIOLATIONS_REPORT in; RAW {rule_id,file,line,col,evidence,source_line} out. Exits 0.
 

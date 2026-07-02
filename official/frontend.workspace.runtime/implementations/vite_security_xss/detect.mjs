@@ -8,6 +8,15 @@
 // the document — the classic XSS sink. This detector flags each such site in a
 // non-test `*.ts`/`*.tsx`/`*.jsx` source file.
 //
+// SELF-SCOPING (defense-in-depth to the consumer scope map). This is a Vite/React
+// detector. SCOPES TO: the React-extension whitelist `*.ts`/`*.tsx`/`*.jsx` only. It
+// explicitly SKIPS `.astro` files — an `.astro` component belongs to the Astro stack
+// and must never be linted by a Vite React rule (the `coder.astro.security-xss` sibling
+// owns `set:html`/`.astro` sinks). RESIDUE the extension CANNOT decide: a `.tsx` React
+// component is legal in BOTH a Vite app and as an Astro island, so in a MIXED tree this
+// detector still scans Astro-island `.tsx`. That last-mile separation is the consumer
+// scope map's job, not a file-signature guard's.
+//
 // CONTRACT (frontend.workspace.runtime v1.1 — the JS sibling of the python-pytest
 // provider contract). The provider (adapter/run.py) shells out to `node` over THIS
 // file and communicates ONLY through env + a JSON report file:
@@ -86,6 +95,8 @@ function* walk(root, excludes) {
     }
     if (cst.isDirectory()) {
       yield* walk(full, excludes);
+    } else if (extname(full) === ".astro") {
+      continue; // SELF-SCOPING: never lint an Astro-stack `.astro` file (see header)
     } else if (SRC_EXT.has(extname(full)) && !TEST_RE.test(full)) {
       yield full;
     }

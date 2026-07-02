@@ -13,6 +13,15 @@
 //   INPUT   env ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES / ATDD_VIOLATIONS_REPORT
 //   OUTPUT  {"violations": [{rule_id,file,line,col,evidence,source_line}, ...]}
 // RAW channel only — zero disposition; exits 0 even when violations are found.
+//
+// SELF-SCOPING (defense-in-depth to the consumer scope map). This check scans `.astro`
+// AND `.css` files — but `.css` is NOT an Astro-exclusive signature (a sibling Vite app
+// ships `.css` too). So it file-signature-gates the whole run on the Astro marker: with
+// NO `.astro` file anywhere in the roots the tree is not apps/web, and the check NO-OPS
+// rather than flag a Vite app's `.css`. SCOPES TO: `.astro` markup/`<style>` plus the
+// `styles/*.css` that travels with an Astro app. RESIDUE: a `.css` file that lives in a
+// MIXED tree alongside `.astro` is still scanned; splitting Vite `.css` from Astro
+// `.css` in one root is the consumer scope map's job, not a file-signature guard's.
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join, extname, sep } from "node:path";
@@ -124,6 +133,17 @@ function scanFile(file, violations) {
   }
 }
 
+// File-signature gate: is any `.astro` file present? `.css` alone is not enough — it
+// ships in Vite apps too — so the Astro marker must be seen for this check to run.
+function treeHasAstro(roots, excludes) {
+  for (const root of roots) {
+    for (const file of walk(root, excludes)) {
+      if (extname(file) === ".astro") return true;
+    }
+  }
+  return false;
+}
+
 function main() {
   const reportPath = process.env.ATDD_VIOLATIONS_REPORT;
   if (!reportPath) {
@@ -134,6 +154,13 @@ function main() {
   const excludes = [...DEFAULT_EXCLUDES, ...parseJsonEnv("ATDD_SCAN_EXCLUDES", [])];
 
   const violations = [];
+  if (!treeHasAstro(roots, excludes)) {
+    writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
+    process.stderr.write(
+      `astro-detector(${RULE_ID}): no .astro files in scan tree — self-scoped no-op\n`,
+    );
+    process.exit(0);
+  }
   for (const root of roots) for (const file of walk(root, excludes)) scanFile(file, violations);
 
   writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");

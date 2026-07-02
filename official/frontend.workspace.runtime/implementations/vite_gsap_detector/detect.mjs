@@ -2,7 +2,11 @@
 // FAMILY validator: vite_gsap_detector
 // Runs each member check (checks/*.mjs) VERBATIM as a subprocess and merges their
 // RAW v1.1 reports into one. ONE implementation realizing a family of rule_ids
-// (Core pattern). Member logic is preserved byte-for-byte.
+// (Core pattern). Member detection logic is preserved; each member additionally carries
+// a SELF-SCOPING file-signature guard (Vite/React detector): it SKIPS `.astro` files —
+// an Astro-stack artifact is never linted by a Vite React rule. RESIDUE the extension
+// cannot decide — a `.tsx` legal in both a Vite app and an Astro island — is left to the
+// consumer scope map, not this guard.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";

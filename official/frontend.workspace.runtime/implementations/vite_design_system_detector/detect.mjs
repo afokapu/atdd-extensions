@@ -3,7 +3,11 @@
 // Runs each member check (checks/*.mjs) VERBATIM as a subprocess and merges their
 // RAW v1.1 reports into one. ONE implementation realizing a family of rule_ids
 // (Core pattern). Member detection logic is preserved; each member additionally
-// carries a DESIGN-LAYER SCOPE GATE (mirrors the interlocking/train-e2e no-op).
+// carries a DESIGN-LAYER SCOPE GATE (mirrors the interlocking/train-e2e no-op) AND a
+// SELF-SCOPING file-signature guard (Vite/React detector): it SKIPS `.astro` files — an
+// Astro-stack artifact is never linted by a Vite React rule. RESIDUE the extension
+// cannot decide — a `.tsx` legal in both a Vite app and an Astro island — is left to the
+// consumer scope map, not this guard.
 //
 // DESIGN-LAYER NO-OP — per-check decision (all four NO-OP when no design layer):
 //   * design-primitives      NO-OP — "compose from the design-system primitives
