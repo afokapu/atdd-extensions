@@ -2,7 +2,21 @@
 // FAMILY validator: convex_design_detector
 // Runs each member check (checks/*.mjs) VERBATIM as a subprocess and merges their
 // RAW v1.1 reports into one. ONE implementation realizing a family of rule_ids
-// (Core pattern). Member logic is preserved byte-for-byte.
+// (Core pattern). Member detection logic is preserved; each member additionally
+// carries a DESIGN-LAYER SCOPE GATE (mirrors the interlocking/train-e2e no-op).
+//
+// DESIGN-LAYER NO-OP — per-check decision (all three NO-OP when no design layer):
+//   * design-foundations      NO-OP — presupposes the layered design convention
+//                             (a feature resting on a domain foundation). A repo
+//                             that doesn't opt into a design layer is out of scope.
+//   * design-hierarchy-import NO-OP — presupposes the layered design (inward-only
+//                             import direction). Out of scope without a design layer.
+//   * design-orphan-export    NO-OP — presupposes the design layer's export surface.
+//                             Out of scope without a design layer.
+// "Design layer present" is determined structurally in each check (a design /
+// design_system / tokens / foundations dir, or a design-token/foundations file).
+// Proven: over the FRG consumer (no design layer) this family drops from 83 → 0;
+// the dirty fixtures (which carry a design-layer marker) keep firing.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";

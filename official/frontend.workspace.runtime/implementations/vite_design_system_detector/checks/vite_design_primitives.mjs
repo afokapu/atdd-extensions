@@ -116,6 +116,52 @@ function main() {
   const roots = parseJsonEnv("ATDD_SCAN_ROOTS", []);
   const excludes = [...DEFAULT_EXCLUDES, ...parseJsonEnv("ATDD_SCAN_EXCLUDES", [])];
 
+  // ── Design-layer scope gate (mirrors the interlocking/train-e2e no-op) ───────
+  // This rule PRESUPPOSES a design system. On a codebase with NO design layer at
+  // all (e.g. the FRG consumer, which has real component/feature code but no design
+  // system), the rule is OUT OF SCOPE — not a clean pass hiding violations. Exactly
+  // like train_e2e_coverage / interlocking_e2e_coverage no-op when their plan
+  // registry is absent, this writes an empty report and exits 0 when no design layer
+  // is present. "Design layer present" is determined STRUCTURALLY from the scanned
+  // roots: a design / design_system / design-system (or tokens / foundations /
+  // primitives) directory, OR a design-token/foundations source file
+  // (tokens|foundations|theme(.ts) / *.tokens.* / _design.yaml / design.manifest.*).
+  const DESIGN_DIRS = new Set([
+    "design", "design_system", "design-system", "tokens", "foundations", "primitives",
+  ]);
+  const DESIGN_FILE_RE =
+    /^(tokens|foundations|theme)\.[cm]?[jt]sx?$|\.tokens\.[cm]?[jt]sx?$|^_design\.ya?ml$|^design\.manifest\./i;
+  function hasDesignLayer(scanRoots) {
+    const stack = [...scanRoots];
+    const seenPaths = new Set();
+    while (stack.length) {
+      const cur = stack.pop();
+      if (seenPaths.has(cur)) continue;
+      seenPaths.add(cur);
+      let cst;
+      try { cst = statSync(cur); } catch { continue; }
+      const name = cur.split(sep).pop();
+      if (cst.isDirectory()) {
+        if (DESIGN_DIRS.has(name)) return true;
+        let entries;
+        try { entries = readdirSync(cur); } catch { continue; }
+        for (const e of entries) {
+          const full = join(cur, e);
+          if (isExcluded(full, excludes)) continue;
+          stack.push(full);
+        }
+      } else if (DESIGN_FILE_RE.test(name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (!hasDesignLayer(roots)) {
+    writeFileSync(reportPath, JSON.stringify({ violations: [] }, null, 2), "utf8");
+    process.stderr.write(`${RULE_ID}: no design layer in scan roots — out of scope\n`);
+    process.exit(0);
+  }
+
   const violations = [];
   for (const root of roots) {
     for (const file of walk(root, excludes)) scanFile(file, violations);

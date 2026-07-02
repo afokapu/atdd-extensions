@@ -2,11 +2,24 @@
 // FAMILY validator: vite_design_hierarchy_detector
 // Runs each member check (checks/*.mjs) VERBATIM as a subprocess and merges their
 // RAW v1.1 reports into one. ONE implementation realizing a family of rule_ids
-// (Core pattern). Member logic is preserved byte-for-byte.
+// (Core pattern). Member detection logic is preserved; each member additionally
+// carries a DESIGN-LAYER SCOPE GATE (mirrors the interlocking/train-e2e no-op).
 //
 // Emits the three design-system HIERARCHY gap rules the prior wave missed
 // (tokens-pure / dependency-flow / wagons-import), siblings of the agnostic
 // design.convention.yaml obligations DESIGN-HIERARCHY-001/002/003.
+//
+// DESIGN-LAYER NO-OP — per-check decision (all three NO-OP when no design layer):
+//   * design-tokens-pure     NO-OP — presupposes a design-token layer whose values
+//                            must be pure. No tokens → out of scope.
+//   * design-dependency-flow NO-OP — presupposes the design-system layer hierarchy
+//                            (tokens → primitives → components). Out of scope.
+//   * design-wagons-import   NO-OP — presupposes design-system wagons/primitives to
+//                            import from. Out of scope without a design layer.
+// "Design layer present" is determined structurally in each check. These already
+// scanned only design_system/ paths, so over the FRG consumer (no design layer)
+// they were already 0; the gate makes the out-of-scope behavior explicit. The
+// dirty fixtures live under src/design_system/ and keep firing.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
