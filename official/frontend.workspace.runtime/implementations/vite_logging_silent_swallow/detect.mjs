@@ -9,6 +9,13 @@
 // `catch (e) {}`, or a handler that just `return`s a fallback — turns a loud failure
 // into an invisible broken UI state. This detector flags those handlers.
 //
+// SELF-SCOPING (defense-in-depth to the consumer scope map). Vite/React detector.
+// SCOPES TO: the React-extension whitelist `*.ts`/`*.tsx`/`*.jsx` only; it explicitly
+// SKIPS `.astro` files (the `coder.astro.logging-silent-swallow` sibling owns Astro
+// handlers). RESIDUE the extension cannot decide: a `.tsx` handler is legal in both a
+// Vite app and an Astro island, so in a MIXED tree this still scans Astro-island
+// `.tsx` — the last-mile split is the consumer scope map's job, not this guard's.
+//
 // CONTRACT (frontend.workspace.runtime v1.1). Env in / JSON report out:
 //   INPUT   env ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES / ATDD_VIOLATIONS_REPORT
 //   OUTPUT  {"violations":[{rule_id,file,line,col,evidence,source_line}, ...]}
@@ -61,6 +68,8 @@ function* walk(root, excludes) {
     }
     if (cst.isDirectory()) {
       yield* walk(full, excludes);
+    } else if (extname(full) === ".astro") {
+      continue; // SELF-SCOPING: never lint an Astro-stack `.astro` file (see header)
     } else if (SRC_EXT.has(extname(full)) && !TEST_RE.test(full)) {
       yield full;
     }

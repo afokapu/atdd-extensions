@@ -12,6 +12,16 @@
 //   INPUT   env ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES / ATDD_VIOLATIONS_REPORT
 //   OUTPUT  {"violations": [{rule_id,file,line,col,evidence,source_line}, ...]}
 // RAW channel only — zero disposition; exits 0 even when violations are found.
+//
+// SELF-SCOPING (defense-in-depth to the consumer scope map). This is an Astro-stack
+// detector. It file-signature-gates on the scan tree: if NO `.astro` file is present
+// anywhere in the roots, the tree is not an Astro app and the detector NO-OPS (rather
+// than lint `.ts`/`.tsx`/`.jsx` that belong to a sibling Vite app in the same
+// workspace). SCOPES TO: `.astro` files plus the `.ts`/`.tsx`/`.jsx` island code that
+// accompanies them once the tree is proven Astro. RESIDUE the signature CANNOT decide:
+// a `.tsx` React component is legal in BOTH a Vite app and as an Astro island, so in a
+// MIXED tree (both stacks under one root) this detector still scans Vite `.tsx`. That
+// last-mile separation is the consumer scope map's job, not a file-signature guard's.
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join, extname, sep } from "node:path";
@@ -81,6 +91,17 @@ function* walk(root, excludes) {
   }
 }
 
+// File-signature gate: does the scan tree contain any `.astro` file? Reuses walk()
+// (which yields this detector's candidate extensions) so it costs one directory pass.
+function treeHasAstro(roots, excludes) {
+  for (const root of roots) {
+    for (const file of walk(root, excludes)) {
+      if (extname(file) === ".astro") return true;
+    }
+  }
+  return false;
+}
+
 function scanFile(file, violations) {
   const base = file.split(sep).pop();
   if (SANITIZE_FILE_RE.test(base)) return;
@@ -121,6 +142,13 @@ function main() {
   const excludes = [...DEFAULT_EXCLUDES, ...parseJsonEnv("ATDD_SCAN_EXCLUDES", [])];
 
   const violations = [];
+  if (!treeHasAstro(roots, excludes)) {
+    writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
+    process.stderr.write(
+      "astro-detector(security-xss): no .astro files in scan tree — self-scoped no-op\n",
+    );
+    process.exit(0);
+  }
   for (const root of roots) {
     for (const file of walk(root, excludes)) scanFile(file, violations);
   }

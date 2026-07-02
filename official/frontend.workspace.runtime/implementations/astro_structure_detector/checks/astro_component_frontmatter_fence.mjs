@@ -12,6 +12,12 @@
 //   INPUT   env ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES / ATDD_VIOLATIONS_REPORT
 //   OUTPUT  {"violations": [{rule_id,file,line,col,evidence,source_line}, ...]}
 // RAW channel only — zero disposition; exits 0 even when violations are found.
+//
+// SELF-SCOPING (defense-in-depth to the consumer scope map). Inspects ONLY `.astro`
+// files (the `---` frontmatter fence is an Astro-only construct). It also file-
+// signature-gates the run (NO `.astro` anywhere → NO-OP) so its scope is explicit and
+// uniform with the family. SCOPES TO: `.astro` frontmatter. RESIDUE: none — fully
+// decidable from the `.astro` extension; nothing is left for the scope map.
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join, extname, sep } from "node:path";
@@ -124,6 +130,16 @@ function scanFile(file, violations) {
   }
 }
 
+// File-signature gate: is any `.astro` file present in the scan tree?
+function treeHasAstro(roots, excludes) {
+  for (const root of roots) {
+    for (const file of walk(root, excludes)) {
+      if (extname(file) === ".astro") return true;
+    }
+  }
+  return false;
+}
+
 function main() {
   const reportPath = process.env.ATDD_VIOLATIONS_REPORT;
   if (!reportPath) {
@@ -134,6 +150,13 @@ function main() {
   const excludes = [...DEFAULT_EXCLUDES, ...parseJsonEnv("ATDD_SCAN_EXCLUDES", [])];
 
   const violations = [];
+  if (!treeHasAstro(roots, excludes)) {
+    writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
+    process.stderr.write(
+      `astro-detector(${RULE_ID}): no .astro files in scan tree — self-scoped no-op\n`,
+    );
+    process.exit(0);
+  }
   for (const root of roots) for (const file of walk(root, excludes)) scanFile(file, violations);
 
   writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");

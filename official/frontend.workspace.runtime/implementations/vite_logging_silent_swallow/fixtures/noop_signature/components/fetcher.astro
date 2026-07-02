@@ -1,0 +1,13 @@
+---
+// An Astro-stack `.astro` component whose frontmatter has a silently swallowed catch.
+// A Vite React logging detector must SKIP `.astro` files, so it emits ZERO here (the
+// astro.logging-silent-swallow sibling owns Astro handlers). A non-zero count would
+// mean the Vite detector wrongly linted an Astro file.
+let scores = [];
+try {
+  const res = await fetch("/api/scores");
+  scores = await res.json();
+} catch (e) {
+}
+---
+<ul>{scores.map((s) => <li>{s}</li>)}</ul>

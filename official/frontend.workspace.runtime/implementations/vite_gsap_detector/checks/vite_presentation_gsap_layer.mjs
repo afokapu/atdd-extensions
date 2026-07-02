@@ -81,6 +81,8 @@ function* walk(root, excludes) {
     }
     if (cst.isDirectory()) {
       yield* walk(full, excludes);
+    } else if (extname(full) === ".astro") {
+      continue; // SELF-SCOPING: never lint an Astro-stack `.astro` file (see header)
     } else if (TS_EXT.has(extname(full)) && !TEST_RE.test(full)) {
       yield full;
     }

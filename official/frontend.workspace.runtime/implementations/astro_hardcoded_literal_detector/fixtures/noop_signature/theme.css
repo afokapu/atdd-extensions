@@ -1,0 +1,8 @@
+/* A pure `.css` file with NO `.astro` sibling. `.css` is NOT an Astro-exclusive
+   signature (Vite apps ship it too). This uses a raw hex as a VALUE — if the Astro
+   no-hardcoded-color check scanned it WOULD flag `#1a1a1a`; emitting ZERO proves the
+   file-signature guard no-oped because no `.astro` marker is present in the tree. */
+body {
+  color: #1a1a1a;
+  background: rgb(255, 255, 255);
+}

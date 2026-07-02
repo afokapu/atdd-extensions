@@ -13,6 +13,15 @@
 //   INPUT   env ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES / ATDD_VIOLATIONS_REPORT
 //   OUTPUT  {"violations":[{rule_id,file,line,col,evidence,source_line}, ...]}
 // RAW factual channel only — ZERO disposition; exits 0 regardless of count.
+//
+// SELF-SCOPING (defense-in-depth to the consumer scope map). Astro-stack detector: it
+// file-signature-gates on the scan tree — if NO `.astro` file is present anywhere in
+// the roots, the tree is not an Astro app and this detector NO-OPS rather than lint
+// `.ts`/`.tsx`/`.jsx` owned by a sibling Vite app. SCOPES TO: `.astro` files plus the
+// `.ts`/`.tsx`/`.jsx` island code accompanying them once the tree is proven Astro.
+// RESIDUE the signature cannot decide: a `.tsx` handler is legal in both a Vite app
+// and an Astro island, so in a MIXED tree this still scans Vite `.tsx`. That last-mile
+// separation is the consumer scope map's job, not a file-signature guard's.
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join, extname, sep } from "node:path";
@@ -182,6 +191,17 @@ function scanFile(file, violations) {
   }
 }
 
+// File-signature gate: does the scan tree contain any `.astro` file? Reuses walk()
+// (which yields this detector's candidate extensions) so it costs one directory pass.
+function treeHasAstro(roots, excludes) {
+  for (const root of roots) {
+    for (const file of walk(root, excludes)) {
+      if (extname(file) === ".astro") return true;
+    }
+  }
+  return false;
+}
+
 function main() {
   const reportPath = process.env.ATDD_VIOLATIONS_REPORT;
   if (!reportPath) {
@@ -192,6 +212,13 @@ function main() {
   const excludes = [...DEFAULT_EXCLUDES, ...parseJsonEnv("ATDD_SCAN_EXCLUDES", [])];
 
   const violations = [];
+  if (!treeHasAstro(roots, excludes)) {
+    writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
+    process.stderr.write(
+      "astro-detector(logging-silent-swallow): no .astro files in scan tree — self-scoped no-op\n",
+    );
+    process.exit(0);
+  }
   for (const root of roots) {
     for (const file of walk(root, excludes)) scanFile(file, violations);
   }

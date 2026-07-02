@@ -19,6 +19,15 @@
 //
 // RAW factual channel only — the detector applies ZERO disposition. It exits 0 even
 // when it finds violations; it exits non-zero only on a genuine runtime fault.
+//
+// SELF-SCOPING (defense-in-depth to the consumer scope map). This detector already
+// keys on the strongest possible Astro signature: it inspects ONLY `.astro` files
+// (frontmatter fences). To make that boundary explicit and uniform with the rest of
+// the Astro family, it also file-signature-gates the whole run: with NO `.astro` file
+// anywhere in the roots it NO-OPS. SCOPES TO: `.astro` frontmatter. RESIDUE: none —
+// this rule is fully decidable from the `.astro` extension and leaves nothing for the
+// scope map (the `.tsx`-island ambiguity that burdens the XSS/logging detectors does
+// not apply here, because frontmatter is an Astro-only construct).
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join, extname, sep } from "node:path";
@@ -142,6 +151,17 @@ function scanFile(file, violations) {
   }
 }
 
+// File-signature gate: does the scan tree contain any `.astro` file? Reuses walk()
+// (which yields only `.astro` here) so it costs one directory pass.
+function treeHasAstro(roots, excludes) {
+  for (const root of roots) {
+    for (const file of walk(root, excludes)) {
+      if (extname(file) === ".astro") return true;
+    }
+  }
+  return false;
+}
+
 function main() {
   const reportPath = process.env.ATDD_VIOLATIONS_REPORT;
   if (!reportPath) {
@@ -152,6 +172,13 @@ function main() {
   const excludes = [...DEFAULT_EXCLUDES, ...parseJsonEnv("ATDD_SCAN_EXCLUDES", [])];
 
   const violations = [];
+  if (!treeHasAstro(roots, excludes)) {
+    writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
+    process.stderr.write(
+      `astro-detector(${RULE_ID}): no .astro files in scan tree — self-scoped no-op\n`,
+    );
+    process.exit(0);
+  }
   for (const root of roots) for (const file of walk(root, excludes)) scanFile(file, violations);
 
   writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
