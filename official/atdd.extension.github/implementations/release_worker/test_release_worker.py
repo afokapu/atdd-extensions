@@ -483,6 +483,23 @@ def test_drain_maps_skipped_existing_to_skipped_idempotent(store):
     _ = mid
 
 
+# --- Fix #3: build BOTH sdist and wheel; upload glob covers both ---------- #
+def test_build_produces_both_sdist_and_wheel():
+    # `python -m build` with NO --wheel/--sdist flag emits BOTH; regression lock
+    # against the wheel-only builds that #1310 had to graft an sdist shim for.
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    build = [c for c in runner.commands if "build" in c][0]
+    assert build == ["python", "-m", "build"]  # no --wheel → sdist + wheel
+
+
+def test_upload_glob_covers_sdist_and_wheel():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    upload = [c for c in runner.commands if "upload" in c][0]
+    assert "dist/*" in upload  # not dist/*.whl — the sdist ships too
+
+
 def test_provider_push_marks_idempotent_when_publisher_skips():
     def skipping_publisher(version, tag):
         return rw.SKIPPED_EXISTING
