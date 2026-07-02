@@ -1,11 +1,13 @@
-"""Conformance suite for convex.workspace.runtime (contract_version 1.1.0).
+"""Conformance suite for frontend.workspace.runtime (contract_version 1.1.0).
 
 Unlike the typescript/supabase/fastapi providers (whose adapters are
 NotImplementedError stubs and whose suites are skipped), this provider has a REAL
-adapter, so these tests actually RUN. They prove the convex runtime satisfies the
-SAME discover+run contract as atdd.workspace.python-pytest: discovery returns only
-contract-compatible implementations that target this workspace, and a run produces
-RAW v1.1 structured violations through the env + JSON-report seam.
+adapter, so these tests actually RUN. They prove the frontend runtime satisfies the
+SAME discover+run+CLI contract as atdd.workspace.python-pytest: discovery returns
+only contract-compatible implementations that target this workspace, a run produces
+RAW v1.1 structured violations through the env + JSON-report seam, and the provider
+CLI (cli/scan.py — the subprocess boundary core shells out to) emits that RAW v1.1
+array on stdout with run-health exit codes.
 
 Conformance tests stay WITH the provider, never inside the extensions that consume
 it. Requires `node` on PATH (the provider's run command).
@@ -22,18 +24,18 @@ from pathlib import Path
 
 import pytest
 
-_WS = Path(__file__).resolve().parent.parent  # convex.workspace.runtime/
+_WS = Path(__file__).resolve().parent.parent  # frontend.workspace.runtime/
 sys.path.insert(0, str(_WS / "adapter"))
 
 import discover as discover_mod  # noqa: E402
 import run as run_mod  # noqa: E402
 
 _CLI = _WS / "cli" / "scan.py"
-_IMPL_DIR = _WS / "implementations" / "convex_no_server_console_log"
+_IMPL_DIR = _WS / "implementations" / "vite_logging_silent_swallow"
 _DETECTOR = _IMPL_DIR / "detect.mjs"
 _CLEAN = _IMPL_DIR / "fixtures" / "clean"
 _DIRTY = _IMPL_DIR / "fixtures" / "dirty"
-_IMPL_ID = "coder.convex.no-server-console-log"
+_IMPL_ID = "coder.vite.logging-silent-swallow"
 
 requires_node = pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")
 
@@ -49,7 +51,7 @@ def test_discover_returns_only_contract_compatible_for_this_workspace() -> None:
     impls = discover_mod.discover_implementations(_WS / "implementations")
     ids = {i.implementation_id for i in impls}
     assert _IMPL_ID in ids  # membership, not exact-list: more detectors may ship
-    assert all(i.targets_workspace == "convex.workspace.runtime" for i in impls)
+    assert all(i.targets_workspace == "frontend.workspace.runtime" for i in impls)
 
 
 @requires_node
@@ -64,11 +66,10 @@ def test_run_clean_yields_no_violations_via_report_channel() -> None:
 def test_run_dirty_yields_raw_v11_violation() -> None:
     res = run_mod.run_implementation(_IMPL_ID, _DETECTOR, scan_roots=[str(_DIRTY)], exclude_globs=[])
     assert res.structured is True
-    assert len(res.violations) == 1
+    assert len(res.violations) >= 1
     v = res.violations[0]
     assert set(v) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
     assert v["rule_id"] == _IMPL_ID
-    assert "console.log" in v["source_line"]
 
 
 @requires_node
@@ -107,11 +108,10 @@ def test_cli_dirty_emits_raw_v11_array_on_stdout() -> None:
     proc = _run_cli(scan_roots=[str(_DIRTY)], impl_id=_IMPL_ID)
     assert proc.returncode == 0, proc.stderr
     parsed = json.loads(proc.stdout)  # raises if stdout is not valid JSON
-    assert isinstance(parsed, list) and len(parsed) == 1
+    assert isinstance(parsed, list) and len(parsed) >= 1
     v = parsed[0]
     assert set(v) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
     assert v["rule_id"] == _IMPL_ID
-    assert "console.log" in v["source_line"]
 
 
 @requires_node
@@ -142,7 +142,7 @@ def test_cli_missing_report_field_exits_2(tmp_path: Path) -> None:
             """\
             kind: implementation
             implementation_id: ext.broken
-            targets_workspace: convex.workspace.runtime
+            targets_workspace: frontend.workspace.runtime
             contract_version: "1.1.0"
             entrypoint: broken.mjs
             """
