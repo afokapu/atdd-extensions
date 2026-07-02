@@ -433,6 +433,66 @@ def test_publish_error_surfaces_stdout_the_incident_hid():
     assert "exited 1" in msg
 
 
+# --- Fix #2: --skip-existing + skipped_idempotent ------------------------- #
+def test_upload_command_uses_skip_existing():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    upload = [c for c in runner.commands if "upload" in c][0]
+    assert "--skip-existing" in upload  # never hard-fails on an existing version
+
+
+@pytest.mark.parametrize("stdout,stderr,expected", [
+    ("Skipping v3.150.0 because it appears to already exist", "", True),
+    ("Uploading dist/atdd-3.150.0-py3-none-any.whl\nView at ...", "", False),
+    ("", "some file already exists on the index", True),
+])
+def test_twine_skipped_detection(stdout, stderr, expected):
+    assert rw._twine_skipped(stdout, stderr) is expected
+
+
+def test_real_publish_reports_skipped_when_twine_skips():
+    runner = _RecordingRunner(procs={
+        "upload": _FakeProc(stdout="Skipping v3.152.0 because it already exists")})
+    assert rw.real_publish("3.152.0", "v3.152.0", env=_ARMED,
+                           runner=runner) == rw.SKIPPED_EXISTING
+
+
+def test_real_publish_reports_published_on_fresh_upload():
+    runner = _RecordingRunner(procs={
+        "upload": _FakeProc(stdout="Uploading atdd-3.153.0.tar.gz")})
+    assert rw.real_publish("3.153.0", "v3.153.0", env=_ARMED,
+                           runner=runner) == rw.PUBLISHED
+
+
+def test_drain_maps_skipped_existing_to_skipped_idempotent(store):
+    # A version published out-of-band (manually, like 3.152.0 in the incident):
+    # the store has NO external_ref, but PyPI already has it. --skip-existing
+    # makes twine SUCCEED-by-skipping; the drain must count it skipped_idempotent,
+    # NOT published and NOT failed, while still recording the ref + draining.
+    mid = _enqueue(store, "3.152.0")
+
+    def skipping_publisher(version, tag):
+        return rw.SKIPPED_EXISTING
+
+    res = rw.drain_version_decided(store, dry_run=False, publisher=skipping_publisher)
+
+    assert res.skipped_idempotent == 1 and res.published == 0 and res.failed == 0
+    assert res.tags == ["v3.152.0"]
+    assert store.external_refs.resolve("github", "tag", "v3.152.0") is not None
+    assert store.sync.pending_outbox() == []  # drained, not left pending
+    _ = mid
+
+
+def test_provider_push_marks_idempotent_when_publisher_skips():
+    def skipping_publisher(version, tag):
+        return rw.SKIPPED_EXISTING
+
+    prov = rw.GithubReleaseProvider(publisher=skipping_publisher,
+                                    tag_exists=lambda t: False)
+    out = prov.push(rw.VERSION_DECIDED_OPERATION, {"version": "3.152.0"})
+    assert out.records_ref and out.ref_data.get("idempotent") is True
+
+
 # --------------------------------------------------------------------------- #
 # Honest skips — what genuinely cannot run in this repo (never faked green)
 # --------------------------------------------------------------------------- #

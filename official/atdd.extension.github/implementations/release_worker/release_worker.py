@@ -60,6 +60,11 @@ RELEASE_OBJECT_UID = "release"
 TAG_REF_KIND = "tag"
 #: env guard for the real publish side-effect; must equal ``"1"`` to arm it.
 PUBLISH_ENV_GUARD = "ATDD_RELEASE_ALLOW_PUBLISH"
+#: publisher outcomes — a fresh upload vs. an idempotent skip of a version that
+#: already exists on the index (``twine upload --skip-existing`` succeeds either
+#: way; the drain accounting needs to tell them apart).
+PUBLISHED = "published"
+SKIPPED_EXISTING = "skipped_existing"
 
 
 class ReleaseError(Exception):
@@ -90,8 +95,10 @@ class PushOutcome:
 
 
 # A publisher takes (version, tag) and performs the ecosystem publish, raising
-# PublishError on failure. Injectable so tests never touch PyPI/network.
-Publisher = Callable[[str, str], None]
+# PublishError on failure. It returns ``SKIPPED_EXISTING`` when the version was
+# already on the index (idempotent skip), ``PUBLISHED`` (or ``None``, treated as
+# published) otherwise. Injectable so tests never touch PyPI/network.
+Publisher = Callable[[str, str], Optional[str]]
 #: A tag-existence probe (the idempotency oracle for the store-less provider).
 TagExists = Callable[[str], bool]
 
@@ -133,6 +140,21 @@ def git_tag_exists(tag: str, *, cwd: Optional[str] = None) -> bool:
     return tag in proc.stdout.split()
 
 
+#: substrings twine emits when ``--skip-existing`` skips an already-present file
+#: (both the modern "skipping ... already exist" and older phrasings).
+_TWINE_SKIP_MARKERS = ("skipping", "already exist")
+
+
+def _twine_skipped(stdout: str, stderr: str) -> bool:
+    """True if twine's output shows it SKIPPED an already-present version.
+
+    ``twine upload --skip-existing`` exits 0 whether it uploaded or skipped, so
+    the only signal that a version was already on the index is in its output.
+    """
+    blob = f"{stdout or ''}\n{stderr or ''}".lower()
+    return any(marker in blob for marker in _TWINE_SKIP_MARKERS)
+
+
 def _format_publish_error(tag: str, exc: subprocess.CalledProcessError) -> str:
     """Compose a *diagnosable* PublishError message from a failed subprocess.
 
@@ -147,7 +169,8 @@ def _format_publish_error(tag: str, exc: subprocess.CalledProcessError) -> str:
 
 
 def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None,
-                 cwd: Optional[str] = None, runner: Callable = subprocess.run) -> None:
+                 cwd: Optional[str] = None, remote: str = "origin",
+                 runner: Callable = subprocess.run) -> str:
     """Create the annotated git tag and upload to PyPI. **Double-gated.**
 
     Refuses to run unless ``ATDD_RELEASE_ALLOW_PUBLISH=1`` — so this can never be
@@ -155,6 +178,11 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
     *before* the caller records the ``external_ref`` (the ref is the durable
     completion marker), so a failed upload leaves nothing recorded and the next
     drain retries cleanly.
+
+    Idempotent by construction: ``twine upload --skip-existing`` succeeds (rather
+    than 403-ing) when the version is already on the index, and returns
+    :data:`SKIPPED_EXISTING` so the caller can account for it as an idempotent
+    skip instead of a fresh publish.
 
     ``runner`` (default :func:`subprocess.run`) is injectable so the command
     orchestration and its error surfacing can be exercised without spawning a
@@ -175,12 +203,17 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
             ["python", "-m", "build"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
-        runner(
-            ["python", "-m", "twine", "upload", "dist/*"],
+        upload = runner(
+            ["python", "-m", "twine", "upload", "--skip-existing", "dist/*"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
     except subprocess.CalledProcessError as exc:
         raise PublishError(_format_publish_error(tag, exc)) from exc
+
+    if _twine_skipped(getattr(upload, "stdout", "") or "",
+                      getattr(upload, "stderr", "") or ""):
+        return SKIPPED_EXISTING
+    return PUBLISHED
 
 
 def _default_publisher(env: Optional[Dict[str, str]] = None,
@@ -259,9 +292,12 @@ def drain_version_decided(
                       extra={"outbox_id": msg.id, "tag": tag})
             continue
 
+        status = PUBLISHED
         try:
             if not dry_run:
-                publisher(version, tag)  # raises PublishError → left pending below
+                # raises PublishError → left pending below; may return
+                # SKIPPED_EXISTING when the version was already on the index.
+                status = publisher(version, tag) or PUBLISHED
         except PublishError as exc:
             result.failed += 1
             result.errors.append(f"outbox#{msg.id} {tag}: {exc}")
@@ -269,17 +305,23 @@ def drain_version_decided(
                        extra={"outbox_id": msg.id, "tag": tag, "error": str(exc)})
             continue
 
+        skipped = status == SKIPPED_EXISTING
         store.external_refs.link(
             RELEASE_OBJECT_UID, provider, TAG_REF_KIND, tag,
             data={"version": version, "change_class": msg.payload.get("change_class"),
-                  "dry_run": dry_run},
+                  "dry_run": dry_run, "idempotent": skipped},
         )
         store.sync.mark_sent(msg.id)
-        result.published += 1
         result.drained_ids.append(msg.id)
         result.tags.append(tag)
-        _log.info("release published; tag ref recorded and outbox drained",
-                  extra={"outbox_id": msg.id, "tag": tag, "dry_run": dry_run})
+        if skipped:
+            result.skipped_idempotent += 1
+            _log.info("release version already on index; idempotent skip drained",
+                      extra={"outbox_id": msg.id, "tag": tag, "dry_run": dry_run})
+        else:
+            result.published += 1
+            _log.info("release published; tag ref recorded and outbox drained",
+                      extra={"outbox_id": msg.id, "tag": tag, "dry_run": dry_run})
 
     return result
 
@@ -329,10 +371,11 @@ class GithubReleaseProvider:
         if self._tag_exists(tag):
             _log.info("tag already exists; idempotent push no-op", extra={"tag": tag})
             return PushOutcome(RELEASE_OBJECT_UID, TAG_REF_KIND, tag, {"idempotent": True})
+        status = PUBLISHED
         if not self.dry_run:
-            self._publisher(version, tag)
+            status = self._publisher(version, tag) or PUBLISHED
         return PushOutcome(
             RELEASE_OBJECT_UID, TAG_REF_KIND, tag,
             {"version": version, "change_class": payload.get("change_class"),
-             "dry_run": self.dry_run},
+             "dry_run": self.dry_run, "idempotent": status == SKIPPED_EXISTING},
         )
