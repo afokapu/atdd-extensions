@@ -510,6 +510,38 @@ def test_provider_push_marks_idempotent_when_publisher_skips():
     assert out.records_ref and out.ref_data.get("idempotent") is True
 
 
+# --- Fix #4: the annotated tag is actually PUSHED (was created but orphaned) - #
+def test_real_publish_pushes_the_tag():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    pushes = [c for c in runner.commands if c[:2] == ["git", "push"]]
+    assert pushes == [["git", "push", "origin", "v3.150.0"]]
+
+
+def test_real_publish_pushes_to_configured_remote():
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, remote="upstream", runner=runner)
+    assert ["git", "push", "upstream", "v3.150.0"] in runner.commands
+
+
+def test_real_publish_reuses_existing_local_tag_and_still_pushes():
+    # Retry after a prior failed run left the local tag behind: creating it again
+    # would 'already exists'-crash and mask the real error. Skip create, push.
+    runner = _RecordingRunner(procs={"taglist": _FakeProc(stdout="v3.150.0\n")})
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    creates = [c for c in runner.commands if c[:2] == ["git", "tag"] and "-a" in c]
+    pushes = [c for c in runner.commands if c[:2] == ["git", "push"]]
+    assert creates == []                       # not re-created (idempotent)
+    assert pushes == [["git", "push", "origin", "v3.150.0"]]  # still pushed
+
+
+def test_real_publish_creates_tag_when_absent():
+    runner = _RecordingRunner()  # taglist returns empty → tag absent
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    creates = [c for c in runner.commands if c[:2] == ["git", "tag"] and "-a" in c]
+    assert creates == [["git", "tag", "-a", "v3.150.0", "-m", "Release v3.150.0"]]
+
+
 # --------------------------------------------------------------------------- #
 # Honest skips — what genuinely cannot run in this repo (never faked green)
 # --------------------------------------------------------------------------- #

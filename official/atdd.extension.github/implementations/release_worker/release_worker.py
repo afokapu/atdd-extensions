@@ -168,6 +168,17 @@ def _format_publish_error(tag: str, exc: subprocess.CalledProcessError) -> str:
     return f"publish of {tag} failed: {exc.cmd} exited {exc.returncode}: {detail}"
 
 
+def _local_tag_exists(runner: Callable, tag: str, cwd: Optional[str]) -> bool:
+    """True if ``tag`` already exists locally (via the injected ``runner``).
+
+    Uses the same runner as :func:`real_publish` so retry-safety is testable
+    without spawning git; parallels the store-less :func:`git_tag_exists`.
+    """
+    proc = runner(["git", "tag", "--list", tag],
+                  cwd=cwd, capture_output=True, text=True, check=False)
+    return tag in (getattr(proc, "stdout", "") or "").split()
+
+
 def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None,
                  cwd: Optional[str] = None, remote: str = "origin",
                  runner: Callable = subprocess.run) -> str:
@@ -182,7 +193,11 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
     Idempotent by construction: ``twine upload --skip-existing`` succeeds (rather
     than 403-ing) when the version is already on the index, and returns
     :data:`SKIPPED_EXISTING` so the caller can account for it as an idempotent
-    skip instead of a fresh publish.
+    skip instead of a fresh publish. The annotated tag is created only if absent
+    (a leftover local tag from a prior failed run would otherwise crash a re-run)
+    and is **pushed** to ``remote`` — the original flow created the tag but never
+    pushed it, so the provider-side ref never became visible. Ordering mirrors
+    core's ``publish.yml``: tag → push → build → upload.
 
     ``runner`` (default :func:`subprocess.run`) is injectable so the command
     orchestration and its error surfacing can be exercised without spawning a
@@ -195,8 +210,13 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
             f"(refusing to tag/publish {tag} without an explicit opt-in)"
         )
     try:
+        if not _local_tag_exists(runner, tag, cwd):
+            runner(
+                ["git", "tag", "-a", tag, "-m", f"Release {tag}"],
+                cwd=cwd, check=True, capture_output=True, text=True,
+            )
         runner(
-            ["git", "tag", "-a", tag, "-m", f"Release {tag}"],
+            ["git", "push", remote, tag],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
         runner(
