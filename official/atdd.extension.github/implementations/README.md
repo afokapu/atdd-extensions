@@ -1,6 +1,6 @@
 # `atdd.extension.github` — implementations
 
-> **Built.** These five implementations are real, discoverable, runnable units —
+> **Built.** These implementations are real, discoverable, runnable units —
 > each a directory with an `atdd.implementation.yaml` (declaring
 > `targets_workspace: atdd.workspace.python-pytest` + `contract_version`) plus a
 > uniquely-named pure decision module (e.g. `base_branch.py`) and its real pytest
@@ -25,6 +25,7 @@ wagon's job; the decision logic and its tests live here.
 | `pr_merge_gate` | PR-merge gate | `github.pr.merge-blocks-on-pre-smoke-close` | `check_merge_gate(auto_closes, phase)` — blocks auto-close while issue is pre-SMOKE; fails closed on unknown phase |
 | `pr_base_branch_validator` | validator | `github.pr.base-must-be-default-branch` | `check_base_branch(base, default)` |
 | `pr_mass_delete_guard` | validator | `github.pr.mass-delete-guard` | `check_mass_delete(files, lines, …)` — >100 files / >10,000 lines, with title-prefix / `[mass-delete-approved]` escape hatches |
+| `issue_advancement_gate` | post-merge gate | `github.issue.auto-phase-on-merge` | `check_issue_advancement(pr_merged, is_own_pr, auto_closes_issue, issue_phase, issue_state)` — own PR auto-closing an open issue still at INIT/PLANNED/RED/GREEN skips the lifecycle; SMOKE+ allowed, cross-PR advisory, unknown phase fails closed (migrates core COACH-PRGATE-0003) |
 
 ## Not yet built (deferred to a follow-up build slice)
 
