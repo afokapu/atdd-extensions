@@ -1,7 +1,7 @@
 schema_version: 1.1.0
 rule_id: coder.train.executional-machinery.definition
 kind: family
-status: draft
+status: active
 name: Executional Machinery — coder-layer runtime realizing planner artifacts as executable components (advisory semantic anchor, umbrella)
 statement: >-
   Executional machinery is the coder-layer runtime that realizes the planner's domain artifacts as

@@ -1,7 +1,7 @@
 schema_version: 1.1.0
 rule_id: coder.train.train-runner.definition
 kind: family
-status: draft
+status: active
 name: TrainRunner — runtime executor of a resolved train (advisory semantic anchor)
 statement: >-
   TrainRunner is the production runtime component that runs a train's wagons and carries Cargo between

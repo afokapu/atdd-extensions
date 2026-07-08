@@ -1,7 +1,7 @@
 schema_version: 1.1.0
 rule_id: coder.train.station-master.definition
 kind: family
-status: draft
+status: active
 name: Station Master — entrypoint routing direct and interlocking journeys to TrainRunner (advisory semantic anchor)
 statement: >-
   The Station Master is the consumer entrypoint that routes both direct-train and interlocking-enabled
