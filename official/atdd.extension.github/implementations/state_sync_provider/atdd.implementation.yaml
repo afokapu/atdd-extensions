@@ -1,0 +1,15 @@
+schema_version: "1.0.0"
+kind: implementation
+implementation_id: github.state.sync-store-from-issues.impl
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.0.0"
+
+# The convention (in this same extension) this provider realizes. Core
+# afokapu/atdd#1364 ships the provider-agnostic sync seam (register_provider +
+# discover_providers + the optional SyncProvider.ingest(store) hook); this is the
+# GitHub-side provider that fills the inbox from issues (ingest) and drains the
+# outbox to GitHub (push). The extension's relationships own the realizes edge;
+# this is the executable side. Never imports `atdd` (duck-typed store, structural
+# SyncProvider conformance).
+realizes_convention: github.state.sync-store-from-issues
+entrypoint: github_sync.py

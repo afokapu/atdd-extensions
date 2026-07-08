@@ -115,7 +115,7 @@ jobs:
           import discover, run
           ext = Path("official/atdd.extension.github/implementations").resolve()
           impls = discover.discover_implementations(ext)
-          assert len(impls) == 7, f"expected 7 implementations, discovered {len(impls)}"
+          assert len(impls) == 8, f"expected 8 implementations, discovered {len(impls)}"
           failed = []
           for i in impls:
               res = run.run_implementation(i.implementation_id, i.manifest_path.parent)
@@ -125,5 +125,5 @@ jobs:
                   print(res.stdout[-800:])
           if failed:
               sys.exit(f"implementations failed: {failed}")
-          print("all 7 github implementations discovered and green")
+          print("all 8 github implementations discovered and green")
           PY

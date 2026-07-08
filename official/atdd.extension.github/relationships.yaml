@@ -26,8 +26,20 @@ nodes:
   - github.shim.gh-issue-create-blocked
   - github.command.forbidden-gh-patterns
   - github.release.version-decided-drains-to-tag-and-publish
+  - github.state.sync-store-from-issues
 
 edges:
+  # --- store<->GitHub sync reads the label taxonomy and mirrors auto-phase ---
+  - from: github.state.sync-store-from-issues
+    to: github.issue.label-taxonomy
+    type: depends_on
+    rationale: Ingest maps each issue's atdd:{PHASE} label (defined by the taxonomy) to the canonical inbox state event.
+
+  - from: github.state.sync-store-from-issues
+    to: github.issue.auto-phase-on-merge
+    type: complements
+    rationale: Auto-phase writes the atdd:{PHASE} label on merge; this ingester reads it back into the State Store, closing the loop in the opposite direction.
+
   # --- label taxonomy underpins phase + auto-phase expression ---
   - from: github.issue.auto-phase-on-merge
     to: github.issue.label-taxonomy
