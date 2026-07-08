@@ -1,15 +1,15 @@
 """Real behavior tests for the github.issue.auto-phase-on-merge implementation
-(the post-merge issue-advancement gate).
+(the issue-advancement gate — a faithful migration of core SPEC-COACH-PRGATE-0003).
 
 Mirrors the sibling ``pr_merge_gate`` suite: a table-driven pytest over the pure
-decision function, importing the module directly (no GitHub API, no I/O). Each
-case supplies a full fact set and asserts the returned violation list.
+decision function, importing the module directly (no GitHub API, no I/O).
 
-Rule under test: a PR that auto-closes its OWN linked ATDD issue must leave that
-issue advanced (REFACTOR/COMPLETE, with SMOKE as the advance-in-progress
-boundary). An own PR that auto-closes an OPEN issue still at INIT/PLANNED/RED/
-GREEN skipped the lifecycle (the #256 stale-issue pattern) -> one violation.
-Cross-PR is advisory (never blocking here). Unknown/missing phase fails closed.
+Rule under test (core ``_STALE_PHASES``): a MERGED PR that auto-closes its OWN
+linked ATDD issue must not leave that issue OPEN and stuck at INIT/PLANNED. Only
+``{INIT, PLANNED}`` block; every other phase (RED/GREEN/SMOKE/REFACTOR/terminal)
+is advanced → clean. Fail-OPEN on unknown/None phase. Closed / terminal /
+non-lifecycle issues are skipped. Cross-PR is advisory. ``pr_merged`` is a hard
+precondition (post-merge stale detection only).
 """
 from __future__ import annotations
 
@@ -24,77 +24,78 @@ import issue_advancement as check  # noqa: E402
 
 
 def _facts(**overrides) -> dict:
-    """A blocking baseline fact set; override one axis per case."""
+    """A blocking baseline fact set (merged own PR, open INIT issue)."""
     base = dict(
         pr_merged=True,
         is_own_pr=True,
         auto_closes_issue=True,
-        issue_phase="RED",
+        issue_phase="INIT",
         issue_state="OPEN",
+        non_lifecycle=False,
         pr_ref="PR#40",
     )
     base.update(overrides)
     return base
 
 
-# --- RED cases: premature auto-close of an early-phase own issue -------------- #
+# --- RED cases: merged own PR left an open INIT/PLANNED issue ----------------- #
 
 
-@pytest.mark.parametrize("phase", ["INIT", "PLANNED", "RED", "GREEN"])
-def test_early_phase_own_autoclose_blocks(phase: str) -> None:
+@pytest.mark.parametrize("phase", ["INIT", "PLANNED"])
+def test_stale_phase_own_autoclose_blocks(phase: str) -> None:
     v = check.check_issue_advancement(**_facts(issue_phase=phase))
     assert len(v) == 1
     assert v[0]["rule_id"] == check.RULE_ID
     assert v[0]["location"] == "PR#40"
 
 
-def test_unknown_phase_fails_closed() -> None:
-    v = check.check_issue_advancement(**_facts(issue_phase="FROBNICATE"))
-    assert len(v) == 1
-    assert v[0]["rule_id"] == check.RULE_ID
-
-
-def test_none_phase_fails_closed() -> None:
-    v = check.check_issue_advancement(**_facts(issue_phase=None))
-    assert len(v) == 1
-
-
-def test_label_prefix_and_case_are_normalized_to_block() -> None:
-    assert len(check.check_issue_advancement(**_facts(issue_phase="atdd:red"))) == 1
+def test_stale_phase_prefix_and_case_are_normalized_to_block() -> None:
+    assert len(check.check_issue_advancement(**_facts(issue_phase="atdd:init"))) == 1
 
 
 # --- GREEN / clean cases ----------------------------------------------------- #
 
 
-@pytest.mark.parametrize("phase", ["REFACTOR", "COMPLETE"])
+@pytest.mark.parametrize("phase", ["RED", "GREEN", "SMOKE", "REFACTOR", "COMPLETE"])
 def test_advanced_phases_are_clean(phase: str) -> None:
+    # Only INIT/PLANNED are stale; RED/GREEN/SMOKE/REFACTOR/terminal are advanced.
     assert check.check_issue_advancement(**_facts(issue_phase=phase)) == []
 
 
-def test_smoke_is_clean() -> None:
-    # SMOKE is the advance-in-progress boundary (auto-phase advances
-    # SMOKE->REFACTOR on merge); it is treated as satisfied, not blocking.
-    assert check.check_issue_advancement(**_facts(issue_phase="SMOKE")) == []
+@pytest.mark.parametrize("phase", ["COMPLETE", "OBSOLETE"])
+def test_terminal_phases_are_clean(phase: str) -> None:
+    assert check.check_issue_advancement(**_facts(issue_phase=phase)) == []
+
+
+def test_unknown_phase_is_clean_fail_open() -> None:
+    # Fail-OPEN: an unrecognized phase isn't in _STALE_PHASES → no violation.
+    assert check.check_issue_advancement(**_facts(issue_phase="FROBNICATE")) == []
+
+
+def test_none_phase_is_clean_fail_open() -> None:
+    # Core: `if phase is None: continue` — deliberately no false positive.
+    assert check.check_issue_advancement(**_facts(issue_phase=None)) == []
 
 
 def test_advanced_prefix_and_case_are_normalized_to_clean() -> None:
     assert check.check_issue_advancement(**_facts(issue_phase="atdd:REFACTOR")) == []
 
 
-@pytest.mark.parametrize("phase", ["BLOCKED", "OBSOLETE"])
-def test_escape_phases_are_out_of_scope(phase: str) -> None:
-    assert check.check_issue_advancement(**_facts(issue_phase=phase)) == []
-
-
 def test_non_autoclosing_pr_is_never_blocked() -> None:
-    # Even at RED, a PR that closes no issue cannot advance one prematurely.
+    # Even at INIT, a PR that closes no issue cannot leave one stale.
     assert check.check_issue_advancement(**_facts(auto_closes_issue=False)) == []
 
 
 def test_closed_issue_is_clean() -> None:
-    # GitHub's auto-close already ran; nothing left to gate (terminal-safe).
+    # GitHub's auto-close already ran; core skips CLOSED issues.
     assert check.check_issue_advancement(**_facts(issue_state="CLOSED")) == []
     assert check.check_issue_advancement(**_facts(issue_state="closed")) == []
+
+
+def test_non_lifecycle_issue_is_skipped() -> None:
+    # Tracking/meta/epic/parent issues advance by children, not a label swap
+    # (core _issue_is_non_lifecycle skip) — clean even at INIT.
+    assert check.check_issue_advancement(**_facts(non_lifecycle=True)) == []
 
 
 def test_cross_pr_is_advisory_not_blocking() -> None:
@@ -102,10 +103,6 @@ def test_cross_pr_is_advisory_not_blocking() -> None:
     assert check.check_issue_advancement(**_facts(is_own_pr=False)) == []
 
 
-def test_decision_is_merge_agnostic() -> None:
-    # pr_merged annotates evidence but does not change the decision: the gate
-    # blocks the pre-merge (delivering) and detects the post-merge (stale) case
-    # on the same criteria.
-    merged = check.check_issue_advancement(**_facts(pr_merged=True))
-    open_pr = check.check_issue_advancement(**_facts(pr_merged=False))
-    assert len(merged) == 1 and len(open_pr) == 1
+def test_unmerged_pr_is_not_gated() -> None:
+    # Hard precondition: core scans merged PRs only (post-merge stale detection).
+    assert check.check_issue_advancement(**_facts(pr_merged=False)) == []

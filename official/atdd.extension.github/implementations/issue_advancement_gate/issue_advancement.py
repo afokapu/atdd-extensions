@@ -1,38 +1,41 @@
 """Implementation of github.issue.auto-phase-on-merge — the issue-advancement gate.
 
-Pure decision: a PR that auto-closes its OWN linked ATDD issue (via
-Closes/Fixes/Resolves #N or the closingIssuesReferences field) must leave that
-issue at a phase where the lifecycle is delivered — REFACTOR or COMPLETE, with
-SMOKE as the advance-in-progress boundary. If the delivering (own) PR auto-closes
-an issue that is still OPEN and stuck at an early phase (INIT/PLANNED/RED/GREEN),
-the ATDD lifecycle was skipped: GitHub's auto-close fires before the phases ran
-(the #256 stale-issue incident, where a PR merges but its issue never advanced).
-Realizes the core single-step-advance-on-delivery expectation on the GitHub
-platform.
+Faithful migration of core's SPEC-COACH-PRGATE-0003
+(``src/atdd/coach/validators/test_issue_advancement.py``,
+``scan_issue_advancement`` / ``_STALE_PHASES``) into a PURE decision core on the
+GitHub platform. No GitHub API, no I/O — the caller supplies every fact.
 
-Scope (mirrors core #1296's `_current_pr_number` logic): the gate is BLOCKING
-only for the *own* PR — the PR currently under evaluation. Cross-PR observations
-are advisory; the caller decides own-vs-cross and passes `is_own_pr`. This
-function returns no blocking violation for a cross-PR fact set.
+Rule (mirrors the core validator exactly): a MERGED PR that auto-closes its OWN
+linked ATDD issue must not leave that issue still OPEN and stuck at an early
+phase. "Early" is exactly ``{INIT, PLANNED}`` (core ``_STALE_PHASES``) — a merged
+PR whose linked issue is still at INIT/PLANNED means the lifecycle was skipped
+(the #256 stale-issue incident). Every other phase (RED, GREEN, SMOKE, REFACTOR,
+and the terminal COMPLETE/OBSOLETE) counts as advanced → clean.
 
-No GitHub API — the caller supplies every fact: whether the PR merged, whether it
-is the own PR, whether it auto-closes an issue, and that issue's phase label +
-open/closed state. Own-vs-cross determination and closing-reference parsing stay
-outside (the runtime wagon's job), keeping this deterministic and testable.
+Deliberate fail-OPEN semantics, faithful to core:
+  * unknown / missing phase label → NO violation (core: ``if phase is None:
+    continue``; an unrecognized phase simply isn't in ``_STALE_PHASES``). This
+    avoids false positives on an unresolvable phase.
+  * closed issue → clean (core skips ``issue_state == "CLOSED"`` — GitHub's
+    auto-close already handled it).
+  * terminal COMPLETE/OBSOLETE → clean (never re-advanced).
+  * non-lifecycle issue (tracking/meta/epic/parent) → clean (core
+    ``_issue_is_non_lifecycle`` skip). The caller supplies ``non_lifecycle``.
+
+Scope (core #1296's ``_current_pr_number`` logic): BLOCKING only for the *own*
+PR under evaluation; cross-PR observations are advisory — the caller decides
+own-vs-cross and passes ``is_own_pr``. ``pr_merged`` is a hard precondition: the
+core validator only ever scans merged PRs (post-merge stale detection), so an
+unmerged PR is never gated here.
 """
 from __future__ import annotations
 
 RULE_ID = "github.issue.auto-phase-on-merge"
 
-# Early phases: a delivering PR's auto-close here is premature — closing the
-# issue skips the remaining lifecycle.
-_ADVANCEMENT_BLOCKED = frozenset({"INIT", "PLANNED", "RED", "GREEN"})
-# Delivered-enough phases: auto-close is legitimate. SMOKE is the
-# advance-in-progress boundary (auto-phase advances SMOKE->REFACTOR on merge) and
-# is treated as satisfied, not blocking.
-_ADVANCEMENT_OK = frozenset({"SMOKE", "REFACTOR", "COMPLETE"})
-# Escape phases — the standard 6-phase advancement does not apply.
-_OUT_OF_SCOPE = frozenset({"BLOCKED", "OBSOLETE"})
+# Core _STALE_PHASES: a merged PR whose linked issue is still here skipped the
+# lifecycle. Everything else (RED/GREEN/SMOKE/REFACTOR + terminal + unknown) is
+# treated as advanced / out-of-scope → clean (fail-open).
+_STALE_PHASES = frozenset({"INIT", "PLANNED"})
 
 _CLOSED_STATES = frozenset({"CLOSED"})
 
@@ -50,50 +53,44 @@ def check_issue_advancement(
     auto_closes_issue: bool,
     issue_phase: str | None,
     issue_state: str | None,
+    non_lifecycle: bool = False,
     pr_ref: str = "PR",
 ) -> list[dict]:
-    """Return a violation iff the own PR auto-closes an open, un-advanced issue.
+    """Return a violation iff a merged own PR left an open INIT/PLANNED issue.
 
     Empty list == clean. At most one violation is returned.
     """
-    # A PR that closes no issue can never advance one prematurely.
+    # Post-merge stale detection only: the core validator scans merged PRs.
+    if not pr_merged:
+        return []
+    # A PR that closes no issue can never leave one stale via auto-close.
     if not auto_closes_issue:
         return []
     # Cross-PR is advisory only (core #1296 own-PR scoping) — never blocking here.
     if not is_own_pr:
         return []
-    # Already closed: GitHub's auto-close ran; nothing left to gate (terminal-safe).
+    # Already closed: GitHub's auto-close ran; nothing to gate (core CLOSED skip).
     if _normalize(issue_state) in _CLOSED_STATES:
+        return []
+    # Non-lifecycle issue (tracking/meta/epic/parent) — advancement is the
+    # cumulative state of children, not a single label transition (core skip).
+    if non_lifecycle:
         return []
 
     phase = _normalize(issue_phase)
-    merged_desc = "merged" if pr_merged else "open"
-
-    if phase in _ADVANCEMENT_OK or phase in _OUT_OF_SCOPE:
+    # Fail-OPEN on an unresolvable/unknown phase (core: phase is None → skip; an
+    # unrecognized phase is simply not in _STALE_PHASES). No false positives.
+    if phase not in _STALE_PHASES:
         return []
 
-    if phase in _ADVANCEMENT_BLOCKED:
-        return [
-            {
-                "rule_id": RULE_ID,
-                "location": pr_ref,
-                "evidence": (
-                    f"{pr_ref} ({merged_desc}) auto-closes an ATDD issue still at "
-                    f"atdd:{phase}; the linked issue must advance to REFACTOR/"
-                    f"COMPLETE before its delivering PR closes it"
-                ),
-            }
-        ]
-
-    # Unknown / missing phase label — fail closed (treat as blocking) rather than
-    # silently allow a premature auto-close.
     return [
         {
             "rule_id": RULE_ID,
             "location": pr_ref,
             "evidence": (
-                f"{pr_ref} ({merged_desc}) auto-closes an issue with unrecognized "
-                f"phase {issue_phase!r}"
+                f"{pr_ref} merged but auto-closes an ATDD issue still at "
+                f"atdd:{phase}; a merged PR's linked issue must have advanced past "
+                f"INIT/PLANNED (lifecycle skipped — SPEC-COACH-PRGATE-0003)"
             ),
         }
     ]
