@@ -1,7 +1,7 @@
 schema_version: 1.1.0
 rule_id: coder.train.cargo.definition
 kind: family
-status: draft
+status: active
 name: Cargo — artifact data plane carried by TrainRunner (advisory semantic anchor)
 statement: >-
   Cargo is the artifact data plane carried by TrainRunner between wagons inside a selected train:
