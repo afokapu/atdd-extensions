@@ -60,6 +60,13 @@ owns:
     - conventions/tester.interlocking.trace-binds-declared-route.convention.yaml
     # #27 bilateral declaration<->runtime<->station<->trace binding (the systemic-closure convention)
     - conventions/coder.train.interlocking-bilateral-binding.convention.yaml
+    # runtime-machinery definition anchors (kind: family, advisory) — coder-layer
+    # semantic anchors for the runtime concepts the enforcing rules above operationalize.
+    - conventions/coder.train.train-runner.definition.convention.yaml
+    - conventions/coder.train.interlocking-runner.definition.convention.yaml
+    - conventions/coder.train.cargo.definition.convention.yaml
+    - conventions/coder.train.station-master.definition.convention.yaml
+    - conventions/coder.train.executional-machinery.definition.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
