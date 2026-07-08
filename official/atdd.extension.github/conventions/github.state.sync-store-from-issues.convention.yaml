@@ -1,0 +1,73 @@
+schema_version: 1.1.0
+rule_id: github.state.sync-store-from-issues
+kind: rule
+status: active
+name: The GitHub provider syncs the State Store from GitHub issues (ingest + push)
+statement: >-
+  Core (the State Store, afokapu/atdd#1364) is provider-agnostic: `atdd state sync` drives providers
+  registered by name and imports no provider. The GitHub extension MUST supply that provider for the
+  `github` key. It heals `store<->GitHub` in BOTH directions: on ingest it polls GitHub issues
+  (`gh issue list --json number,title,state,labels`), maps each to a canonical inbox event, and
+  `enqueue_inbox("github", event)` so core's `apply_inbox` drains it onto local object state; on push it
+  drains the outbox to GitHub (issue create / label / comment) and records the issue `external_ref`.
+  This closes the ingest gap — before this, nothing filled the inbox, so the store drifted from GitHub.
+content:
+  summary: >-
+    Core owns the queues and the generic drain/apply engine; the GitHub-specific poll + issue->event
+    mapping + gh side-effects live entirely in this extension, plugged into core's registry seam. Swap
+    GitHub for GitLab/Jira by installing a different provider — never by editing core.
+  normative_text: |
+    Ingest contract (remote -> local; fills core's inbox, core drains it):
+
+      - Poll: `gh issue list --label atdd-issue --state all --json number,title,state,labels`
+        (reuses reconcile()'s fetch shape). gh access is injectable so tests never shell out.
+      - Map each issue to ONE canonical event (atdd.state.sync_engine kinds):
+          * closed issue                      -> EVENT_EXTERNAL_STATE, state = COMPLETE (terminal)
+          * a local external_ref exists + an `atdd:<PHASE>` label -> EVENT_EXTERNAL_STATE, state = PHASE
+          * no local ref (new/missing issue)  -> EVENT_EXTERNAL_IMPORTED (core upserts the work_item +
+                                                 links provider=github, ref_kind=issue, ref_value=<n>)
+          * known + open + no phase label      -> no event (nothing changed)
+      - Enqueue only: `store.sync.enqueue_inbox("github", event)`. Draining is core's provider-agnostic
+        `apply_inbox` — the extension never mutates object state directly.
+      - Isolation: one malformed issue is logged + skipped; it never aborts the whole poll.
+
+    Push contract (local -> remote; mirrors the relocated core provider):
+
+      - `create_issue` -> create the GitHub issue, return PushOutcome(object_uid, issue, <number>);
+        `add_label` / `comment` -> perform the edit, return None. Unknown operation raises.
+
+    Separation (core/extension split): the provider NEVER imports `atdd`. It duck-types the store's
+    shipped sync surface (`store.sync.enqueue_inbox`, `store.external_refs.resolve`, `store.objects`)
+    and conforms structurally to core's SyncProvider Protocol (name + push + optional ingest(store)).
+    Registration is in-process via core's `register_provider` seam, called by the extension's sync
+    runner (the composition root that imports both core and the provider) — core never imports the
+    provider. atdd extensions are not pip distributions, so the entry-point path core also offers is a
+    secondary convenience, not the mechanism this extension relies on.
+  fix_hint: |
+    If the store drifts from GitHub (labels moved but object state stale, or a new issue is missing):
+      1. Confirm the GitHub provider is registered for the `github` key (the sync runner calls
+         `github_sync.register(register_provider)` before `atdd state sync`).
+      2. Run the heal: `atdd-github-sync` (ingest + push), or `atdd state sync --ingest` for ingest-only.
+      3. Ingest is a poll, not a webhook: it reflects GitHub state at call time. Re-run after a label
+         change to re-sync.
+      4. A known issue with no `atdd:<PHASE>` label enqueues nothing by design (nothing to sync).
+  exceptions:
+    - a stack tracking work on a non-GitHub platform installs its own provider (GitLab/Jira/cmux); the
+      core seam and inbox/outbox contract are unchanged.
+metadata:
+  severity: 3
+  disposition: documentation-only
+  introduced_in: 0.1.0
+parity:
+  source_fragments_preserved: false
+  examples_preserved: false
+  implementation_preserved: true
+  fix_hint_preserved: true
+  reviewed_at: '2026-07-08'
+terms:
+- term_id: inbox_event
+  text: a provider-neutral canonical event core's apply_inbox drains — EVENT_EXTERNAL_STATE (set a
+    linked object's state) or EVENT_EXTERNAL_IMPORTED (upsert an object + link its external_ref).
+- term_id: issue_external_ref
+  text: the link (provider=github, ref_kind=issue, ref_value=<number>) binding a GitHub issue to a
+    local work_item; its presence decides state-update vs. import on ingest.

@@ -40,6 +40,7 @@ owns:
     - conventions/github.shim.gh-issue-create-blocked.convention.yaml
     - conventions/github.command.forbidden-gh-patterns.convention.yaml
     - conventions/github.release.version-decided-drains-to-tag-and-publish.convention.yaml
+    - conventions/github.state.sync-store-from-issues.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
@@ -51,6 +52,7 @@ owns:
     - implementations/forbidden_command_policy
     - implementations/release_worker
     - implementations/issue_advancement_gate
+    - implementations/state_sync_provider
   schemas: []
   gates: []
   scopes:
