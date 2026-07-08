@@ -50,6 +50,7 @@ owns:
     - implementations/pr_mass_delete_guard
     - implementations/forbidden_command_policy
     - implementations/release_worker
+    - implementations/issue_advancement_gate
   schemas: []
   gates: []
   scopes:
