@@ -9,12 +9,16 @@ implementation_id: tester.interlocking.route-coverage.impl
 targets_workspace: atdd.workspace.python-pytest
 contract_version: "1.1.0"
 
-# PRIMARY back-reference: the headline obligation this detector realizes (the
-# scaffold-pinned binding, kept stable per #24). The same detector also co-emits
-# three sibling tester rule_ids (see emits_rule_ids) — exactly the multi-rule
-# python-pytest pattern used by security_patterns_detector (one realizes_convention
-# + N emits_rule_ids). All four convention nodes live in ../../conventions/.
-realizes_convention: tester.interlocking.route-coverage
+# The obligations this detector OWNS — all four, since no other implementation
+# realizes them and each has a convention node in ../../conventions/. Ownership is
+# what the core composer binds (afokapu/atdd#1359); emits_rule_ids below is
+# co-emission and does not create a binding. Declaring only the headline rule left
+# the other three unbound and therefore never enforced.
+realizes_convention:
+  - tester.interlocking.route-coverage
+  - tester.interlocking.production-runner-used
+  - tester.interlocking.smoke-coverage-for-station-master
+  - tester.interlocking.trace-binds-declared-route
 
 # One run surfaces FOUR rule_ids — all strict — over the v1.1 multi-rule output
 # channel. Declared so the resolver knows one run emits more than the primary
