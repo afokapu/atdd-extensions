@@ -5,16 +5,21 @@ schema_version: "1.0.0"
 # Boundary (see README + docs/atdd-extension-github-boundary.md in core, issue
 # afokapu/atdd#1118):
 #   "Core owns the lifecycle. This extension maps GitHub concepts onto the
-#    lifecycle." This extension contributes GitHub platform behavior (labels,
-#   PR-merge gates, gh shims, forbidden-command patterns, issue/PR trailers).
-#   It NEVER redeclares a core lifecycle/role/graph node — it references them.
+#    lifecycle." After the coach-orchestration decommission (core #1487 and the
+#   removal of the `atdd issue` CLI, #1309), this package no longer carries the
+#   gh PATH shim, the forbidden-command classifier, or the PR/issue lifecycle
+#   gates — those enforced an orchestration model core is retiring. What remains
+#   are the GitHub-side POST-MERGE SIDE-EFFECTS core triggers via provider-neutral
+#   signals (release tag+publish, store<->issue sync) plus the label taxonomy the
+#   sync provider reads. It NEVER redeclares a core lifecycle/role/graph node.
 extension_id: atdd.extension.github
 version: "0.1.0"
 kind: extension
 
 # This extension realizes coach-protocol behavior on the GitHub platform. The
-# implementations are PR/issue gates and PATH shims, not a single role's
-# source surface, so the closest role is the lifecycle orchestrator (coach).
+# surviving implementations are post-merge provider side-effect workers (the
+# release drain and the store<->GitHub sync provider), so the closest role is
+# still the lifecycle orchestrator (coach).
 role: coach
 flow_wagon: govern-lifecycle
 feature: github-platform-binding
@@ -25,40 +30,24 @@ feature: github-platform-binding
 # provider. See implementations/README.md.
 owns:
   conventions:
-    - conventions/github.issue.tracking-on-github-issues.convention.yaml
+    # The label taxonomy survives as the atdd:{PHASE} label contract the sync
+    # provider reads; the release + state-sync nodes are the post-merge
+    # side-effects. The orchestration conventions (shim, forbidden-command, and
+    # the PR/issue lifecycle gates) were removed with their implementations.
     - conventions/github.issue.label-taxonomy.convention.yaml
-    - conventions/github.issue.auto-phase-on-merge.convention.yaml
-    - conventions/github.issue.projects-access-fallback.convention.yaml
-    - conventions/github.issue.create-via-atdd-not-gh.convention.yaml
-    - conventions/github.issue.trailer-required.convention.yaml
-    - conventions/github.pr.merge-blocks-on-pre-smoke-close.convention.yaml
-    - conventions/github.pr.closes-keyword-discipline.convention.yaml
-    - conventions/github.pr.green-ships-without-smoke.convention.yaml
-    - conventions/github.pr.runtime-artifacts-blocked.convention.yaml
-    - conventions/github.pr.base-must-be-default-branch.convention.yaml
-    - conventions/github.pr.mass-delete-guard.convention.yaml
-    - conventions/github.shim.gh-issue-create-blocked.convention.yaml
-    - conventions/github.command.forbidden-gh-patterns.convention.yaml
     - conventions/github.release.version-decided-drains-to-tag-and-publish.convention.yaml
     - conventions/github.state.sync-store-from-issues.convention.yaml
   relationships:
     - relationships.yaml
   implementations:
-    # Real, discoverable + runnable units — see implementations/README.md.
-    - implementations/gh_path_shim
-    - implementations/pr_merge_gate
-    - implementations/pr_base_branch_validator
-    - implementations/pr_mass_delete_guard
-    - implementations/forbidden_command_policy
+    # Post-merge provider side-effect workers — see implementations/README.md.
     - implementations/release_worker
-    - implementations/issue_advancement_gate
     - implementations/state_sync_provider
   schemas: []
   gates: []
-  scopes:
-    # Selector types this extension uses (boundary spec §6, §7).
-    - github_issue
-    - github_pr
+  # No selector types: github_issue/github_pr were defined by (and only used by)
+  # the removed issue/PR lifecycle conventions.
+  scopes: []
 
 # This extension TARGETS the core coach protocol. It does not redeclare any core
 # lifecycle/role/graph node — every GitHub behavior maps onto a core node that
@@ -69,25 +58,16 @@ depends_on:
     - atdd.core.relationship-schema
     - atdd.core.implementation-schema
     - atdd.core.violation-output-schema
-  # Core coach nodes (shipped in Slice 2 / core PR #1117) that the left-column
+  # Core coach nodes (shipped in Slice 2 / core PR #1117) that the surviving
   # GitHub behaviors realize. Referenced by id; never copied here. Core remains
-  # the authority for WHEN a unit may advance or close.
-  # targets.coach_nodes lists ONLY shipped, resolvable core nodes. A loader may
-  # assume every entry here resolves.
+  # the authority. targets.coach_nodes lists ONLY shipped, resolvable core nodes.
+  # The single-step-advance / no-terminal / runtime-state / atomic-registry
+  # targets left with the lifecycle gates that referenced them; only the
+  # phase-machine (expressed by the surviving label taxonomy) remains.
   targets:
     coach_nodes:
       - coach.lifecycle.phase-machine
-      - coach.lifecycle.single-step-advance-on-delivery
-      - coach.lifecycle.no-terminal-before-lifecycle-satisfied
-      - coach.execution.runtime-state-not-a-delivery-artifact
-      - coach.execution.atomic-registry-write
-  # design_candidates are NOT yet shipped core nodes — kept out of targets so
-  # depends_on stays strictly resolvable. The README mapping table carries the
-  # narrative reference. Tracked in afokapu/atdd#1122.
-  design_candidates:
-    coach_nodes:
-      - coach.execution.work-provenance
-  # Implementations (validators / shims) run inside this shared workspace
+  # Implementations run inside this shared workspace
   # provider; each implementations/<name>/atdd.implementation.yaml echoes the
   # target id + a contract_version satisfying the range below.
   workspaces:

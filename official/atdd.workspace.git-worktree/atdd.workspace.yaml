@@ -44,9 +44,9 @@ capabilities:
         danger_keys: [core.bare, core.worktree, core.hooksPath]
   # ── source_control.commit-trailers ───────────────────────────────────────
   # Mechanics for appending machine-readable trailers to commit messages (the
-  # POLICY — which trailers are required — is owned by the consuming extension,
-  # e.g. atdd.extension.github's trailer-required convention). This capability
-  # owns only the insertion mechanism and idempotency, never a trailer schema.
+  # POLICY — which trailers are required — is owned by the consuming extension).
+  # This capability owns only the insertion mechanism and idempotency, never a
+  # trailer schema.
   - capability_id: source_control.commit-trailers
     domain: source_control
     type: commit-trailers

@@ -10,101 +10,24 @@ schema_version: "1.0.0"
 # mapping table — NOT as graph edges. Only extension-internal edges live here.
 graph_id: atdd.extension.github.relationships
 
+# After the coach-orchestration decommission this graph holds only the surviving
+# post-merge side-effect nodes and the label contract the sync provider reads.
+# The removed shim / forbidden-command / PR-and-issue lifecycle nodes and every
+# edge touching them left with their implementations.
 nodes:
-  - github.issue.tracking-on-github-issues
   - github.issue.label-taxonomy
-  - github.issue.auto-phase-on-merge
-  - github.issue.projects-access-fallback
-  - github.issue.create-via-atdd-not-gh
-  - github.issue.trailer-required
-  - github.pr.merge-blocks-on-pre-smoke-close
-  - github.pr.closes-keyword-discipline
-  - github.pr.green-ships-without-smoke
-  - github.pr.runtime-artifacts-blocked
-  - github.pr.base-must-be-default-branch
-  - github.pr.mass-delete-guard
-  - github.shim.gh-issue-create-blocked
-  - github.command.forbidden-gh-patterns
   - github.release.version-decided-drains-to-tag-and-publish
   - github.state.sync-store-from-issues
 
 edges:
-  # --- store<->GitHub sync reads the label taxonomy and mirrors auto-phase ---
+  # store<->GitHub sync reads the atdd:{PHASE} label the taxonomy defines.
   - from: github.state.sync-store-from-issues
     to: github.issue.label-taxonomy
     type: depends_on
     rationale: Ingest maps each issue's atdd:{PHASE} label (defined by the taxonomy) to the canonical inbox state event.
 
-  - from: github.state.sync-store-from-issues
-    to: github.issue.auto-phase-on-merge
-    type: complements
-    rationale: Auto-phase writes the atdd:{PHASE} label on merge; this ingester reads it back into the State Store, closing the loop in the opposite direction.
-
-  # --- label taxonomy underpins phase + auto-phase expression ---
-  - from: github.issue.auto-phase-on-merge
-    to: github.issue.label-taxonomy
-    type: depends_on
-    rationale: Auto-phase advances by swapping the atdd:{PHASE} label defined by the taxonomy.
-
-  - from: github.issue.projects-access-fallback
-    to: github.issue.auto-phase-on-merge
-    type: refines
-    rationale: The fallback narrows auto-phase behavior when the workflow token lacks Projects R/W.
-
-  - from: github.issue.projects-access-fallback
-    to: github.issue.label-taxonomy
-    type: depends_on
-    rationale: Label-only sync degrades to swapping the taxonomy's atdd:{PHASE} label.
-
-  - from: github.issue.label-taxonomy
-    to: github.issue.tracking-on-github-issues
-    type: part_of
-    rationale: The label taxonomy is one facet of the three-layer GitHub issue tracking model.
-
-  # --- issue-create enforcement triad realizes one intent across sites ---
-  - from: github.shim.gh-issue-create-blocked
-    to: github.issue.create-via-atdd-not-gh
-    type: enforces
-    rationale: The PATH shim + pre-commit grep are the harness-agnostic enforcement of the create-via-atdd rule.
-
-  - from: github.command.forbidden-gh-patterns
-    to: github.issue.create-via-atdd-not-gh
-    type: enforces
-    rationale: The in-harness classifier hard-blocks gh issue create, the L1 enforcement of the same rule.
-
-  # --- PR auto-close discipline cluster ---
-  - from: github.pr.closes-keyword-discipline
-    to: github.pr.merge-blocks-on-pre-smoke-close
-    type: complements
-    rationale: Keyword discipline ensures the body's declared close set matches what the pre-smoke gate evaluates.
-
-  - from: github.pr.green-ships-without-smoke
-    to: github.pr.merge-blocks-on-pre-smoke-close
-    type: complements
-    rationale: Both guard code/auto-close crossing the PR boundary before SMOKE evidence exists.
-
-  # --- forbidden-pattern policy also governs PR creation safety ---
-  - from: github.command.forbidden-gh-patterns
-    to: github.pr.base-must-be-default-branch
-    type: enforces
-    rationale: Blocking gh pr create routes PR creation through atdd pr, which enforces the default-branch base rule.
-
-  # --- coverage: wire the remaining standalone nodes into the local graph ---
-  - from: github.issue.trailer-required
-    to: github.issue.tracking-on-github-issues
-    type: part_of
-    rationale: The required trailer (Issue #N) is the mechanism that binds a commit/PR to the tracked GitHub issue.
-  - from: github.pr.mass-delete-guard
-    to: github.pr.merge-blocks-on-pre-smoke-close
-    type: complements
-    rationale: The mass-delete escape-hatch guard complements the pre-smoke-close merge gate as a PR-merge safety check.
-  - from: github.pr.runtime-artifacts-blocked
-    to: github.pr.merge-blocks-on-pre-smoke-close
-    type: complements
-    rationale: Blocking runtime artifacts in the PR diff complements the merge gate by keeping non-deliverable state out of a merging PR.
-
-  # --- post-merge provider side-effects core triggers via neutral signals ---
+  # the two surviving post-merge provider side-effects are siblings.
   - from: github.release.version-decided-drains-to-tag-and-publish
-    to: github.issue.auto-phase-on-merge
+    to: github.state.sync-store-from-issues
     type: complements
-    rationale: Both are post-merge GitHub side-effects that drain a provider-neutral core signal — auto-phase swaps the atdd:{PHASE} label, the release worker drains version_decided into a tag + publish — keeping core decision-only and the GitHub effect in the extension.
+    rationale: Both are post-merge GitHub-provider side-effects that drain a provider-neutral core outbox signal (version_decided -> tag + publish; sync outbox -> GitHub), keeping core decision-only and the GitHub effect in the extension.

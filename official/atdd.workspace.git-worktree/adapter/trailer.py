@@ -3,9 +3,8 @@
 The ``source_control.commit-trailers`` capability owns the MECHANISM for adding
 machine-readable trailers to commit messages — idempotent insertion into the
 message footer via ``git interpret-trailers``. It owns no trailer SCHEMA: which
-trailers are required is policy owned by the consuming extension (e.g.
-atdd.extension.github's trailer-required convention). Contract stub — see
-``isolate.py``.
+trailers are required is policy owned by the consuming extension. Contract stub
+— see ``isolate.py``.
 """
 from __future__ import annotations
 

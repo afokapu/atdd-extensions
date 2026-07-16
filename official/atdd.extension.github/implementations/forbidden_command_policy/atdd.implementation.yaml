@@ -1,8 +1,0 @@
-schema_version: "1.0.0"
-kind: implementation
-implementation_id: github.command.forbidden-gh-patterns.impl
-targets_workspace: atdd.workspace.python-pytest
-contract_version: "1.0.0"
-
-realizes_convention: github.command.forbidden-gh-patterns
-entrypoint: forbidden_command.py

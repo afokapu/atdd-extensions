@@ -54,7 +54,7 @@ jobs:
           p = sys.argv[1]
           d = yaml.safe_load(open(p))
           d.setdefault("realizes", []).append({
-              "extension_node": "github.pr.merge-blocks-on-pre-smoke-close",
+              "extension_node": "github.state.sync-store-from-issues",
               "core_node": "coach.bogus.does-not-exist",   # unresolved -> must fail
           })
           yaml.safe_dump(d, open(p, "w"), sort_keys=False)
@@ -115,7 +115,7 @@ jobs:
           import discover, run
           ext = Path("official/atdd.extension.github/implementations").resolve()
           impls = discover.discover_implementations(ext)
-          assert len(impls) == 8, f"expected 8 implementations, discovered {len(impls)}"
+          assert len(impls) == 2, f"expected 2 implementations, discovered {len(impls)}"
           failed = []
           for i in impls:
               res = run.run_implementation(i.implementation_id, i.manifest_path.parent)
@@ -125,5 +125,5 @@ jobs:
                   print(res.stdout[-800:])
           if failed:
               sys.exit(f"implementations failed: {failed}")
-          print("all 8 github implementations discovered and green")
+          print("all 2 github implementations discovered and green")
           PY
