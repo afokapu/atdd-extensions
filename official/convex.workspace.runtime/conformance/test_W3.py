@@ -30,8 +30,8 @@ _W3_RULE_IDS = {
     "coder.convex.dto-purity",
     "coder.convex.dto-mapper",
 }
-# W3 convention nodes live in the sibling convex.extension.coder package.
-_NODES_DIR = _WS.parent / "convex.extension.coder" / "conventions"
+# W3 convention nodes live in the sibling convex.extension.coder.base package.
+_NODES_DIR = _WS.parent / "convex.extension.coder.base" / "conventions"
 
 # (impl_dir, alias-subdir, rule_id) — one case per family member.
 _CASES = []

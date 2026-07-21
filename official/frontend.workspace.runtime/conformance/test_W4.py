@@ -38,7 +38,7 @@ def test_manifest_conforms_to_implementation_schema():
 
 
 def test_every_rule_realized_by_a_convention_node():
-    conv_dir = _WS.parent / "frontend.extension.vite-coder" / "conventions"
+    conv_dir = _WS.parent / "frontend.extension.coder.vite" / "conventions"
     for rid in _RIDS:
         node = conv_dir / f"{rid}.convention.yaml"
         assert node.is_file(), f"missing convention node for {rid}"

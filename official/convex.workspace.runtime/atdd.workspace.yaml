@@ -1,7 +1,7 @@
 schema_version: "1.0.0"
 
 # First-class workspace PROVIDER: a reusable, domain-agnostic runtime that the
-# Convex extensions (convex.extension.coder / convex.extension.tester)
+# Convex extensions (convex.extension.coder.base / convex.extension.tester.base)
 # target. Namespaced id (scope segment is `workspace`):
 #   <publisher>.workspace.<name>
 #

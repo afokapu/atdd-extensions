@@ -26,7 +26,7 @@ sys.path.insert(0, str(_WS / "adapter"))
 import run as run_mod  # noqa: E402
 
 _IMPLS_DIR = _WS / "implementations"
-_CONV_DIR = _WS.parent / "convex.extension.tester" / "conventions"
+_CONV_DIR = _WS.parent / "convex.extension.tester.base" / "conventions"
 
 # The exact W11 build set (add-only; scoped so this file never asserts over siblings).
 _W11_IMPLS = [

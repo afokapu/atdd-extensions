@@ -23,19 +23,19 @@ _ROOT = _WS.parent  # official/
 W8_IMPLS = {
     "vite_security_xss": (
         "coder.vite.security-xss",
-        "frontend.extension.vite-coder/conventions/coder.vite.security-xss.convention.yaml",
+        "frontend.extension.coder.vite/conventions/coder.vite.security-xss.convention.yaml",
     ),
     "astro_security_xss": (
         "coder.astro.security-xss",
-        "frontend.extension.astro-coder/conventions/coder.astro.security-xss.convention.yaml",
+        "frontend.extension.coder.astro/conventions/coder.astro.security-xss.convention.yaml",
     ),
     "vite_logging_silent_swallow": (
         "coder.vite.logging-silent-swallow",
-        "frontend.extension.vite-coder/conventions/coder.vite.logging-silent-swallow.convention.yaml",
+        "frontend.extension.coder.vite/conventions/coder.vite.logging-silent-swallow.convention.yaml",
     ),
     "astro_logging_silent_swallow": (
         "coder.astro.logging-silent-swallow",
-        "frontend.extension.astro-coder/conventions/coder.astro.logging-silent-swallow.convention.yaml",
+        "frontend.extension.coder.astro/conventions/coder.astro.logging-silent-swallow.convention.yaml",
     ),
 }
 

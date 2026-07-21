@@ -20,7 +20,7 @@ sys.path.insert(0, str(_WS / "adapter"))
 import run as run_mod  # noqa: E402
 
 # The coder train family W2 authored (add-only allow-list). The tester journey +
-# train-coverage detectors were relocated to frontend.extension.vite-tester
+# train-coverage detectors were relocated to frontend.extension.tester.vite
 # (frontend Playwright/journey concerns); see docs/mirror-classification/WT.md.
 _W2_IMPLS = [
     "convex_train_composition_detector",   # coder train family (3 rule_ids)

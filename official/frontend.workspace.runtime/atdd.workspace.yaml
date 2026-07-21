@@ -1,7 +1,8 @@
 schema_version: "1.0.0"
 
 # First-class workspace PROVIDER: a reusable, domain-agnostic runtime that the
-# frontend extensions (convex.extension.coder / convex.extension.tester)
+# frontend extensions (frontend.extension.coder.astro / frontend.extension.coder.vite /
+# frontend.extension.tester.vite)
 # target. Namespaced id (scope segment is `workspace`):
 #   <publisher>.workspace.<name>
 #
