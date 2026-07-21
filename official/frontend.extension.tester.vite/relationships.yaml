@@ -1,8 +1,8 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for frontend.extension.vite-tester. Sorted-adjacent sibling
+# Extension-LOCAL relationship graph for frontend.extension.tester.vite. Sorted-adjacent sibling
 # chain (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
-graph_id: frontend.extension.vite-tester.relationships
+graph_id: frontend.extension.tester.vite.relationships
 
 nodes:
   - tester.vite.a11y-harness
