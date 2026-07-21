@@ -179,6 +179,46 @@ def _local_tag_exists(runner: Callable, tag: str, cwd: Optional[str]) -> bool:
     return tag in (getattr(proc, "stdout", "") or "").split()
 
 
+def _github_release_exists(runner: Callable, tag: str, cwd: Optional[str]) -> bool:
+    """True if a GitHub Release already exists for ``tag`` (idempotency oracle).
+
+    ``gh release view`` exits 0 when the release exists and non-zero otherwise,
+    so the returncode alone answers the question without parsing output.
+    """
+    proc = runner(["gh", "release", "view", tag],
+                  cwd=cwd, capture_output=True, text=True, check=False)
+    return getattr(proc, "returncode", 1) == 0
+
+
+def _ensure_github_release(runner: Callable, tag: str, cwd: Optional[str]) -> None:
+    """Create the GitHub Release for ``tag`` if it does not exist yet.
+
+    The git tag + PyPI upload make a version *installable*; the GitHub Release is
+    the human-facing announcement — the "Latest" version surfaced on the repo's
+    Releases page. The original flow tagged + published but never created the
+    Release object, so GitHub's Releases page froze at the last version cut by the
+    retired pre-4.0 pipeline while tags/PyPI marched on (the 3.150.0-vs-4.x drift).
+
+    Idempotent by the same discipline as the tag/upload above: skip when the
+    Release already exists (so a retry after a mid-flight failure re-enters here
+    cleanly), and let a genuine ``gh`` failure raise ``CalledProcessError`` — the
+    caller converts it to :class:`PublishError`, leaving the outbox message
+    pending for the next drain. ``--verify-tag`` asserts the just-pushed tag is
+    visible server-side; ``--generate-notes`` fills the body from the PRs merged
+    since the previous release. Auth is the ``GH_TOKEN``/``GITHUB_TOKEN`` in the
+    inherited process env (same channel twine's creds use).
+    """
+    if _github_release_exists(runner, tag, cwd):
+        _log.info("github release already exists; idempotent skip",
+                  extra={"tag": tag})
+        return
+    runner(
+        ["gh", "release", "create", tag, "--verify-tag",
+         "--generate-notes", "--title", tag],
+        cwd=cwd, check=True, capture_output=True, text=True,
+    )
+
+
 def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None,
                  cwd: Optional[str] = None, remote: str = "origin",
                  runner: Callable = subprocess.run) -> str:
@@ -197,7 +237,10 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
     (a leftover local tag from a prior failed run would otherwise crash a re-run)
     and is **pushed** to ``remote`` — the original flow created the tag but never
     pushed it, so the provider-side ref never became visible. Ordering mirrors
-    core's ``publish.yml``: tag → push → build → upload.
+    core's ``publish.yml``: tag → push → build → upload → github-release. The
+    trailing GitHub Release (:func:`_ensure_github_release`) is the human-facing
+    announcement that keeps the repo's Releases page in step with tags/PyPI; it is
+    idempotent (skipped when already present) so it never breaks a retry.
 
     ``runner`` (default :func:`subprocess.run`) is injectable so the command
     orchestration and its error surfacing can be exercised without spawning a
@@ -235,6 +278,11 @@ def real_publish(version: str, tag: str, *, env: Optional[Dict[str, str]] = None
             ["python", "-m", "twine", "upload", "--skip-existing", "dist/*"],
             cwd=cwd, check=True, capture_output=True, text=True,
         )
+        # Announce the GitHub Release from the just-pushed tag. Idempotent, and
+        # last in the chain: the release is only cut once the artifact is actually
+        # on PyPI, so the Releases page never advertises a version that failed to
+        # publish.
+        _ensure_github_release(runner, tag, cwd)
     except subprocess.CalledProcessError as exc:
         raise PublishError(_format_publish_error(tag, exc)) from exc
 

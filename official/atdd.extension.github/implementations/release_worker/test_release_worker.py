@@ -378,6 +378,10 @@ def _classify(cmd):
         return "tag"
     if cmd[:2] == ["git", "push"]:
         return "push"
+    if cmd[:3] == ["gh", "release", "view"]:
+        return "ghview"
+    if cmd[:3] == ["gh", "release", "create"]:
+        return "ghcreate"
     return "other"
 
 
@@ -546,6 +550,47 @@ def test_real_publish_creates_tag_when_absent():
     rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
     creates = [c for c in runner.commands if c[:2] == ["git", "tag"] and "-a" in c]
     assert creates == [["git", "tag", "-a", "v3.150.0", "-m", "Release v3.150.0"]]
+
+
+# --- Fix #5: announce the GitHub Release so the Releases page tracks tags/PyPI - #
+def test_real_publish_creates_github_release_when_absent():
+    # `gh release view` non-zero → no Release yet → cut one from the pushed tag.
+    runner = _RecordingRunner(procs={"ghview": _FakeProc(returncode=1)})
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    creates = [c for c in runner.commands if c[:3] == ["gh", "release", "create"]]
+    assert creates == [["gh", "release", "create", "v3.150.0",
+                        "--verify-tag", "--generate-notes", "--title", "v3.150.0"]]
+
+
+def test_real_publish_skips_github_release_when_present():
+    # `gh release view` returns 0 (default fake proc) → Release exists → no create.
+    # Idempotent: a retry after a mid-flight failure must not 'already exists'-crash.
+    runner = _RecordingRunner()
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    creates = [c for c in runner.commands if c[:3] == ["gh", "release", "create"]]
+    assert creates == []
+
+
+def test_real_publish_cuts_github_release_after_the_upload():
+    # Ordering lock: the Release is announced only once the artifact is on PyPI, so
+    # the Releases page never advertises a version that failed to publish.
+    runner = _RecordingRunner(procs={"ghview": _FakeProc(returncode=1)})
+    rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    classes = runner.classes()
+    assert classes.index("upload") < classes.index("ghcreate")
+
+
+def test_real_publish_raises_when_github_release_fails():
+    # A genuine `gh release create` failure must surface as PublishError so the
+    # drain leaves the outbox message pending (never a silent green).
+    cpe = subprocess.CalledProcessError(
+        returncode=1, cmd=["gh", "release", "create", "v3.150.0"],
+        output="", stderr="HTTP 403: Resource not accessible by integration")
+    runner = _RecordingRunner(raise_on="ghcreate", cpe=cpe,
+                              procs={"ghview": _FakeProc(returncode=1)})
+    with pytest.raises(rw.PublishError) as ei:
+        rw.real_publish("3.150.0", "v3.150.0", env=_ARMED, runner=runner)
+    assert "403" in str(ei.value)
 
 
 # --------------------------------------------------------------------------- #
