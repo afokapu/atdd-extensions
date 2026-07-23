@@ -1,8 +1,8 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for convex.extension.coder. Sorted-adjacent sibling chain
+# Extension-LOCAL relationship graph for convex.extension.coder.base. Sorted-adjacent sibling chain
 # (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
-graph_id: convex.extension.coder.relationships
+graph_id: convex.extension.coder.base.relationships
 
 nodes:
   - coder.convex.api-no-underscore-dir

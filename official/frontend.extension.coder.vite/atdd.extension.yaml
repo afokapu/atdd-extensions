@@ -1,5 +1,5 @@
 schema_version: "1.0.0"
-extension_id: frontend.extension.vite-coder
+extension_id: frontend.extension.coder.vite
 version: "0.1.0"
 kind: extension
 role: coder

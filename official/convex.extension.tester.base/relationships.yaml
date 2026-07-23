@@ -1,8 +1,8 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for convex.extension.tester. Sorted-adjacent sibling chain
+# Extension-LOCAL relationship graph for convex.extension.tester.base. Sorted-adjacent sibling chain
 # (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
-graph_id: convex.extension.tester.relationships
+graph_id: convex.extension.tester.base.relationships
 
 nodes:
   - tester.convex.filename-urn

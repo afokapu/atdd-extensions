@@ -1,11 +1,11 @@
-# frontend.extension.vite-tester
+# frontend.extension.tester.vite
 
 Test-surface (tester) conventions for the **Vite/React + Playwright** stack — the
 frontend **E2E / journey / smoke / a11y / visual** test surface. This surface was never
 built as a frontend concern, and several journey/E2E obligations were mis-scoped into
-`convex.extension.tester` during the Convex wave (see
+`convex.extension.tester.base` during the Convex wave (see
 [`docs/mirror-classification/WT.md`](../../docs/mirror-classification/WT.md), section
-"Relocate from convex.extension.tester").
+"Relocate from convex.extension.tester.base").
 
 ## Two-layer model
 
