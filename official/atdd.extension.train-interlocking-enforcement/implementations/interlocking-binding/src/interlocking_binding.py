@@ -429,7 +429,20 @@ def _train_artifact_exists(root: Path, route: dict, globs: list[str] | None = No
     train_id = route.get("train_id")
     if not train_id:
         return False
-    return any(p.stem == train_id for p in _glob_files(root, _globs_for(root, SEL_TRAIN, globs)))
+    for p in _glob_files(root, _globs_for(root, SEL_TRAIN, globs)):
+        # Core afokapu/atdd#1504: underscore-prefixed control artifacts under the
+        # train space (``_interlockings/`` route-space files, the ``_trains.yaml`` /
+        # ``_aliases.yaml`` registries) are NOT trains and must never satisfy a
+        # train-artifact existence check. Without this, the recursive ``train_yaml``
+        # default (``plan/_trains/**/*.yaml``) matches an interlocking whose stem
+        # equals the ``train_id`` and silently suppresses ``declaration_to_runtime``
+        # (a fail-OPEN hole in a fail-closed rule).
+        rel_parts = p.relative_to(root).parts
+        if "_interlockings" in rel_parts or p.name.startswith("_"):
+            continue
+        if p.stem == train_id:
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------

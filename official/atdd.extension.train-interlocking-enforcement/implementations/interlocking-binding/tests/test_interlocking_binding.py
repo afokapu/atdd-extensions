@@ -252,6 +252,26 @@ def test_layout_unresolved_fires_when_runtime_and_station_resolve_to_nothing() -
     assert "no runtime/Station Master found at configured layout" in v[0]["evidence"]
 
 
+def test_train_id_fallback_ignores_interlocking_control_artifact(tmp_path) -> None:
+    # Regression (adversarial review R3): the recursive train_yaml default
+    # (plan/_trains/**/*.yaml) must NOT accept an _interlockings/<id>.yaml control
+    # artifact as the route's train (core afokapu/atdd#1504). A route whose
+    # train_id equals an interlocking stem, with no real train file, MUST still
+    # fire declaration_to_runtime (fail-closed) — not be silently resolved.
+    il = tmp_path / "plan" / "_trains" / "_interlockings"
+    il.mkdir(parents=True)
+    (il / "match-resolution.yaml").write_text(
+        "interlocking_id: interlocking:match-resolution\n"
+        "routes:\n- route_id: r1\n  train_id: match-resolution\n",
+        encoding="utf-8",
+    )
+    v = detector.scan_root(tmp_path)
+    assert detector.DIR_DECL_RUNTIME in _directions(v), (
+        "declaration_to_runtime must fire: no real train file exists, only an "
+        "_interlockings/ control artifact sharing the train_id stem"
+    )
+
+
 def test_malformed_override_falls_back_to_defaults(monkeypatch) -> None:
     # A non-JSON override must not crash the scan — it falls back to scope/defaults.
     monkeypatch.setenv(detector.ENV_LAYOUT, "{not-json")
