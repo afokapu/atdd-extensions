@@ -184,6 +184,7 @@ def test_every_binding_direction_is_proven_by_one_fixture() -> None:
         "exposed_interlocking_unreachable": detector.DIR_DECL_STATION,
         "trace_does_not_resolve_to_yaml": detector.DIR_TRACE_DECL,
         "parallel_reachability_field_used": detector.DIR_PARALLEL_FIELD,
+        "layout_unresolved_no_runtime_or_station": detector.DIR_LAYOUT_UNRESOLVED,
     }
     seen: set[str] = set()
     for name, direction in expected.items():
@@ -197,6 +198,66 @@ def test_every_binding_direction_is_proven_by_one_fixture() -> None:
 
 def test_non_interlocking_tree_carries_no_obligation() -> None:
     assert detector.scan_root(_PASS / "does-not-exist") == []
+
+
+# ── 1f. scan layout is resolved from selectors (override / scope / defaults) ────
+
+_LAYOUT = _FIXTURES / "layout"
+_SRC_RUNTIME_LAYOUT = _LAYOUT / "runtime_in_src_layout"
+
+
+def test_default_layout_equals_today_hardcoded_constants(monkeypatch) -> None:
+    # Behavior-preserving: with no env override, the resolved layout (from the shipped scope file)
+    # MUST equal today's hardcoded constants — this is what keeps every game-app fixture green.
+    monkeypatch.delenv(detector.ENV_LAYOUT, raising=False)
+    layout = detector._resolve_layout(_PASS)
+    assert layout[detector.SEL_INTERLOCKING] == list(detector._INTERLOCKING_GLOBS)
+    assert layout[detector.SEL_RUNTIME] == ["python/trains/**/*.py"]
+    assert layout[detector.SEL_STATION] == ["python/app.py"]
+    assert layout[detector.SEL_E2E] == [detector._E2E_GLOB]
+    assert layout[detector.SEL_TRAIN] == [f"{detector._TRAIN_DIR}/**/*.yaml"]
+
+
+def test_per_repo_override_reads_runtime_at_configured_layout(monkeypatch) -> None:
+    # A per-repo ATDD_INTERLOCKING_LAYOUT override pointing python_runtime at src/**/runtime/
+    # interlocking/ makes the detector read the runtime that lives THERE (not python/trains/), so its
+    # hidden route (declared in no YAML) is caught as runtime_to_declaration.
+    monkeypatch.setenv(
+        detector.ENV_LAYOUT,
+        json.dumps({"python_runtime": ["src/**/runtime/interlocking/**/*.py"]}),
+    )
+    v = detector.scan_root(_SRC_RUNTIME_LAYOUT)
+    _assert_v11_shape(v)
+    assert detector.DIR_RUNTIME_DECL in _directions(v)
+    assert any("ghost-route-not-declared" in item["evidence"] for item in v)
+    assert any(item["file"].endswith("runtime.py") for item in v)
+
+
+def test_without_override_configured_runtime_is_invisible_and_scan_fails_closed(monkeypatch) -> None:
+    # Same tree, DEFAULT layout: the src/ runtime is never read (python/trains/ is empty), there is no
+    # Station Master — so instead of a silent green pass the detector fails closed.
+    monkeypatch.delenv(detector.ENV_LAYOUT, raising=False)
+    v = detector.scan_root(_SRC_RUNTIME_LAYOUT)
+    _assert_v11_shape(v)
+    assert _directions(v) == {detector.DIR_LAYOUT_UNRESOLVED}
+
+
+def test_layout_unresolved_fires_when_runtime_and_station_resolve_to_nothing() -> None:
+    # Fail-closed teeth: interlockings declared but the resolved runtime AND Station Master globs match
+    # NO file → ONE layout_unresolved violation (replaces the old silent no-op).
+    v = detector.scan_root(_FAIL / "layout_unresolved_no_runtime_or_station")
+    _assert_v11_shape(v)
+    assert _directions(v) == {detector.DIR_LAYOUT_UNRESOLVED}
+    assert len(v) == 1
+    assert "no runtime/Station Master found at configured layout" in v[0]["evidence"]
+
+
+def test_malformed_override_falls_back_to_defaults(monkeypatch) -> None:
+    # A non-JSON override must not crash the scan — it falls back to scope/defaults.
+    monkeypatch.setenv(detector.ENV_LAYOUT, "{not-json")
+    layout = detector._resolve_layout(_PASS)
+    assert layout[detector.SEL_RUNTIME] == ["python/trains/**/*.py"]
+    assert detector.scan_root(_PASS) == []
 
 
 # ── 2. emission (writes the RAW report; does NOT decide disposition) ───────────

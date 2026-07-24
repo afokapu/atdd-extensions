@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
 from pathlib import Path
 
@@ -63,6 +64,7 @@ DIR_STATION_DECL = "station_to_declaration"
 DIR_DECL_STATION = "declaration_to_station"
 DIR_TRACE_DECL = "trace_to_declaration"
 DIR_PARALLEL_FIELD = "parallel_reachability_field"
+DIR_LAYOUT_UNRESOLVED = "layout_unresolved"
 
 ALL_DIRECTIONS = (
     DIR_DECL_RUNTIME,
@@ -71,6 +73,7 @@ ALL_DIRECTIONS = (
     DIR_DECL_STATION,
     DIR_TRACE_DECL,
     DIR_PARALLEL_FIELD,
+    DIR_LAYOUT_UNRESOLVED,
 )
 
 # Where the authoritative guarded route space + entrypoint live (core #1248).
@@ -80,6 +83,40 @@ _INTERLOCKING_GLOBS = (
 )
 _E2E_GLOB = "e2e/**/*.py"
 _TRAIN_DIR = "plan/_trains"
+_RUNTIME_GLOB = "python/trains/**/*.py"
+_STATION_GLOB = "python/app.py"
+
+# ---------------------------------------------------------------------------
+# Scan layout — WHERE each surface lives in the consumer tree
+# ---------------------------------------------------------------------------
+# The detector inspects five consumer surfaces. Their location is NOT a property of this
+# detector: it is a property of the consumer repo. Each surface is therefore resolved from a
+# NAMED SELECTOR, with precedence
+#
+#   1. per-repo override — env var ATDD_INTERLOCKING_LAYOUT, JSON {selector_id: [globs]},
+#      set by core for the repo under scan;
+#   2. this extension's own scopes/interlocking-targets.scope.yaml selector `include` globs;
+#   3. the built-in DEFAULTS below (the historical hardcoded game-app layout).
+#
+# The selector ids are the scope file's ids — core writes the override under the SAME names.
+ENV_LAYOUT = "ATDD_INTERLOCKING_LAYOUT"
+
+SEL_INTERLOCKING = "interlocking_yaml"
+SEL_TRAIN = "train_yaml"
+SEL_RUNTIME = "python_runtime"
+SEL_STATION = "station_master"
+SEL_E2E = "e2e_tests"
+
+# src/interlocking_binding.py -> implementations/interlocking-binding -> implementations -> package root.
+_SCOPE_FILE = Path(__file__).resolve().parents[3] / "scopes" / "interlocking-targets.scope.yaml"
+
+_LAYOUT_DEFAULTS: dict[str, tuple[str, ...]] = {
+    SEL_INTERLOCKING: _INTERLOCKING_GLOBS,
+    SEL_TRAIN: (f"{_TRAIN_DIR}/**/*.yaml",),
+    SEL_RUNTIME: (_RUNTIME_GLOB,),
+    SEL_STATION: (_STATION_GLOB,),
+    SEL_E2E: (_E2E_GLOB,),
+}
 
 # Forbidden parallel reachability fields — anything that forks core #1248's `entrypoint`.
 _PARALLEL_FIELDS = (
@@ -143,6 +180,61 @@ def _violation(rule_id: str, file: str, line: int, col: int, direction: str, det
         "evidence": f"{direction}: {detail}",
         "source_line": source_line,
     }
+
+
+# ---------------------------------------------------------------------------
+# Layout resolution (pure apart from ONE env read, done per scan_root call)
+# ---------------------------------------------------------------------------
+
+
+def _selector_globs(raw: object) -> dict[str, list[str]]:
+    """Keep only known selector ids mapped to a non-empty list of glob strings."""
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, list[str]] = {}
+    for sel, globs in raw.items():
+        if sel not in _LAYOUT_DEFAULTS or not isinstance(globs, (list, tuple)) or not globs:
+            continue
+        out[str(sel)] = [str(g) for g in globs]
+    return out
+
+
+def _layout_from_env() -> dict[str, list[str]]:
+    raw = os.environ.get(ENV_LAYOUT)
+    if not raw:
+        return {}
+    try:
+        return _selector_globs(json.loads(raw))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _layout_from_scope() -> dict[str, list[str]]:
+    """This package's own scope selectors: ``selectors[*].{id, include}``."""
+    try:
+        doc = yaml.safe_load(_read(_SCOPE_FILE))
+    except yaml.YAMLError:
+        return {}
+    if not isinstance(doc, dict):
+        return {}
+    selectors = doc.get("selectors")
+    if not isinstance(selectors, list):
+        return {}
+    return _selector_globs(
+        {s.get("id"): s.get("include") for s in selectors if isinstance(s, dict)}
+    )
+
+
+def _resolve_layout(root: Path) -> dict[str, list[str]]:
+    """Resolve ``{selector_id: [globs]}`` for the five surfaces scanned under ``root``.
+
+    Precedence: the per-repo ``ATDD_INTERLOCKING_LAYOUT`` override, else this package's
+    scope selectors, else the built-in defaults. Unknown/empty selectors fall through, so a
+    partial override still leaves every surface resolved.
+    """
+    layout = {sel: list(globs) for sel, globs in _LAYOUT_DEFAULTS.items()}
+    layout.update(_layout_from_env() or _layout_from_scope())
+    return layout
 
 
 # ---------------------------------------------------------------------------
@@ -298,38 +390,46 @@ def runtime_resolution_literals(text: str) -> list[tuple[str, str, int, int]]:
 # ---------------------------------------------------------------------------
 
 
-def find_interlocking_files(root: Path) -> list[Path]:
-    found: list[Path] = []
-    for glob in _INTERLOCKING_GLOBS:
-        found.extend(p for p in root.glob(glob) if p.is_file())
-    return sorted(set(found))
+def _glob_files(root: Path, globs: list[str]) -> list[Path]:
+    """Every existing file under ``root`` matching any of the selector's globs."""
+    found: set[Path] = set()
+    for glob in globs:
+        found.update(p for p in root.glob(glob) if p.is_file())
+    return sorted(found)
 
 
-def find_e2e_files(root: Path) -> list[Path]:
-    return sorted(p for p in root.glob(_E2E_GLOB) if p.is_file())
+def _globs_for(root: Path, selector: str, globs: list[str] | None) -> list[str]:
+    """The caller's resolved globs, or a freshly resolved layout for a standalone call."""
+    return globs if globs is not None else _resolve_layout(root)[selector]
 
 
-def find_runtime_files(root: Path) -> list[Path]:
-    base = root / "python" / "trains"
-    if not base.is_dir():
-        return []
-    return sorted(p for p in base.rglob("*.py") if p.is_file())
+def find_interlocking_files(root: Path, globs: list[str] | None = None) -> list[Path]:
+    return _glob_files(root, _globs_for(root, SEL_INTERLOCKING, globs))
 
 
-def _app_file(root: Path) -> Path | None:
-    app = root / "python" / "app.py"
-    return app if app.is_file() else None
+def find_e2e_files(root: Path, globs: list[str] | None = None) -> list[Path]:
+    return _glob_files(root, _globs_for(root, SEL_E2E, globs))
 
 
-def _train_artifact_exists(root: Path, route: dict) -> bool:
-    """True if the route's train artifact exists (train_path, else plan/_trains/<train_id>.yaml)."""
+def find_runtime_files(root: Path, globs: list[str] | None = None) -> list[Path]:
+    return _glob_files(root, _globs_for(root, SEL_RUNTIME, globs))
+
+
+def _app_file(root: Path, globs: list[str] | None = None) -> Path | None:
+    matches = _glob_files(root, _globs_for(root, SEL_STATION, globs))
+    return matches[0] if matches else None
+
+
+def _train_artifact_exists(root: Path, route: dict, globs: list[str] | None = None) -> bool:
+    """True if the route's train artifact exists: ``train_path``, else a train YAML named
+    ``<train_id>.yaml`` anywhere the resolved ``train_yaml`` selector reaches."""
     train_path = route.get("train_path")
     if train_path:
         return (root / train_path).is_file()
     train_id = route.get("train_id")
-    if train_id:
-        return (root / _TRAIN_DIR / f"{train_id}.yaml").is_file()
-    return False
+    if not train_id:
+        return False
+    return any(p.stem == train_id for p in _glob_files(root, _globs_for(root, SEL_TRAIN, globs)))
 
 
 # ---------------------------------------------------------------------------
@@ -337,15 +437,19 @@ def _train_artifact_exists(root: Path, route: dict) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _declaration_to_runtime_violations(records: dict[Path, dict], root: Path) -> list[dict]:
+def _declaration_to_runtime_violations(
+    records: dict[Path, dict], root: Path, train_globs: list[str] | None = None
+) -> list[dict]:
     out: list[dict] = []
     for il_file, rec in records.items():
         rel = _rel(il_file, root)
         for route in rec["routes"]:
-            if _train_artifact_exists(root, route):
+            if _train_artifact_exists(root, route, train_globs):
                 continue
             target = route.get("train_path") or (
-                f"{_TRAIN_DIR}/{route.get('train_id')}.yaml" if route.get("train_id") else "<no train_id>"
+                f"{route['train_id']}.yaml under [{', '.join(_globs_for(root, SEL_TRAIN, train_globs))}]"
+                if route.get("train_id")
+                else "<no train_id>"
             )
             out.append(
                 _violation(
@@ -535,6 +639,25 @@ def _trace_to_declaration_violations(
 
 
 # ---------------------------------------------------------------------------
+# Fail-closed — the configured layout resolves to no runtime AND no Station Master
+# ---------------------------------------------------------------------------
+
+
+def _layout_unresolved_violation(records: dict[Path, dict], layout: dict[str, list[str]], root: Path) -> dict:
+    """A repo that declares a route space but whose resolved runtime/Station Master globs match
+    nothing is UNSCANNED, not clean — say so instead of silently passing."""
+    anchor = next(iter(sorted(records)))
+    globs = ", ".join(layout[SEL_RUNTIME] + layout[SEL_STATION])
+    return _violation(
+        RULE_BILATERAL, _rel(anchor, root), 1, 0, DIR_LAYOUT_UNRESOLVED,
+        f"interlocking declared but no runtime/Station Master found at configured layout [{globs}]; "
+        f"the binding directions that close on the runtime + Station Master cannot be checked — set "
+        f"{ENV_LAYOUT} (selectors {SEL_RUNTIME!r}/{SEL_STATION!r}) to this repo's actual layout",
+        "",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Aggregate scan
 # ---------------------------------------------------------------------------
 
@@ -543,22 +666,26 @@ def scan_root(root: Path) -> list[dict]:
     """Scan one consumer ``root`` and return RAW v1.1 violations for all binding directions.
 
     The rule only bites an interlocking system: a root with a declared interlocking route space OR an
-    InterlockingRunner runtime. The detector NEVER applies disposition — ``strict`` is the gate's call.
+    InterlockingRunner runtime. Every surface is located through the resolved LAYOUT (per-repo
+    override / scope selectors / defaults), resolved once here and threaded into the walks. The
+    detector NEVER applies disposition — ``strict`` is the gate's call.
     """
     root = Path(root)
     if not root.exists():
         return []
 
+    layout = _resolve_layout(root)
+
     records: dict[Path, dict] = {}
-    for il_file in find_interlocking_files(root):
+    for il_file in find_interlocking_files(root, layout[SEL_INTERLOCKING]):
         rec = parse_interlocking(_read(il_file))
         if rec is not None:
             records[il_file] = rec
 
-    runtime_files = [(p, _read(p)) for p in find_runtime_files(root)]
-    app = _app_file(root)
+    runtime_files = [(p, _read(p)) for p in find_runtime_files(root, layout[SEL_RUNTIME])]
+    app = _app_file(root, layout[SEL_STATION])
     journey = parse_journey_map(_read(app)) if app is not None else {}
-    e2e_files = [(p, _read(p)) for p in find_e2e_files(root)]
+    e2e_files = [(p, _read(p)) for p in find_e2e_files(root, layout[SEL_E2E])]
 
     enabled = bool(records) or any(
         "InterlockingRunner" in t or "InterlockingResolution" in t for _p, t in runtime_files
@@ -567,12 +694,19 @@ def scan_root(root: Path) -> list[dict]:
         return []
 
     violations: list[dict] = []
-    violations += _declaration_to_runtime_violations(records, root)
+    violations += _declaration_to_runtime_violations(records, root, layout[SEL_TRAIN])
     violations += _runtime_to_declaration_violations(records, runtime_files, root)
     violations += _station_to_declaration_violations(journey, records, app, root)
     violations += _declaration_to_station_violations(records, journey, root)
     violations += _parallel_field_violations(records, root)
     violations += _trace_to_declaration_violations(records, e2e_files, root)
+
+    # Fail-closed teeth: a declared route space whose resolved runtime AND Station Master surfaces
+    # BOTH match nothing is UNSCANNED, not clean — the runtime/station-facing directions never ran.
+    # This replaces today's SILENT no-op, so it fires only when the scan otherwise produced nothing
+    # (any real direction firing already proves the system is not silently passing).
+    if bool(records) and not runtime_files and app is None and not violations:
+        violations.append(_layout_unresolved_violation(records, layout, root))
     return violations
 
 
