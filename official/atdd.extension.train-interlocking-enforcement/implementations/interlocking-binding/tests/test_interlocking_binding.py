@@ -280,6 +280,151 @@ def test_malformed_override_falls_back_to_defaults(monkeypatch) -> None:
     assert detector.scan_root(_PASS) == []
 
 
+# ── 1g. atdd's idiom — function-based Station Master + variable-built resolutions ──
+#
+# atdd's runtime (core #1251) does NOT use the game-app idiom: the Station Master is the
+# FUNCTION `resolve_journey(journey_map, action)` (map is a parameter, no module-level
+# JOURNEY_MAP literal), and InterlockingResolution(...) is built from VARIABLES
+# (`route_id=route.route_id`), not string literals. These pin the matcher adaptation that
+# teaches the detector atdd's idiom while leaving the game-app path (1a–1f) untouched.
+#
+# The idiom is reproduced INLINE below (portable — no dependency on a sibling core checkout). The
+# real dogfood binding to atdd's actual runtime happens in STEP 3 (running the detector against the
+# repo), not here — these unit tests stay hermetic.
+
+# Faithful reproduction of atdd's station_master.py idiom: the Station Master is a FUNCTION; the
+# journey map is a PARAMETER. No module-level JOURNEY_MAP literal, no call site handing it a map.
+_ATDD_STATION_MASTER = (
+    "def resolve_journey(journey_map, action):\n"
+    "    if action not in journey_map:\n"
+    "        raise StationMasterError(action)\n"
+    "    mapping = journey_map[action]\n"
+    "    return mapping\n"
+)
+
+# Faithful reproduction of atdd's runner.py idiom: resolution built from `route.<attr>` where
+# `route = interlocking.route_by_id(route_id)` — variables, not string literals.
+_ATDD_RUNNER = (
+    "def resolve_train(self, action, inputs, state=None):\n"
+    "    interlocking = self._load_and_validate()\n"
+    "    route_id = evaluate_interlocking_route(interlocking, action, inputs, state)\n"
+    "    route = interlocking.route_by_id(route_id)\n"
+    "    return InterlockingResolution(\n"
+    "        interlocking_id=interlocking.interlocking_id,\n"
+    "        route_id=route.route_id,\n"
+    "        train_id=route.train_id,\n"
+    "        train_path=route.train_path,\n"
+    "    )\n"
+)
+
+
+def test_function_based_station_master_wiring_is_followed() -> None:
+    # atdd idiom: a concrete map handed to resolve_journey(...) is real wiring the matcher must read,
+    # exactly as a game-app JOURNEY_MAP literal is. Both the bare and the Name-bound form resolve.
+    inline = (
+        "from atdd.runtime.interlocking import resolve_journey\n"
+        "def dispatch(action, inputs):\n"
+        "    return resolve_journey({\n"
+        "        'start_match': '3001-solo',\n"
+        "        'resolve_match': {'interlocking_id': 'interlocking:match-resolution',\n"
+        "                          'path': 'plan/_trains/_interlockings/match-resolution.yaml'},\n"
+        "    }, action)\n"
+    )
+    journey = detector.parse_journey_map(inline)
+    assert journey["resolve_match"]["kind"] == "interlocking"
+    assert journey["resolve_match"]["interlocking_id"] == "interlocking:match-resolution"
+    assert journey["start_match"]["kind"] == "direct"
+
+    name_bound = (
+        "JOURNEY = {'resolve_match': {'interlocking_id': 'interlocking:match-resolution',\n"
+        "                             'path': 'plan/_trains/_interlockings/match-resolution.yaml'}}\n"
+        "def dispatch(action):\n"
+        "    return resolve_journey(JOURNEY, action)\n"
+    )
+    assert detector.parse_journey_map(name_bound)["resolve_match"]["kind"] == "interlocking"
+
+
+def test_station_master_definition_alone_yields_no_invented_wiring() -> None:
+    # atdd's Station Master only DEFINES resolve_journey (map is a runtime parameter); there is no
+    # call site handing it a concrete map. The matcher must NOT hallucinate wiring — it returns {} so
+    # a genuinely unwired exposed interlocking still surfaces via declaration_to_station.
+    assert "def resolve_journey" in _ATDD_STATION_MASTER  # guard: this IS the function-based idiom
+    assert detector.parse_journey_map(_ATDD_STATION_MASTER) == {}
+
+
+def test_variable_built_resolution_is_provenance_bound_not_undecidable() -> None:
+    # atdd builds InterlockingResolution from `route = interlocking.route_by_id(...)` attributes.
+    # runtime_resolution_literals sees NO literal route/train kwarg; provenance classifies
+    # route.route_id / route.train_id as "bound" (derived from the loaded route space) — so
+    # runtime_to_declaration holds by construction, WITHOUT a literal.
+    assert detector.runtime_resolution_literals(_ATDD_RUNNER) == []  # no string-literal resolution kwargs
+    prov = detector.runtime_resolution_provenance(_ATDD_RUNNER)
+    kinds = {(kind, provenance) for kind, provenance, *_ in prov}
+    assert ("route", "bound") in kinds
+    assert ("train", "bound") in kinds
+    assert all(provenance == "bound" for _kind, provenance, *_ in prov)  # nothing undecidable
+
+
+def test_opaque_variable_resolution_is_surfaced_not_silently_passed() -> None:
+    # A resolution built from an opaque variable (no route_by_id provenance) is UNDECIDABLE by static
+    # scan. It must NOT be silently passed: provenance flags it, and runtime_to_declaration surfaces it.
+    opaque = (
+        "def resolve_train(self, action):\n"
+        "    picked = external_pick(action)\n"
+        "    return InterlockingResolution(route_id=picked.rid, train_id=picked.tid)\n"
+    )
+    prov = detector.runtime_resolution_provenance(opaque)
+    assert {(kind, provenance) for kind, provenance, *_ in prov} == {
+        ("route", "undecidable"),
+        ("train", "undecidable"),
+    }
+
+
+def _write_atdd_shaped_repo(root: Path, runner_src: str, station_src: str) -> None:
+    il_dir = root / "plan" / "_trains" / "_interlockings"
+    il_dir.mkdir(parents=True)
+    (root / "plan" / "_trains" / "3007-x.yaml").write_text("train_id: 3007-x\n", encoding="utf-8")
+    (il_dir / "match-resolution.yaml").write_text(
+        "interlocking_id: interlocking:match-resolution\n"
+        "entrypoint:\n  exposed: true\n  actions:\n  - resolve_match\n"
+        "routes:\n"
+        "- route_id: nominal-all-voted\n  train_id: 3007-x\n"
+        "  train_path: plan/_trains/3007-x.yaml\n",
+        encoding="utf-8",
+    )
+    rt = root / "src" / "atdd" / "runtime" / "interlocking"
+    rt.mkdir(parents=True)
+    (rt / "runner.py").write_text(runner_src, encoding="utf-8")
+    (rt / "station_master.py").write_text(station_src, encoding="utf-8")
+
+
+_ATDD_LAYOUT = json.dumps(
+    {
+        "python_runtime": ["src/atdd/runtime/interlocking/*.py"],
+        "station_master": ["src/atdd/runtime/interlocking/station_master.py"],
+    }
+)
+
+
+def test_atdd_shaped_repo_reds_on_unwired_exposed_interlocking_only(tmp_path, monkeypatch) -> None:
+    # END-TO-END dogfood shape: an exposed interlocking declared in YAML, atdd's runtime/station under
+    # a src-style layout override. runtime_to_declaration must NOT fire (resolutions are
+    # provenance-bound), but declaration_to_station MUST fire — the exposed interlocking has no Station
+    # Master wiring (function-based Station Master with no concrete map). This is the genuine RED the
+    # dogfood is meant to surface, not a matcher-blindness false positive.
+    _write_atdd_shaped_repo(tmp_path, _ATDD_RUNNER, _ATDD_STATION_MASTER)
+    monkeypatch.setenv(detector.ENV_LAYOUT, _ATDD_LAYOUT)
+    v = detector.scan_root(tmp_path)
+    _assert_v11_shape(v)
+    dirs = _directions(v)
+    assert detector.DIR_RUNTIME_DECL not in dirs, "resolutions are provenance-bound; must not RED"
+    assert detector.DIR_DECL_STATION in dirs, "exposed interlocking is genuinely unwired — must RED"
+    assert any("resolve_match" in item["evidence"] for item in v)
+
+
+# ── 2. emission (writes the RAW report; does NOT decide disposition) ───────────
+
+
 # ── 2. emission (writes the RAW report; does NOT decide disposition) ───────────
 
 
