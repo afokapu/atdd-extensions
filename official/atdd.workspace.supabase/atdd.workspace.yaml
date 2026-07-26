@@ -5,7 +5,7 @@ schema_version: "1.0.0"
 #   <publisher>.workspace.<name>
 # SKELETON — mirrors atdd.workspace.python-pytest exactly. The adapter bodies are
 # NotImplementedError stubs; real Supabase/Deno/Postgres discovery+run is authored
-# in the build slice. Owns ZERO conventions (those live in atdd.extension.coder/tester).
+# in the build slice. Owns ZERO conventions (those live in atdd.extension.coder.base/tester).
 workspace_id: atdd.workspace.supabase
 kind: workspace
 version: "0.1.0"

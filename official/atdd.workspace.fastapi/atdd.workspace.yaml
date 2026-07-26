@@ -6,7 +6,7 @@ schema_version: "1.0.0"
 # SKELETON — mirrors atdd.workspace.python-pytest exactly. The adapter bodies are
 # NotImplementedError stubs; real FastAPI/HTTP-REST discovery+run is authored in
 # the build slice. Kept distinct from python-pytest (FastAPI ≠ pytest; see DESIGN
-# §5 Open Decision 3). Owns ZERO conventions (those live in atdd.extension.coder/tester).
+# §5 Open Decision 3). Owns ZERO conventions (those live in atdd.extension.coder.base/tester).
 workspace_id: atdd.workspace.fastapi
 kind: workspace
 version: "0.1.0"
