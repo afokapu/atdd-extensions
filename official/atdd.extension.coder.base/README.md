@@ -1,4 +1,4 @@
-# atdd.extension.coder
+# atdd.extension.coder.base
 
 Official ATDD **coder-role extension**. It owns every coder convention node
 classified `extension` in the coder/tester decomposition — the stack-bound coder
@@ -17,7 +17,7 @@ metrics, FastAPI route auth, AWS secret scanning, …).
 publisher : atdd
 kind      : extension
 name      : coder
-id        : atdd.extension.coder
+id        : atdd.extension.coder.base
 manifest  : atdd.extension.yaml
 ```
 
@@ -33,7 +33,7 @@ convention or implementation is authored here yet.
 ## Layout
 
 ```text
-atdd.extension.coder/
+atdd.extension.coder.base/
   atdd.extension.yaml      # manifest: id, role: coder, owns, depends_on.workspaces
   conventions/             # coder.<area>.<slug> nodes — authored in the build slice
   relationships.yaml       # extension-internal edges only (empty skeleton)

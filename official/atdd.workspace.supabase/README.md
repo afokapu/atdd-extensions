@@ -12,8 +12,8 @@ validator implementations run inside.
 This is a *provider*, not a use-case extension. It owns runtime machinery only
 (language, runner, package manager, command, discovery + run contract). It does
 **not** own conventions, scopes, gates, or any backend/frontend/domain semantics
-— those live in the extensions that depend on it (`atdd.extension.coder` /
-`atdd.extension.tester`).
+— those live in the extensions that depend on it (`atdd.extension.coder.base` /
+`atdd.extension.tester.base`).
 
 ## Contract
 
