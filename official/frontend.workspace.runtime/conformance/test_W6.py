@@ -29,7 +29,7 @@ import run as run_mod  # noqa: E402
 
 _IMPL_ROOT = _WS / "implementations"
 _CONV_DIR = (
-    _WS.parent / "frontend.extension.vite-coder" / "conventions"
+    _WS.parent / "frontend.extension.coder.vite" / "conventions"
 )
 
 W6_IMPLS = [

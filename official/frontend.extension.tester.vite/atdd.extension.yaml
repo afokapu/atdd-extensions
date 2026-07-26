@@ -1,5 +1,5 @@
 schema_version: "1.0.0"
-extension_id: frontend.extension.vite-tester
+extension_id: frontend.extension.tester.vite
 version: "0.1.0"
 kind: extension
 role: tester
@@ -8,8 +8,8 @@ feature: vite-tester-conventions
 
 # Test-surface (tester) conventions for the Vite/React + Playwright stack — the
 # frontend E2E / journey / smoke / a11y / visual surface that was never built as a
-# frontend concern (and was partly mis-scoped into convex.extension.tester; see
-# docs/mirror-classification/WT.md "Relocate from convex.extension.tester"). Each
+# frontend concern (and was partly mis-scoped into convex.extension.tester.base; see
+# docs/mirror-classification/WT.md "Relocate from convex.extension.tester.base"). Each
 # convention is the stack-bound OBLIGATION; the detector that realizes it lives in
 # the frontend.workspace.runtime provider (two-layer model). Astro folds in — apps/web
 # has no Playwright surface (WT.md "Astro decision"). This extension owns ZERO runtime.

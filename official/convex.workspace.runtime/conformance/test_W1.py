@@ -28,8 +28,8 @@ sys.path.insert(0, str(_WS / "adapter"))
 import run as run_mod  # noqa: E402
 
 _IMPLS = _WS / "implementations"
-_CODER_CONV = _ROOT / "official" / "convex.extension.coder" / "conventions"
-_TESTER_CONV = _ROOT / "official" / "convex.extension.tester" / "conventions"
+_CODER_CONV = _ROOT / "official" / "convex.extension.coder.base" / "conventions"
+_TESTER_CONV = _ROOT / "official" / "convex.extension.tester.base" / "conventions"
 
 _INFRA = _IMPLS / "convex_interlocking_infrastructure"
 _BINDING = _IMPLS / "convex_interlocking_binding"

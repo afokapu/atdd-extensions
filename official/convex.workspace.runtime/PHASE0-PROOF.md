@@ -63,6 +63,6 @@ shape, and every detector keep working.
 
 ## Not in scope here (Phase 1+)
 
-- Convention nodes (`coder.convex.*`) — authored in `convex.extension.coder`.
-- The tester surface — `convex.extension.tester`.
+- Convention nodes (`coder.convex.*`) — authored in `convex.extension.coder.base`.
+- The tester surface — `convex.extension.tester.base`.
 - Wiring into frg-app via `atdd substrate add → bind → enforce`.

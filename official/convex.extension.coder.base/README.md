@@ -1,4 +1,4 @@
-# convex.extension.coder
+# convex.extension.coder.base
 
 Source-surface (coder) conventions for the **Convex** backend stack. Owns the
 declarative obligations; the detectors that realize them live in the

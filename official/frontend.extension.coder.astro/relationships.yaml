@@ -1,8 +1,8 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for frontend.extension.astro-coder. Sorted-adjacent sibling chain
+# Extension-LOCAL relationship graph for frontend.extension.coder.astro. Sorted-adjacent sibling chain
 # (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
-graph_id: frontend.extension.astro-coder.relationships
+graph_id: frontend.extension.coder.astro.relationships
 
 nodes:
   - coder.astro.client-directive-explicit

@@ -23,7 +23,7 @@ _ROOT = _WS.parent  # official/
 W8_IMPLS = {
     "convex_security_sql_injection": (
         "coder.convex.security-sql-injection",
-        "convex.extension.coder/conventions/coder.convex.security-sql-injection.convention.yaml",
+        "convex.extension.coder.base/conventions/coder.convex.security-sql-injection.convention.yaml",
     ),
 }
 

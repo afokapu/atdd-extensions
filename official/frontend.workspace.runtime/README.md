@@ -3,7 +3,8 @@
 A first-class ATDD **workspace provider**: a reusable JavaScript/TypeScript
 runtime that runs validator implementations against a Convex codebase. It owns
 **zero conventions** — those live in the Convex extensions
-(`convex.extension.coder`, `convex.extension.tester`), which *target*
+(`frontend.extension.coder.astro`, `frontend.extension.coder.vite`,
+`frontend.extension.tester.vite`), which *target*
 this provider by id + contract range.
 
 It is the first **real** (non-stub) non-pytest provider in the hub: its Python

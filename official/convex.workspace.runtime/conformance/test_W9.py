@@ -26,7 +26,7 @@ RULE_ID = "tester.convex.live-smoke-no-self-skip"
 _IMPL = _WS / "implementations" / "convex_test_live_smoke_no_self_skip"
 _NODE = (
     _WS.parent
-    / "convex.extension.tester"
+    / "convex.extension.tester.base"
     / "conventions"
     / "tester.convex.live-smoke-no-self-skip.convention.yaml"
 )

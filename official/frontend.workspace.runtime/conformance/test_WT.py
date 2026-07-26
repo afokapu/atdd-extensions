@@ -23,11 +23,11 @@ sys.path.insert(0, str(_WS / "adapter"))
 import run as run_mod  # noqa: E402
 
 _ROOT = _WS.parent  # official/
-_EXT = _ROOT / "frontend.extension.vite-tester" / "conventions"
+_EXT = _ROOT / "frontend.extension.tester.vite" / "conventions"
 _IMPL_DIRS = _WS / "implementations"
 
 # WT's own implementations. Each convention node is
-# frontend.extension.vite-tester/conventions/{rule_id}.convention.yaml
+# frontend.extension.tester.vite/conventions/{rule_id}.convention.yaml
 WT_IMPLS = [
     "vite_interlocking_e2e_coverage",
     "vite_journey_test_detector",
