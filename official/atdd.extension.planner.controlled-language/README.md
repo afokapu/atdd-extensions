@@ -202,16 +202,17 @@ wiring:
 # Docker (simplest)
 docker run --rm -p 8081:8010 erikvl87/languagetool
 
-# or from the standalone distribution (needs Java 17+)
+# or from the standalone distribution (needs a JRE)
 #   https://languagetool.org/download/  ->  LanguageTool-stable.zip
 unzip LanguageTool-*.zip && cd LanguageTool-*
-java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081 --allow-origin
+java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081
 ```
 
-**LanguageTool + the TechScribe STE rules** — the real gate. TechScribe distributes the ASD-STE100
-rule set as LanguageTool rule XML (<https://www.techscribe.co.uk/ta/ste-checker.htm>); follow their
-install instructions to drop it into the server's `org/languagetool/rules/en/` tree, then start the
-server the same way. TechScribe owns those rules; this package neither ships nor reimplements them.
+**LanguageTool + the TechScribe STE rules** — the real gate. TechScribe (<https://www.techscribe.co.uk>)
+distributes an ASD-STE100 checker built on LanguageTool; follow *their* install instructions for the
+rule set and the server it expects, then point `ATDD_STE_URL` at it. Check their current packaging
+rather than trusting a path written here — TechScribe owns those rules, and this package neither
+ships, mirrors, nor reimplements them.
 
 ### 2. Install the ATDD vocabulary
 
