@@ -11,6 +11,7 @@ import sys
 import urllib.error
 from pathlib import Path
 from types import SimpleNamespace
+from xml.etree import ElementTree
 
 import pytest
 
@@ -23,6 +24,8 @@ _REPO = _HERE / "fixtures" / "repo"
 _STE = _HERE.parent.parent / "ste"
 _URL = "http://127.0.0.1:8081/v2/check"
 _EXCLUDES = ["_generated/**"]
+_XML_RULE_IDS = [r.get("id") for x in sorted(_STE.glob("*.xml"))
+                 for r in ElementTree.parse(x).getroot().iter("rule")]
 
 # Mirrors run.py::_VIOLATION_KEYS — a record missing one of these is dropped by the provider and
 # silently degrades to the v1.0.0 exit-code fallback, i.e. to a clean pass.
@@ -103,11 +106,23 @@ def test_word_choice_and_writing_findings_route_apart(match, expected) -> None:
 
 def test_project_term_xml_rule_ids_route_to_the_vocabulary_rule() -> None:
     """XML and detector must agree, or a project-term finding gets fixed the wrong way."""
-    ids = [line.split('id="')[1].split('"')[0]
-           for xml in sorted(_STE.glob("*.xml"))
-           for line in xml.read_text().splitlines() if "<rule id=" in line]
-    assert ids
-    assert all(detector.rule_for({"rule": {"id": i}}) == detector.RULE_VOCABULARY for i in ids)
+    assert _XML_RULE_IDS
+    assert all(detector.rule_for({"rule": {"id": i}}) == detector.RULE_VOCABULARY
+               for i in _XML_RULE_IDS)
+
+
+def test_vocabulary_is_usable_and_not_a_stub() -> None:
+    """Derived from the convention corpus, so it must stay well past the ten baseline terms — a
+    shrink back toward a stub is a regression, not a cleanup. And a grammar rule without a failing
+    example AND a passing one cannot be trusted to fire on what it claims to catch."""
+    blob = " ".join(x.read_text() for x in sorted(_STE.glob("*.xml"))).lower()
+    assert all(t in blob for t in ("acceptance", "artifact", "cargo", "contract", "convention",
+                                   "feature", "interlocking", "train", "wagon", "wmbt"))
+    assert len(_XML_RULE_IDS) >= 100, f"vocabulary shrank to {len(_XML_RULE_IDS)} rules"
+    for rule in ElementTree.parse(_STE / "grammar-projectterms.xml").getroot().iter("rule"):
+        examples = list(rule.iter("example"))
+        assert len(examples) >= 2 and any(e.get("correction") is not None for e in examples), \
+            rule.get("id")
 
 
 def test_evidence_is_the_checker_finding_verbatim() -> None:

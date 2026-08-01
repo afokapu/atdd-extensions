@@ -7,10 +7,11 @@ statement: >-
   Every prose field in an authored ATDD artifact MUST draw its words from the approved
   ASD-STE100 dictionary extended by the ATDD project-terms vocabulary shipped in this package
   (`ste/disambiguation-projectterms.xml`, `ste/grammar-projectterms.xml`). A domain word that
-  the substrate depends on — acceptance, artifact, cargo, contract, convention node, feature,
-  interlocking, train, wagon, WMBT — is approved BECAUSE it is declared in that vocabulary, and
-  is approved in that declared sense only. This is the agnostic obligation; the checker judges
-  conformance and the implementation referenced below transports and reports it.
+  the substrate depends on — obligation, detector, realization, disposition, workspace, wagon,
+  train, cargo, interlocking, WMBT and the rest of the declared set — is approved BECAUSE it is
+  declared in that vocabulary, and is approved in that declared sense only. This is the agnostic
+  obligation; the checker judges conformance and the implementation referenced below transports
+  and reports it.
 implementation:
   type: validator
   ref: controlled-language-check
@@ -30,6 +31,11 @@ content:
       * The ATDD project terms — `ste/*.xml` in this package. A project term is a Technical Name
         or a Technical Verb the substrate cannot express in base STE. Each entry declares the
         word, its part of speech, and the ONE meaning it carries in ATDD prose.
+
+    The project-term layer is DERIVED, not invented: each term was selected from the authored
+    convention corpus under `official/` by document frequency — how many separate convention
+    nodes use the word — and each entry records that count. A reviewer can therefore see the
+    evidence for admitting a word, and a word nothing in the corpus uses does not earn an entry.
 
     The obligations:
 

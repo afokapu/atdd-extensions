@@ -129,25 +129,155 @@ consumer's decision (v1.1 §1), so the suite passes even when it finds violation
 
 ## The vocabulary
 
-`ste/disambiguation-projectterms.xml` and `ste/grammar-projectterms.xml` — LanguageTool rule XML,
-the format the STE checker consumes. Install them into `<repo>/.atdd/ste/` so the checker loads
-them alongside the base ASD-STE100 dictionary.
+`ste/disambiguation-projectterms.xml` (93 terms) and `ste/grammar-projectterms.xml` (21 misuse
+rules) — LanguageTool rule XML, the format the STE checker consumes. Install into
+`<repo>/.atdd/ste/` so the checker loads them alongside the base ASD-STE100 dictionary.
 
-The disambiguation file **adds** each ATDD Technical Name to the approved word list and pins it to
-one part of speech. The grammar file **reports** a declared term used outside that sense, plus the
-spellings the substrate has settled on. Both halves are needed: widening a dictionary without
-pinning meaning is how a controlled language stops controlling anything.
+The disambiguation file **adds** each ATDD Technical Name and Technical Verb to the approved word
+list and pins it to one part of speech. The grammar file **reports** a declared term used outside
+that sense, plus the spellings and casings the substrate has settled on. Both halves are needed:
+widening a dictionary without pinning meaning is how a controlled language stops controlling
+anything.
 
-Declared terms: `acceptance`, `artifact`, `cargo`, `contract`, `convention node`, `feature`,
-`interlocking`, `train`, `wagon`, `WMBT` ("What Must Be True").
+### It is derived, not invented
+
+Every term was selected from the **207 `*.convention.yaml` nodes under `official/`** by *document
+frequency* — how many separate convention nodes use the word. Each entry carries that count as
+`[corpus df N]`, so a reviewer can see the evidence for admitting a word instead of taking it on
+faith. Terms with no count are structural words the corpus uses in identifiers and headings rather
+than in running prose.
+
+| Group | Count | Examples (with corpus df) |
+|---|---|---|
+| Substrate Technical Names | 35 | `obligation` (197), `detector` (195), `realization` (195), `implementation` (166), `workspace` (145), `runtime` (143), `disposition` (109), `consumer` (76), `violation` (50), `scope` (43), `ratchet` (34), `URN` (33) |
+| Train-model Technical Names | 14 | `wagon` (63), `feature` (55), `train` (39), `route` (35), `interlocking` (27), `contract` (25), `artifact` (16), `cargo`, `acceptance`, `WMBT`, `convention node`, `station master`, `journey map`, `smoke test` |
+| Persona Technical Names | 4 | `coder` (152), `coach` (50), `tester` (30), `planner` |
+| ATDD Technical Verbs | 11 | `delegate` (169), `enforce` (135), `flag` (131), `emit` (90), `realize` (47), `scan` (42), `resolve` (42), `compose` (22), `ratchet` (20), `bind` (18), `suppress` |
+| Runtime class names | 5 | `TrainRunner` (23), `InterlockingRunner` (23), `InterlockingResolution` (6), `TrainResult` (5), `SyncProvider` (2) |
+| Product / format proper names | 24 | `ATDD`, `GitHub`, `Python`, `pytest`, `TypeScript`, `YAML`, `JSON`, `LanguageTool`, `TechScribe`, `Convex`, `Vite`, `Astro`, `Supabase`, `FastAPI`, … |
+
+A word already approved by base ASD-STE100 needs no entry; declaring one anyway is harmless,
+because the only added effect is pinning its part of speech.
+
+### The misuse rules
+
+Three groups, all corpus-motivated:
+
+1. **Technical Name used as a verb** — `train`, `contract`, `feature`, `gate`, `scope`, `coach`,
+   and `interlocking` as a participle. English lets every one of these slip into a verb, and each
+   slip changes what the sentence claims.
+2. **Spelling** — `artefact`→`artifact`, `realise`→`realize` (matching `realizes_convention` in
+   every implementation manifest), `convention-node`→`convention node`,
+   `stationmaster`→`station master`, `work space`→`workspace`, `run time`→`runtime` as a noun,
+   `cargos`→`cargo`, `suppress and clean`→`suppress-and-clean`.
+3. **Casing** — `WMBT`, `URN`, `ATDD`, `YAML`/`JSON`/`XML`/`HTTP`/`AST`, vendor spellings
+   (`TypeScript`, `GitHub`, `LanguageTool`, …) and PascalCase runtime names.
 
 Every rule id is prefixed `ATDD_TERM_`, which is how a project-term finding routes to
-`approved-vocabulary` rather than `ste-conformance`
-(`controlled_language.VOCABULARY_TOKENS`). A test pins that agreement, because if the two ever
-drift a vocabulary defect gets reported as a writing defect and fixed the wrong way.
+`approved-vocabulary` rather than `ste-conformance` (`controlled_language.VOCABULARY_TOKENS`). A
+test pins that agreement, because if the two ever drift a vocabulary defect gets reported as a
+writing defect and fixed the wrong way. Two further tests guard the vocabulary itself: one asserts
+it stays past 100 rules and still declares the ten baseline terms (a shrink back toward a stub is a
+regression, not a cleanup), and one asserts every grammar rule ships a failing example *and* a
+passing one, because a rule without both cannot be trusted to fire on what it claims to catch.
 
 Adding a term is an authoring decision, not a suppression: it changes a reviewed artifact. A term
 that needs more than one sentence to define is a term the prose should not use.
+
+---
+
+## Operator setup
+
+The extension ships no checker and starts no process. You run one; the detector talks to it.
+
+### 1. Run a checker
+
+The endpoint is the LanguageTool HTTP API (`POST /v2/check`, form-encoded
+`language=en-US&text=…`). Any server that speaks it works. Two options:
+
+**LanguageTool alone** — catches general English style, no STE rules. Enough to smoke-test the
+wiring:
+
+```bash
+# Docker (simplest)
+docker run --rm -p 8081:8010 erikvl87/languagetool
+
+# or from the standalone distribution (needs Java 17+)
+#   https://languagetool.org/download/  ->  LanguageTool-stable.zip
+unzip LanguageTool-*.zip && cd LanguageTool-*
+java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081 --allow-origin
+```
+
+**LanguageTool + the TechScribe STE rules** — the real gate. TechScribe distributes the ASD-STE100
+rule set as LanguageTool rule XML (<https://www.techscribe.co.uk/ta/ste-checker.htm>); follow their
+install instructions to drop it into the server's `org/languagetool/rules/en/` tree, then start the
+server the same way. TechScribe owns those rules; this package neither ships nor reimplements them.
+
+### 2. Install the ATDD vocabulary
+
+Copy this package's project terms next to the base dictionary so the checker loads both:
+
+```bash
+mkdir -p "$REPO/.atdd/ste"
+cp official/atdd.extension.planner.controlled-language/ste/*.xml "$REPO/.atdd/ste/"
+```
+
+Point the server at that directory per your LanguageTool build's custom-rules mechanism
+(`--rulesFile`, or by merging into the server's rule tree). Without this step the checker will
+report every ATDD Technical Name as an unapproved word, and the gate becomes unusable noise rather
+than a signal — which is exactly the failure mode the two-rule split exists to make visible.
+
+### 3. Point the detector at it
+
+```bash
+export ATDD_STE_URL="http://127.0.0.1:8081/v2/check"   # default if unset
+```
+
+| Env | Required | Default |
+|---|---|---|
+| `ATDD_STE_URL` | no | `http://127.0.0.1:8081/v2/check` |
+| `ATDD_SCAN_ROOTS` | supplied by the provider | — |
+| `ATDD_SCAN_EXCLUDES` | supplied by the provider | — |
+| `ATDD_VIOLATIONS_REPORT` | supplied by the provider | — |
+
+Verify the endpoint before blaming the gate:
+
+```bash
+curl -s -d "language=en-US" --data-urlencode "text=We utilise the interlocking." \
+  "$ATDD_STE_URL" | head -c 400
+```
+
+A JSON body with a `matches` array means you are wired up. Anything else — connection refused, an
+HTML error page, a non-2xx status — is what the detector will report as `checker-unavailable`.
+
+### 4. The gate fails closed — read this before you debug it
+
+**If the checker is down, the gate reports a violation. It never reports a clean pass.**
+
+| Condition | What you get |
+|---|---|
+| checker unreachable (not started, wrong port) | one violation, `evidence` starts `checker-unavailable: checker unreachable at …` |
+| request times out (default 15s) | same, with the timeout detail |
+| non-2xx status | `checker-unavailable: checker answered HTTP <code> at …` |
+| unparseable body (an HTML error page) | `checker-unavailable: checker answered unparseable JSON at …` |
+| 2xx JSON with no `matches` array | `checker-unavailable: checker answer carries no 'matches' list at …` |
+
+All five land under `planner.controlled-language.ste-conformance` and stop the scan after the first
+one — **one unavailable checker is one defect, not one per prose field.** Findings gathered before
+the failure are kept; they are still facts.
+
+This is deliberate. A silent style gate is worse than no style gate, because the repo believes it
+is protected. **Do not suppress a `checker-unavailable` finding** — start the checker, or fix
+`ATDD_STE_URL`. The finding is telling you the gate did not run, not that your prose is wrong.
+
+Note that `passed=True` on the run is **run-health, not a verdict** (PROVIDER-CONTRACT-v1.1 §1): it
+means the detector executed and emitted its report. The pass/fail decision is the consumer's, made
+from `violations`.
+
+### 5. CI
+
+CI needs none of this. Every HTTP call in the test suite is mocked — no Java, no TechScribe, no
+network. The checker is only needed where the gate actually runs against a real repository.
 
 ## Tests
 
