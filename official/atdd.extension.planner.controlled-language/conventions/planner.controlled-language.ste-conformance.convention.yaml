@@ -1,0 +1,77 @@
+schema_version: 1.1.0
+rule_id: planner.controlled-language.ste-conformance
+kind: rule
+status: active
+name: Authored prose conforms to ASD-STE100 Simplified Technical English
+statement: >-
+  Every prose field in an authored ATDD artifact — the writing a human reads to learn what an
+  obligation MEANS, not the ids/URNs/paths a machine resolves — MUST conform to ASD-STE100
+  Simplified Technical English as judged by the project's STE checker. This is the agnostic
+  obligation. WHICH checker, WHICH transport, and HOW a checker finding maps onto a violation
+  are delegated to the implementation referenced below; the STE rules themselves are owned by
+  the checker vendor and are deliberately NOT restated here.
+implementation:
+  type: validator
+  ref: controlled-language-check
+content:
+  summary: >-
+    An agnostic "authored prose is controlled language" obligation. The realization walks the
+    YAML artifacts under the supplied scan roots, extracts the value of every prose-bearing key
+    (`description`, `statement`, `purpose`, `rationale`, `abstract`, `text`, ...), sends each
+    extracted string to the STE checker, and emits one violation per checker finding that is not
+    a vocabulary finding. Findings about the approved word list belong to the sibling rule
+    `planner.controlled-language.approved-vocabulary`.
+  normative_text: |
+    ASD-STE100 owns the normative text; this node deliberately does not copy it. What IS
+    normative here is the boundary:
+
+      * The governed surface is PROSE ONLY. A prose key's value is checked; everything else in
+        an authored artifact — URNs, ids, paths, slugs, enums, statuses, relationship types,
+        schema keys, commands, code, numbers, contract refs, artifact names — is NOT prose and
+        is never sent to the checker. Sending an identifier to an English style checker produces
+        noise, and noise is how a rule gets switched off.
+      * A prose key's value is checked when it is a string; when it is a list, each string
+        element is checked; when it is a mapping, each of its string values is checked.
+      * A violation's `location` is `<artifact path>:<dotted prose path>` — the dotted path is
+        the authored form (`description`, `acceptances.0.given.abstract.0`, `terms.1.text`), not
+        a line offset, because a prose path survives reformatting and a line number does not.
+      * The checker is the authority on WHAT is wrong. This rule never second-guesses a finding
+        and never implements an STE rule locally.
+      * The check FAILS CLOSED. A checker that is down, times out, answers non-2xx, or answers
+        unparseable JSON yields a violation, never a clean pass. A silent style gate is worse
+        than no style gate, because the repo believes it is protected.
+  fix_hint: |
+    Rewrite the flagged prose in Simplified Technical English: one instruction per sentence,
+    active voice, present tense, an approved word in its approved part of speech, and no more
+    than twenty words in a procedural sentence. The violation's `evidence` carries the checker's
+    own `msg=` and `replacements=[...]`; apply the suggested replacement unless it changes the
+    meaning of the obligation.
+
+    If the checker is what is broken (`evidence` starts with `checker-unavailable`), start the
+    STE checker or point `ATDD_STE_URL` at a reachable one. Do not suppress the finding — the
+    rule fails closed on purpose.
+  exceptions:
+    - Quoted external material inside a prose field (a spec sentence cited verbatim) is still
+      checked; the checker has no way to know it is a quotation. Reword the surrounding prose or
+      move the quotation to a non-prose key rather than weakening the rule.
+metadata:
+  aliases:
+    - STE-CONFORMANCE-001
+  severity: 3
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0
+terms:
+  - term_id: prose_field
+    text: >-
+      the value of an authored key that carries English meant for a human reader (for example
+      description, statement, purpose, rationale, abstract, text); it is not an identifier, a
+      path, an enum, or a number.
+  - term_id: ste_checker
+    text: >-
+      the external service that judges a string against ASD-STE100 and answers with findings;
+      it owns the STE rules, and this extension only transports strings to it and reports what
+      it answers.
+  - term_id: fails_closed
+    text: >-
+      the property that an unreachable, slow, or unparseable checker produces a violation rather
+      than an empty result, so an unavailable gate can never be mistaken for a satisfied one.

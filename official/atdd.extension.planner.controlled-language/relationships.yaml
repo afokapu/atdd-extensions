@@ -1,0 +1,26 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.planner.controlled-language.
+#
+# IMPORTANT (boundary spec §6.2): core<->extension edges are NOT authored here.
+# The core planner surface these rules govern (`atdd author` output) is named
+# narratively in atdd.extension.yaml and in the README, never as a graph edge.
+# Only extension-internal edges live here.
+graph_id: atdd.extension.planner.controlled-language.relationships
+
+nodes:
+  - planner.controlled-language.ste-conformance
+  - planner.controlled-language.approved-vocabulary
+
+edges:
+  # The two halves of one gate. They are split because they fail for different
+  # reasons and are fixed by different acts (rewrite a sentence vs. extend the
+  # reviewed project vocabulary), but one detector emits both from one checker
+  # round-trip, so neither is meaningful without the other.
+  - from: planner.controlled-language.approved-vocabulary
+    to: planner.controlled-language.ste-conformance
+    type: complements
+    rationale: >-
+      Word choice and writing rules are the two layers of the same controlled language.
+      One checker call answers both; the detector routes each finding to whichever rule owns it,
+      so a repo that enforces one and not the other has a controlled language with a hole in it.

@@ -1,0 +1,29 @@
+schema_version: "1.0.0"
+identity:
+  urn: "wmbt:match:match-resolution:D001"
+  slug: resolve-match
+  purpose: Utilise the interlocking to resolve the match.
+description: This wagon resolve the match.
+status: RED
+severity: 4
+acceptances:
+  - identity:
+      urn: "acc:match:D001-UNIT-001"
+      purpose: Prove the resolution.
+    given:
+      abstract:
+        - A train is registered.
+        - The wagon is clean.
+      fixtures:
+        - python/trains/runner.py
+    outcome: The match resolves.
+terms:
+  - term_id: cargo
+    text: The artifact data plane.
+  - term_id: wagon
+    text: An ordered step.
+notes:
+  operator: Check the checker first.
+  agent: Rewrite the prose.
+commands:
+  - atdd validate package

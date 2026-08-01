@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ATDD project terms — part-of-speech disambiguation.
+
+  Realizes: planner.controlled-language.approved-vocabulary
+
+  ASD-STE100 Part 1 approves a base dictionary. These are the ATDD Technical Names the substrate
+  cannot express in that dictionary. Declaring a term here does two things:
+
+    1. It ADDS the word to the approved word list, so the STE checker stops reporting it as
+       unapproved.
+    2. It PINS the word to one part of speech, so the word is approved in ONE sense only. A
+       Technical Name is a noun; using it as a verb is a vocabulary defect, and the companion
+       file grammar-projectterms.xml is what reports that.
+
+  Install into <repo>/.atdd/ste/ so the checker loads it alongside the base dictionary.
+
+  Format: LanguageTool disambiguation rule XML (the format the STE checker consumes). Every rule
+  id is prefixed ATDD_TERM_ so a finding it produces routes to the approved-vocabulary rule
+  rather than to ste-conformance (see controlled_language.VOCABULARY_TOKENS).
+
+  Adding a term is an authoring decision, not a suppression: it is reviewed like any other
+  authored artifact, and a term that needs more than one sentence to define is a term the prose
+  should not use.
+-->
+<rules lang="en">
+  <category id="ATDD_PROJECT_TERMS" name="ATDD project terms">
+
+    <rulegroup id="ATDD_TERM_TECHNICAL_NAMES" name="ATDD Technical Names are nouns">
+
+      <rule id="ATDD_TERM_ACCEPTANCE">
+        <!-- A verifiable obligation attached to a WMBT or a train. Never the act of accepting. -->
+        <pattern><token regexp="yes">acceptances?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_ARTIFACT">
+        <!-- An authored file the substrate governs (a WMBT, a train, a feature, a node). -->
+        <pattern><token regexp="yes">artifacts?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_CARGO">
+        <!-- The artifact data plane the TrainRunner carries between wagons. A mass noun. -->
+        <pattern><token>cargo</token></pattern>
+        <disambig action="filter" postag="NN"/>
+      </rule>
+
+      <rule id="ATDD_TERM_CONTRACT">
+        <!-- The versioned interface between a workspace provider and an implementation. -->
+        <pattern><token regexp="yes">contracts?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_CONVENTION_NODE">
+        <!-- One authored rule: a single *.convention.yaml node with one rule_id. -->
+        <pattern>
+          <token regexp="yes">convention</token>
+          <token regexp="yes">nodes?</token>
+        </pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_FEATURE">
+        <!-- A URN-addressed unit of capability that WMBTs and trains bind to. -->
+        <pattern><token regexp="yes">features?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_INTERLOCKING">
+        <!-- The route-control layer that selects which train runs. Never a participle. -->
+        <pattern><token regexp="yes">interlockings?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_TRAIN">
+        <!-- An ordered sequence of wagons. Never the verb "to train". -->
+        <pattern><token regexp="yes">trains?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_WAGON">
+        <!-- One step in a train: a named unit of work with its own WMBTs. -->
+        <pattern><token regexp="yes">wagons?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+      <rule id="ATDD_TERM_WMBT">
+        <!-- "What Must Be True": one decomposed truth a wagon must satisfy. Always uppercase. -->
+        <pattern><token regexp="yes" case_sensitive="yes">WMBTs?</token></pattern>
+        <disambig action="filter" postag="NN.*"/>
+      </rule>
+
+    </rulegroup>
+  </category>
+</rules>

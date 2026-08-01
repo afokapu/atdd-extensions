@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ATDD project terms — misuse rules.
+
+  Realizes: planner.controlled-language.approved-vocabulary
+
+  disambiguation-projectterms.xml ADDS each ATDD Technical Name to the approved word list and
+  pins it to one part of speech. This file is the other half: it REPORTS a declared term used
+  outside its declared sense, plus the spellings the substrate has settled on.
+
+  A term is approved in ONE meaning. `train` is the ordered wagon sequence, never the verb "to
+  train"; `cargo` is the artifact data plane, never freight. Without these rules the vocabulary
+  would only widen the dictionary, and widening a dictionary without pinning meaning is how a
+  controlled language stops controlling anything.
+
+  Install into <repo>/.atdd/ste/ so the checker loads it alongside the base dictionary.
+
+  Format: LanguageTool grammar rule XML (the format the STE checker consumes). Every rule id is
+  prefixed ATDD_TERM_ so a finding it produces routes to the approved-vocabulary rule rather
+  than to ste-conformance (see controlled_language.VOCABULARY_TOKENS).
+-->
+<rules lang="en">
+  <category id="ATDD_PROJECT_TERMS" name="ATDD project terms">
+
+    <rule id="ATDD_TERM_TRAIN_AS_VERB" name="train is a Technical Name, not a verb">
+      <pattern>
+        <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">train</token></marker>
+      </pattern>
+      <message>"train" is an ATDD Technical Name — the ordered sequence of wagons. Do not use it
+        as a verb. Rewrite the sentence around the noun.</message>
+      <example correction="">We <marker>train</marker> the runner on the new wagons.</example>
+      <example>The train runs the wagons in sequence.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_CONTRACT_AS_VERB" name="contract is a Technical Name, not a verb">
+      <pattern>
+        <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">contract</token></marker>
+      </pattern>
+      <message>"contract" is an ATDD Technical Name — the versioned interface between a workspace
+        provider and an implementation. Do not use it as a verb.</message>
+      <example correction="">The scan roots <marker>contract</marker> to one directory.</example>
+      <example>The implementation declares the provider contract.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_FEATURE_AS_VERB" name="feature is a Technical Name, not a verb">
+      <pattern>
+        <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">feature</token></marker>
+      </pattern>
+      <message>"feature" is an ATDD Technical Name — a URN-addressed unit of capability. Do not
+        use it as a verb.</message>
+      <example correction="">The reports <marker>feature</marker> a summary line.</example>
+      <example>The WMBT binds to one feature.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_CARGO_PLURAL" name="cargo is a mass noun">
+      <pattern>
+        <marker><token regexp="yes" case_sensitive="no">cargo(e?s)</token></marker>
+      </pattern>
+      <message>"cargo" is the artifact data plane and is a mass noun. Write "cargo", not a
+        plural.</message>
+      <example correction="cargo">The runner carries two <marker>cargos</marker>.</example>
+      <example>The runner carries the cargo between wagons.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_ARTIFACT_SPELLING" name="artifact is spelled with an i">
+      <pattern>
+        <marker><token regexp="yes" case_sensitive="no">artefacts?</token></marker>
+      </pattern>
+      <message>ATDD spells this term "artifact". "artefact" is not in the approved word
+        list.</message>
+      <example correction="artifact">The authored <marker>artefact</marker> is governed.</example>
+      <example>The authored artifact is governed.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_CONVENTION_NODE_SPELLING" name="convention node is two words">
+      <pattern>
+        <marker><token regexp="yes" case_sensitive="no">convention[-_]nodes?|conventionnodes?</token></marker>
+      </pattern>
+      <message>Write the Technical Name as two words: "convention node".</message>
+      <example correction="convention node">The <marker>convention-node</marker> carries one rule_id.</example>
+      <example>The convention node carries one rule_id.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_WMBT_CASE" name="WMBT is written in capital letters">
+      <pattern>
+        <marker><token regexp="yes" case_sensitive="yes">[Ww]mbts?|WMBTS</token></marker>
+      </pattern>
+      <message>"WMBT" ("What Must Be True") is an abbreviation. Write it in capital letters; write
+        the plural as "WMBTs".</message>
+      <example correction="WMBT">The wagon declares one <marker>wmbt</marker>.</example>
+      <example>The wagon declares one WMBT.</example>
+    </rule>
+
+    <rule id="ATDD_TERM_INTERLOCKING_AS_PARTICIPLE" name="interlocking is a Technical Name">
+      <pattern>
+        <token regexp="yes">is|are|was|were</token>
+        <marker><token case_sensitive="no">interlocking</token></marker>
+      </pattern>
+      <message>"interlocking" is an ATDD Technical Name — the route-control layer that selects a
+        train. Do not use it as a present participle.</message>
+      <example correction="">The routes are <marker>interlocking</marker> at run time.</example>
+      <example>The interlocking selects the train.</example>
+    </rule>
+
+  </category>
+</rules>

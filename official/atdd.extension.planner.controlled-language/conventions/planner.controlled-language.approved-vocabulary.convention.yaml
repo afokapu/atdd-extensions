@@ -1,0 +1,76 @@
+schema_version: 1.1.0
+rule_id: planner.controlled-language.approved-vocabulary
+kind: rule
+status: active
+name: Authored prose uses the approved word list plus the ATDD project terms
+statement: >-
+  Every prose field in an authored ATDD artifact MUST draw its words from the approved
+  ASD-STE100 dictionary extended by the ATDD project-terms vocabulary shipped in this package
+  (`ste/disambiguation-projectterms.xml`, `ste/grammar-projectterms.xml`). A domain word that
+  the substrate depends on — acceptance, artifact, cargo, contract, convention node, feature,
+  interlocking, train, wagon, WMBT — is approved BECAUSE it is declared in that vocabulary, and
+  is approved in that declared sense only. This is the agnostic obligation; the checker judges
+  conformance and the implementation referenced below transports and reports it.
+implementation:
+  type: validator
+  ref: controlled-language-check
+content:
+  summary: >-
+    The vocabulary half of the controlled-language gate, split from
+    `planner.controlled-language.ste-conformance` because the two fail for different reasons and
+    are fixed by different people. A vocabulary finding says "this word is not on the list" —
+    the fix is either to use an approved synonym or to ADD the word to the project vocabulary,
+    which is a deliberate, reviewable act. A conformance finding says "this sentence breaks a
+    writing rule" — the fix is always to rewrite. The detector routes each checker finding to
+    one of the two rule_ids by inspecting the checker's own rule/category id.
+  normative_text: |
+    The approved word list has two layers:
+
+      * ASD-STE100 Part 1 — the base dictionary. Owned by the standard, not restated here.
+      * The ATDD project terms — `ste/*.xml` in this package. A project term is a Technical Name
+        or a Technical Verb the substrate cannot express in base STE. Each entry declares the
+        word, its part of speech, and the ONE meaning it carries in ATDD prose.
+
+    The obligations:
+
+      * A word used in a prose field must be in one of the two layers.
+      * A declared project term must be used in its declared sense. `train` is the ordered
+        wagon sequence, never the verb "to train"; `cargo` is the artifact data plane, never
+        freight.
+      * Adding a project term is an authoring decision, not a suppression. It changes the
+        vocabulary XML, so it is reviewed like any other authored artifact.
+      * This rule governs WORD CHOICE only. Sentence-level writing rules belong to the sibling
+        `planner.controlled-language.ste-conformance` node.
+      * Like its sibling, this rule FAILS CLOSED — an unavailable checker yields a violation.
+  fix_hint: |
+    Replace the flagged word with an approved one; the violation's `evidence` carries the
+    checker's `replacements=[...]` suggestions.
+
+    If the flagged word is a real ATDD concept that the vocabulary is missing, add it to
+    `ste/disambiguation-projectterms.xml` (and `ste/grammar-projectterms.xml` when it needs a
+    part-of-speech rule) with a single, unambiguous definition — then reinstall the vocabulary
+    into `<repo>/.atdd/ste/` so the checker sees it. Do not add a word to make a warning go
+    away; a term that cannot be defined in one sentence is a term the artifact should not use.
+  exceptions:
+    - Proper nouns that name an external product, repository, or standard (for example
+      `LanguageTool`, `TechScribe`, `ASD-STE100`) are Technical Names and are declared in the
+      project vocabulary rather than rewritten.
+metadata:
+  aliases:
+    - STE-VOCABULARY-001
+  severity: 3
+  disposition: suppress-and-clean
+  introduced_in: 0.1.0
+terms:
+  - term_id: project_term
+    text: >-
+      a word the ATDD substrate depends on that base ASD-STE100 does not approve; it is declared
+      in this package's vocabulary XML with its part of speech and its single ATDD meaning.
+  - term_id: approved_word_list
+    text: >-
+      the union of the base ASD-STE100 dictionary and the ATDD project terms; a prose field may
+      use a word only when that word is in the union.
+  - term_id: vocabulary_install_dir
+    text: >-
+      `<repo>/.atdd/ste/`, the directory the project-terms XML is installed into so the STE
+      checker loads it alongside the base dictionary.
