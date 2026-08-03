@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ATDD project terms — part-of-speech disambiguation.
+
+  Realizes: planner.controlled-language.approved-vocabulary
+
+  ASD-STE100 Part 1 approves a base dictionary. These are the ATDD Technical Names and Technical
+  Verbs the substrate cannot express in that dictionary. Declaring a term here does two things:
+
+    1. It ADDS the word to the approved word list, so the checker stops reporting it as
+       unapproved.
+    2. It PINS the word to ONE part of speech, so the word is approved in ONE sense only. A
+       Technical Name is a noun; using it as a verb is a vocabulary defect, and the companion file
+       grammar-projectterms.xml is what reports that.
+
+  PROVENANCE. This is not a guessed list. Every term was selected from the 207 *.convention.yaml
+  nodes under official/ by DOCUMENT FREQUENCY — how many separate convention nodes use the word.
+  The "[corpus df N]" note on each entry is that count, so a reviewer can see the evidence for
+  admitting a word. Entries with no count are structural terms the corpus uses in identifiers and
+  headings rather than in prose (for example "persona", "manifest", "cargo"), or terms named in
+  the extension's own conventions.
+
+  A word already approved by base ASD-STE100 does not need an entry; declaring one anyway is
+  harmless, because the only added effect is pinning its part of speech.
+
+  Install into <repo>/.atdd/ste/ so the checker loads this alongside the base dictionary.
+
+  Format: LanguageTool disambiguation rule XML. Every rule id is prefixed ATDD_TERM_ so a finding
+  it produces routes to the approved-vocabulary rule rather than to ste-conformance (see
+  controlled_language.VOCABULARY_TOKENS); a test pins that agreement.
+
+  Adding a term is an authoring decision, not a suppression: it changes a reviewed artifact. A
+  term that needs more than one sentence to define is a term the prose should not use.
+-->
+<rules lang="en">
+  <category id="ATDD_PROJECT_TERMS" name="ATDD project terms">
+
+    <rulegroup id="ATDD_TERM_SUBSTRATE_NAMES" name="Substrate Technical Names (nouns)">
+      <!-- the agnostic requirement a convention node states, before any stack realizes it. [corpus df 197] -->
+      <rule id="ATDD_TERM_OBLIGATION">
+        <pattern><token regexp="yes">obligations?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the pure decision module that finds violations in the supplied source; it decides no disposition. [corpus df 195] -->
+      <rule id="ATDD_TERM_DETECTOR">
+        <pattern><token regexp="yes">detectors?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the stack-specific implementation of an agnostic obligation. [corpus df 195] -->
+      <rule id="ATDD_TERM_REALIZATION">
+        <pattern><token regexp="yes">realizations?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one governed obligation, addressed by a rule id and declared in one convention node. [corpus df 181] -->
+      <rule id="ATDD_TERM_RULE">
+        <pattern><token regexp="yes">rules?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the executable unit that realizes one or more conventions and emits their rule ids. [corpus df 166] -->
+      <rule id="ATDD_TERM_IMPLEMENTATION">
+        <pattern><token regexp="yes">implementations?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the reusable runtime package an implementation targets, referenced by id and contract range. [corpus df 145] -->
+      <rule id="ATDD_TERM_WORKSPACE">
+        <pattern><token regexp="yes">workspaces?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the executing machinery, as opposed to the authored declaration that describes it. [corpus df 143] -->
+      <rule id="ATDD_TERM_RUNTIME">
+        <pattern><token regexp="yes">runtimes?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one pass of a detector over the supplied scan roots. [corpus df 121] -->
+      <rule id="ATDD_TERM_SCAN">
+        <pattern><token regexp="yes">scans?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the per-rule CI policy: strict, suppress-and-clean, advisory, or documentation-only. [corpus df 109] -->
+      <rule id="ATDD_TERM_DISPOSITION">
+        <pattern><token regexp="yes">dispositions?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a use-case package that owns conventions, relationships and implementations. [corpus df 100] -->
+      <rule id="ATDD_TERM_EXTENSION">
+        <pattern><token regexp="yes">extensions?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a peer node or package authored in the same slice of work. [corpus df 97] -->
+      <rule id="ATDD_TERM_SIBLING">
+        <pattern><token regexp="yes">siblings?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the repository whose source an implementation inspects, and which decides disposition. [corpus df 76] -->
+      <rule id="ATDD_TERM_CONSUMER">
+        <pattern><token regexp="yes">consumers?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a detector that emits more than one rule id from a single run. [corpus df 78] -->
+      <rule id="ATDD_TERM_FAMILY">
+        <pattern><token regexp="yes">families|family</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one language and toolchain a realization is written for. [corpus df 67] -->
+      <rule id="ATDD_TERM_STACK">
+        <pattern><token regexp="yes">stacks?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one raw factual finding: a rule id, a location, and evidence. [corpus df 50] -->
+      <rule id="ATDD_TERM_VIOLATION">
+        <pattern><token regexp="yes">violations?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the selector set that binds a rule's enforcement to the consumer files it inspects. [corpus df 43] -->
+      <rule id="ATDD_TERM_SCOPE">
+        <pattern><token regexp="yes">scopes?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one addressable element of the convention or relationship graph. [corpus df 39] -->
+      <rule id="ATDD_TERM_NODE">
+        <pattern><token regexp="yes">nodes?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one typed relationship between two nodes. [corpus df 37] -->
+      <rule id="ATDD_TERM_EDGE">
+        <pattern><token regexp="yes">edges?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- an inline comment a suppress-and-clean rule honours. [corpus df 36] -->
+      <rule id="ATDD_TERM_MARKER">
+        <pattern><token regexp="yes">markers?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the stage declaration that decides when a rule's implementation runs. [corpus df 36] -->
+      <rule id="ATDD_TERM_GATE">
+        <pattern><token regexp="yes">gates?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the one-to-five weight a convention node assigns to its rule. [corpus df 34] -->
+      <rule id="ATDD_TERM_SEVERITY">
+        <pattern><token regexp="yes">severit(y|ies)</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the policy that lets a recorded count fall but never rise. [corpus df 34] -->
+      <rule id="ATDD_TERM_RATCHET">
+        <pattern><token regexp="yes">ratchets?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the uniform resource name that addresses one authored artifact. [corpus df 33] -->
+      <rule id="ATDD_TERM_URN">
+        <pattern><token regexp="yes">URNs?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the recorded count a ratchet compares the current count against. [corpus df 31] -->
+      <rule id="ATDD_TERM_BASELINE">
+        <pattern><token regexp="yes">baselines?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the set of files or declarations one persona is responsible for. [corpus df 29] -->
+      <rule id="ATDD_TERM_SURFACE">
+        <pattern><token regexp="yes">surfaces?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- an authored rule node; the agnostic half of a governed obligation. [corpus df 24] -->
+      <rule id="ATDD_TERM_CONVENTION">
+        <pattern><token regexp="yes">conventions?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a workspace provider: the shared runtime that discovers and runs implementations. [corpus df 19] -->
+      <rule id="ATDD_TERM_PROVIDER">
+        <pattern><token regexp="yes">providers?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the shared ATDD machinery every persona authors against. -->
+      <rule id="ATDD_TERM_SUBSTRATE">
+        <pattern><token regexp="yes">substrates?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one of the four protocol lanes: planner, coder, tester, coach. -->
+      <rule id="ATDD_TERM_PERSONA">
+        <pattern><token regexp="yes">personas?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the authored YAML that declares a package's identity and what it owns. -->
+      <rule id="ATDD_TERM_MANIFEST">
+        <pattern><token regexp="yes">manifests?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a generated view derived from an authored artifact; never hand-edited. -->
+      <rule id="ATDD_TERM_PROJECTION">
+        <pattern><token regexp="yes">projections?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one include glob in a scope. -->
+      <rule id="ATDD_TERM_SELECTOR">
+        <pattern><token regexp="yes">selectors?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the recorded decision to absorb a violation of a suppress-and-clean rule. -->
+      <rule id="ATDD_TERM_SUPPRESSION">
+        <pattern><token regexp="yes">suppressions?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the header that binds a source file back to the URN it realizes. [corpus df 21] -->
+      <rule id="ATDD_TERM_TRACEABILITY">
+        <pattern><token regexp="yes">traceability</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the factual detail that supports a violation; never an interpretation of it. -->
+      <rule id="ATDD_TERM_EVIDENCE">
+        <pattern><token regexp="yes">evidence</token></pattern>
+        <disambig action="filterall" postag="NN"/>
+      </rule>
+    </rulegroup>
+
+    <rulegroup id="ATDD_TERM_TRAIN_NAMES" name="Train-model Technical Names (nouns)">
+      <!-- an ordered sequence of wagons. Never the verb 'to train'. [corpus df 39] -->
+      <rule id="ATDD_TERM_TRAIN">
+        <pattern><token regexp="yes">trains?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the route-control layer that selects which train runs. Never a present participle. [corpus df 27] -->
+      <rule id="ATDD_TERM_INTERLOCKING">
+        <pattern><token regexp="yes">interlockings?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one step in a train: a named unit of work with its own WMBTs. [corpus df 63] -->
+      <rule id="ATDD_TERM_WAGON">
+        <pattern><token regexp="yes">wagons?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the artifact data plane the train runner carries between wagons. A mass noun. -->
+      <rule id="ATDD_TERM_CARGO">
+        <pattern><token regexp="yes">cargo</token></pattern>
+        <disambig action="filterall" postag="NN"/>
+      </rule>
+
+      <!-- one admissible path an interlocking may select. [corpus df 35] -->
+      <rule id="ATDD_TERM_ROUTE">
+        <pattern><token regexp="yes">routes?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- 'What Must Be True': one decomposed truth a wagon must satisfy. Always capital letters. -->
+      <rule id="ATDD_TERM_WMBT">
+        <pattern><token regexp="yes">WMBTs?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a verifiable obligation attached to a WMBT or a train. Never the act of accepting. -->
+      <rule id="ATDD_TERM_ACCEPTANCE">
+        <pattern><token regexp="yes">acceptances?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- an authored file the substrate governs. Spelled with an i, never 'artefact'. [corpus df 16] -->
+      <rule id="ATDD_TERM_ARTIFACT">
+        <pattern><token regexp="yes">artifacts?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the versioned interface between a workspace provider and an implementation. [corpus df 25] -->
+      <rule id="ATDD_TERM_CONTRACT">
+        <pattern><token regexp="yes">contracts?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- a URN-addressed unit of capability that WMBTs and trains bind to. [corpus df 55] -->
+      <rule id="ATDD_TERM_FEATURE">
+        <pattern><token regexp="yes">features?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- one authored rule: a single convention file carrying one rule id. -->
+      <rule id="ATDD_TERM_CONVENTION_NODE">
+        <pattern><token regexp="yes">convention</token><token regexp="yes">nodes?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the consumer entry point that calls the interlocking before it delegates to the train runner. -->
+      <rule id="ATDD_TERM_STATION_MASTER">
+        <pattern><token regexp="yes">station</token><token regexp="yes">masters?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the station master's declaration of which action reaches which route. -->
+      <rule id="ATDD_TERM_JOURNEY_MAP">
+        <pattern><token regexp="yes">journey</token><token regexp="yes">maps?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+
+      <!-- the production-runner test that proves a station master route executes end to end. -->
+      <rule id="ATDD_TERM_SMOKE_TEST">
+        <pattern><token regexp="yes">smoke</token><token regexp="yes">tests?</token></pattern>
+        <disambig action="filterall" postag="NN.*"/>
+      </rule>
+    </rulegroup>
+
+    <rulegroup id="ATDD_TERM_PERSONA_NAMES" name="Persona Technical Names (nouns)">
+      <!-- the persona that owns the source surface. [corpus df 152] -->
+      <rule id="ATDD_TERM_CODER">
+        <pattern><token regexp="yes">coder</token></pattern>
+        <disambig action="filterall" postag="NN"/>
+      </rule>
+
+      <!-- the persona that owns the test surface. [corpus df 30] -->
+      <rule id="ATDD_TERM_TESTER">
+        <pattern><token regexp="yes">tester</token></pattern>
+        <disambig action="filterall" postag="NN"/>
+      </rule>
+
+      <!-- the persona that owns the lifecycle. Never the verb 'to coach'. [corpus df 50] -->
+      <rule id="ATDD_TERM_COACH">
+        <pattern><token regexp="yes">coach</token></pattern>
+        <disambig action="filterall" postag="NN"/>
+      </rule>
+
+      <!-- the persona that owns the authored artifacts. -->
+      <rule id="ATDD_TERM_PLANNER">
+        <pattern><token regexp="yes">planner</token></pattern>
+        <disambig action="filterall" postag="NN"/>
+      </rule>
+    </rulegroup>
+
+    <rulegroup id="ATDD_TERM_TECHNICAL_VERBS" name="ATDD Technical Verbs">
+      <!-- to hand a decision to the layer that owns it, instead of duplicating it. [corpus df 169] -->
+      <rule id="ATDD_TERM_V_DELEGATE">
+        <pattern><token regexp="yes">delegates?|delegated|delegating</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to make a rule fail the build when it is broken. [corpus df 135] -->
+      <rule id="ATDD_TERM_V_ENFORCE">
+        <pattern><token regexp="yes">enforces?|enforced|enforcing</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to record a violation at a site, without deciding what happens next. [corpus df 131] -->
+      <rule id="ATDD_TERM_V_FLAG">
+        <pattern><token regexp="yes">flags?|flagged|flagging</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to write a raw violation into the report channel. [corpus df 90] -->
+      <rule id="ATDD_TERM_V_EMIT">
+        <pattern><token regexp="yes">emits?|emitted|emitting</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to implement an agnostic obligation for one stack. Spelled with a z. [corpus df 47] -->
+      <rule id="ATDD_TERM_V_REALIZE">
+        <pattern><token regexp="yes">realizes?|realized|realizing</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to walk the supplied roots and inspect the files under them. [corpus df 42] -->
+      <rule id="ATDD_TERM_V_SCAN">
+        <pattern><token regexp="yes">scans?|scanned|scanning</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to turn a reference into the thing it names. [corpus df 42] -->
+      <rule id="ATDD_TERM_V_RESOLVE">
+        <pattern><token regexp="yes">resolves?|resolved|resolving</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to load and validate a package against core, executing nothing. [corpus df 22] -->
+      <rule id="ATDD_TERM_V_COMPOSE">
+        <pattern><token regexp="yes">composes?|composed|composing</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to attach a rule to the surface it governs. [corpus df 18] -->
+      <rule id="ATDD_TERM_V_BIND">
+        <pattern><token regexp="yes">binds?|bound|binding</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to absorb a violation of a suppress-and-clean rule with an inline marker. -->
+      <rule id="ATDD_TERM_V_SUPPRESS">
+        <pattern><token regexp="yes">suppresses?|suppressed|suppressing</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+
+      <!-- to lower a recorded baseline and forbid it from rising again. [corpus df 20] -->
+      <rule id="ATDD_TERM_V_RATCHET">
+        <pattern><token regexp="yes">ratchets?|ratcheted|ratcheting</token></pattern>
+        <disambig action="filterall" postag="VB.*"/>
+      </rule>
+    </rulegroup>
+
+    <rulegroup id="ATDD_TERM_RUNTIME_CLASS_NAMES" name="Runtime Technical Names the corpus references by class name">
+      <!-- the runtime that executes a train's wagons in sequence. [corpus df 23] -->
+      <rule id="ATDD_TERM_CLASS_TRAINRUNNER">
+        <pattern><token case_sensitive="yes">TrainRunner</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+
+      <!-- the runtime that resolves an action to a train before the train runner executes it. [corpus df 23] -->
+      <rule id="ATDD_TERM_CLASS_INTERLOCKINGRUNNER">
+        <pattern><token case_sensitive="yes">InterlockingRunner</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+
+      <!-- the structured answer an interlocking runner returns, never a bare train id. [corpus df 6] -->
+      <rule id="ATDD_TERM_CLASS_INTERLOCKINGRESOLUTION">
+        <pattern><token case_sensitive="yes">InterlockingResolution</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+
+      <!-- the completed outcome a train runner returns. [corpus df 5] -->
+      <rule id="ATDD_TERM_CLASS_TRAINRESULT">
+        <pattern><token case_sensitive="yes">TrainResult</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+
+      <!-- the structural interface a state sync provider satisfies. [corpus df 2] -->
+      <rule id="ATDD_TERM_CLASS_SYNCPROVIDER">
+        <pattern><token case_sensitive="yes">SyncProvider</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+    </rulegroup>
+
+    <rulegroup id="ATDD_TERM_PRODUCT_NAMES" name="Product, format and provider proper names">
+      <rule id="ATDD_TERM_NAME_ATDD">
+        <pattern><token case_sensitive="yes">ATDD</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_GITHUB">
+        <pattern><token case_sensitive="yes">GitHub</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_PYTHON">
+        <pattern><token case_sensitive="yes">Python</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_PYTEST">
+        <pattern><token case_sensitive="yes">pytest</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_TYPESCRIPT">
+        <pattern><token case_sensitive="yes">TypeScript</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_JAVASCRIPT">
+        <pattern><token case_sensitive="yes">JavaScript</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_YAML">
+        <pattern><token case_sensitive="yes">YAML</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_JSON">
+        <pattern><token case_sensitive="yes">JSON</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_XML">
+        <pattern><token case_sensitive="yes">XML</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_HTTP">
+        <pattern><token case_sensitive="yes">HTTP</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_AST">
+        <pattern><token case_sensitive="yes">AST</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_LANGUAGETOOL">
+        <pattern><token case_sensitive="yes">LanguageTool</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_TECHSCRIBE">
+        <pattern><token case_sensitive="yes">TechScribe</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_STE">
+        <pattern><token case_sensitive="yes">STE</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_CONVEX">
+        <pattern><token case_sensitive="yes">Convex</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_VITE">
+        <pattern><token case_sensitive="yes">Vite</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_ASTRO">
+        <pattern><token case_sensitive="yes">Astro</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_REACT">
+        <pattern><token case_sensitive="yes">React</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_SUPABASE">
+        <pattern><token case_sensitive="yes">Supabase</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_DART">
+        <pattern><token case_sensitive="yes">Dart</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_FLUTTER">
+        <pattern><token case_sensitive="yes">Flutter</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_FASTAPI">
+        <pattern><token case_sensitive="yes">FastAPI</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_GIT">
+        <pattern><token case_sensitive="yes">Git</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+      <rule id="ATDD_TERM_NAME_SONARQUBE">
+        <pattern><token case_sensitive="yes">SonarQube</token></pattern>
+        <disambig action="filterall" postag="NNP"/>
+      </rule>
+    </rulegroup>
+
+  </category>
+</rules>

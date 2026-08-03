@@ -1,0 +1,3 @@
+# A generated projection. Consumers exclude this tree via ATDD_SCAN_EXCLUDES; its prose is a
+# derived copy, so checking it would report the same defect twice.
+description: Generated prose that must not be checked.

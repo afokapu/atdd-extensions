@@ -1,0 +1,30 @@
+schema_version: "1.1.0"
+kind: implementation
+subtype: validator
+
+implementation_id: controlled-language-check
+targets_workspace: atdd.workspace.python-pytest
+# Needs the v1.1 scan-mount (ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES) and the structured
+# report channel, so it declares 1.1.0 rather than the v1.0.0 exit-code mapping.
+contract_version: "1.1.0"
+
+# The agnostic obligations this ONE detector realizes. A single checker round-trip answers both
+# layers of the controlled language, so one implementation owns both conventions; each finding is
+# routed to whichever rule owns it (controlled_language.rule_for).
+realizes_convention:
+  - planner.controlled-language.ste-conformance
+  - planner.controlled-language.approved-vocabulary
+
+emits_rule_ids:
+  - planner.controlled-language.ste-conformance     # disposition: suppress-and-clean
+  - planner.controlled-language.approved-vocabulary # disposition: suppress-and-clean
+
+# The pure detector module. Walks the YAML artifacts under the supplied scan roots, extracts every
+# PROSE_KEYS value, and sends each string to $ATDD_STE_URL. Implements no STE rule of its own and
+# decides no disposition; fails closed when the checker cannot be consulted.
+entrypoint: controlled_language.py
+
+# The runnable v1.1 report-emitting pytest the provider CLI collects: scans ATDD_SCAN_ROOTS and
+# writes the RAW report to ATDD_VIOLATIONS_REPORT. Every HTTP call in the suite is mocked — the
+# tests need no Java, no TechScribe install, and no network.
+report: test_controlled_language.py

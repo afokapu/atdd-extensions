@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ATDD project terms — misuse rules.
+
+  Realizes: planner.controlled-language.approved-vocabulary
+
+  disambiguation-projectterms.xml ADDS each ATDD Technical Name and Technical Verb to the approved
+  word list and pins it to one part of speech. This file is the other half: it REPORTS a declared
+  term used outside its declared sense, plus the spellings and casings the substrate has settled on.
+
+  A term is approved in ONE meaning. `train` is the ordered wagon sequence, never the verb "to
+  train"; `cargo` is the artifact data plane, never freight; `coach` is the lifecycle persona,
+  never the verb. Without these rules the vocabulary would only widen the dictionary, and widening
+  a dictionary without pinning meaning is how a controlled language stops controlling anything.
+
+  Rules here are derived from the same corpus as the disambiguation file: the 207 *.convention.yaml
+  nodes under official/. Each one either (a) protects a Technical Name from a part-of-speech slip
+  the corpus makes possible, or (b) pins a spelling/casing the corpus already uses consistently.
+
+  Install into <repo>/.atdd/ste/ so the checker loads this alongside the base dictionary.
+
+  Format: LanguageTool grammar rule XML. Every rule id is prefixed ATDD_TERM_ so a finding it
+  produces routes to the approved-vocabulary rule rather than to ste-conformance (see
+  controlled_language.VOCABULARY_TOKENS); a test pins that agreement.
+-->
+<rules lang="en">
+  <category id="ATDD_PROJECT_TERMS" name="ATDD project terms">
+
+    <!-- ══ 1. Technical Names used as verbs ═══════════════════════════════════════════════════
+         Each of these is declared a noun in the disambiguation file. English lets every one of
+         them slip into a verb, and each slip changes what the sentence claims. -->
+
+    <rulegroup id="ATDD_TERM_NAME_AS_VERB" name="An ATDD Technical Name is not a verb">
+
+      <rule id="ATDD_TERM_TRAIN_AS_VERB" name="train is a Technical Name, not a verb">
+        <pattern>
+          <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">train</token></marker>
+        </pattern>
+        <message>"train" is an ATDD Technical Name — the ordered sequence of wagons. Do not use it
+          as a verb. Rewrite the sentence around the noun.</message>
+        <example correction="">We <marker>train</marker> the runner on the new wagons.</example>
+        <example>The train runs the wagons in sequence.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_CONTRACT_AS_VERB" name="contract is a Technical Name, not a verb">
+        <pattern>
+          <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">contract</token></marker>
+        </pattern>
+        <message>"contract" is an ATDD Technical Name — the versioned interface between a workspace
+          provider and an implementation. Do not use it as a verb.</message>
+        <example correction="">The scan roots <marker>contract</marker> to one directory.</example>
+        <example>The implementation declares the provider contract.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_FEATURE_AS_VERB" name="feature is a Technical Name, not a verb">
+        <pattern>
+          <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">feature</token></marker>
+        </pattern>
+        <message>"feature" is an ATDD Technical Name — a URN-addressed unit of capability. Do not
+          use it as a verb.</message>
+        <example correction="">The reports <marker>feature</marker> a summary line.</example>
+        <example>The WMBT binds to one feature.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_GATE_AS_VERB" name="gate is a Technical Name, not a verb">
+        <pattern>
+          <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">gate</token></marker>
+        </pattern>
+        <message>"gate" is an ATDD Technical Name — the stage declaration that decides when an
+          implementation runs. Write "the gate blocks" or "the gate runs", not "we gate".</message>
+        <example correction="">We <marker>gate</marker> the merge on this rule.</example>
+        <example>The CI gate blocks the merge on this rule.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_SCOPE_AS_VERB" name="scope is a Technical Name, not a verb">
+        <pattern>
+          <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">scope</token></marker>
+        </pattern>
+        <message>"scope" is an ATDD Technical Name — the selector set that binds a rule to the
+          files it inspects. Do not use it as a verb.</message>
+        <example correction="">We <marker>scope</marker> the rule to python/.</example>
+        <example>The scope binds the rule to python/.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_COACH_AS_VERB" name="coach is a persona name, not a verb">
+        <pattern>
+          <marker><token postag="VB|VBP|VBZ|VBD|VBG" postag_regexp="yes">coach</token></marker>
+        </pattern>
+        <message>"coach" is the ATDD persona that owns the lifecycle. Do not use it as a
+          verb.</message>
+        <example correction="">The gate <marker>coaches</marker> the author.</example>
+        <example>The coach persona owns the lifecycle.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_INTERLOCKING_AS_PARTICIPLE" name="interlocking is a Technical Name">
+        <pattern>
+          <token regexp="yes">is|are|was|were</token>
+          <marker><token case_sensitive="no">interlocking</token></marker>
+        </pattern>
+        <message>"interlocking" is an ATDD Technical Name — the route-control layer that selects a
+          train. Do not use it as a present participle.</message>
+        <example correction="">The routes are <marker>interlocking</marker> at run time.</example>
+        <example>The interlocking selects the train.</example>
+      </rule>
+
+    </rulegroup>
+
+    <!-- ══ 2. Spellings the substrate has settled on ══════════════════════════════════════════
+         The corpus is already consistent about each of these. The rules stop new prose from
+         drifting away from a spelling 200 existing nodes share. -->
+
+    <rulegroup id="ATDD_TERM_SPELLING" name="ATDD term spellings">
+
+      <rule id="ATDD_TERM_ARTIFACT_SPELLING" name="artifact is spelled with an i">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="no">artefacts?</token></marker>
+        </pattern>
+        <message>ATDD spells this term "artifact". "artefact" is not in the approved word
+          list.</message>
+        <example correction="artifact">The authored <marker>artefact</marker> is governed.</example>
+        <example>The authored artifact is governed.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_REALIZE_SPELLING" name="realize is spelled with a z">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="no">realis(e|es|ed|ing)|realisations?</token></marker>
+        </pattern>
+        <message>ATDD spells the Technical Verb "realize" and its noun "realization" with a z, to
+          match `realizes_convention` in every implementation manifest.</message>
+        <example correction="realizes">The detector <marker>realises</marker> the convention.</example>
+        <example>The detector realizes the convention.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_CONVENTION_NODE_SPELLING" name="convention node is two words">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="no">convention[-_]nodes?|conventionnodes?</token></marker>
+        </pattern>
+        <message>Write the Technical Name as two words: "convention node".</message>
+        <example correction="convention node">The <marker>convention-node</marker> carries one rule id.</example>
+        <example>The convention node carries one rule id.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_STATION_MASTER_SPELLING" name="station master is two words">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="no">stationmasters?|station[-_]masters?</token></marker>
+        </pattern>
+        <message>Write the Technical Name as two words: "station master".</message>
+        <example correction="station master">The <marker>stationmaster</marker> selects the route.</example>
+        <example>The station master selects the route.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_WORKSPACE_ONE_WORD" name="workspace is one word">
+        <pattern>
+          <marker><token case_sensitive="no">work</token><token case_sensitive="no">space</token></marker>
+        </pattern>
+        <message>Write the Technical Name as one word: "workspace".</message>
+        <example correction="workspace">The implementation targets a <marker>work space</marker>.</example>
+        <example>The implementation targets a workspace.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_RUNTIME_ONE_WORD" name="runtime is one word as a noun">
+        <pattern>
+          <token regexp="yes" case_sensitive="no">the|a|one|shared|reusable</token>
+          <marker><token case_sensitive="no">run</token><token case_sensitive="no">time</token></marker>
+        </pattern>
+        <message>As a Technical Name, write "runtime" as one word. Two words is the adverbial "at
+          run time".</message>
+        <example correction="runtime">The provider owns the <marker>run time</marker>.</example>
+        <example>The provider owns the runtime.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_CARGO_PLURAL" name="cargo is a mass noun">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="no">cargo(e?s)</token></marker>
+        </pattern>
+        <message>"cargo" is the artifact data plane and is a mass noun. Write "cargo", not a
+          plural.</message>
+        <example correction="cargo">The runner carries two <marker>cargos</marker>.</example>
+        <example>The runner carries the cargo between wagons.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_DISPOSITION_HYPHENS" name="suppress-and-clean is hyphenated">
+        <pattern>
+          <marker><token case_sensitive="no">suppress</token><token case_sensitive="no">and</token>
+            <token case_sensitive="no">clean</token></marker>
+        </pattern>
+        <message>The disposition value is written "suppress-and-clean", with hyphens, exactly as
+          the convention nodes declare it.</message>
+        <example correction="suppress-and-clean">The rule is <marker>suppress and clean</marker>.</example>
+        <example>The rule is suppress-and-clean.</example>
+      </rule>
+
+    </rulegroup>
+
+    <!-- ══ 3. Abbreviation and proper-name casing ═════════════════════════════════════════════
+         An abbreviation the corpus writes in capital letters, or a product whose vendor spelling
+         is fixed. Getting the casing wrong makes the term unsearchable across the corpus. -->
+
+    <rulegroup id="ATDD_TERM_CASING" name="ATDD abbreviation and proper-name casing">
+
+      <rule id="ATDD_TERM_WMBT_CASE" name="WMBT is written in capital letters">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="yes">[Ww]mbts?|WMBTS</token></marker>
+        </pattern>
+        <message>"WMBT" ("What Must Be True") is an abbreviation. Write it in capital letters; write
+          the plural as "WMBTs".</message>
+        <example correction="WMBT">The wagon declares one <marker>wmbt</marker>.</example>
+        <example>The wagon declares one WMBT.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_URN_CASE" name="URN is written in capital letters">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="yes">[Uu]rns?|URNS</token></marker>
+        </pattern>
+        <message>"URN" is an abbreviation. Write it in capital letters; write the plural as
+          "URNs".</message>
+        <example correction="URN">The artifact carries one <marker>urn</marker>.</example>
+        <example>The artifact carries one URN.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_ATDD_CASE" name="ATDD is written in capital letters">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="yes">[Aa]tdd|Atdd</token></marker>
+        </pattern>
+        <message>"ATDD" is written in capital letters in prose. The lowercase form `atdd` is the
+          command and the package namespace, which are identifiers, not prose.</message>
+        <example correction="ATDD">The <marker>atdd</marker> substrate governs the artifact.</example>
+        <example>The ATDD substrate governs the artifact.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_FORMAT_CASE" name="YAML, JSON, XML, HTTP and AST are written in capital letters">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="yes">[Yy]aml|[Jj]son|[Xx]ml|[Hh]ttp|[Aa]st</token></marker>
+        </pattern>
+        <message>Write this abbreviation in capital letters: YAML, JSON, XML, HTTP, AST.</message>
+        <example correction="YAML">The manifest is a <marker>yaml</marker> file.</example>
+        <example>The manifest is a YAML file.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_PRODUCT_CASE" name="A product name keeps its vendor spelling">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="yes">[Tt]ypescript|[Jj]avascript|[Gg]ithub|[Ll]anguagetool|[Tt]echscribe|[Ff]astapi|[Ss]onarqube</token></marker>
+        </pattern>
+        <message>Write the product name in its vendor spelling: TypeScript, JavaScript, GitHub,
+          LanguageTool, TechScribe, FastAPI, SonarQube.</message>
+        <example correction="TypeScript">The detector reads <marker>Typescript</marker> source.</example>
+        <example>The detector reads TypeScript source.</example>
+      </rule>
+
+      <rule id="ATDD_TERM_RUNTIME_CLASS_CASE" name="A runtime class name keeps its PascalCase">
+        <pattern>
+          <marker><token regexp="yes" case_sensitive="yes">[Tt]rainrunner|[Ii]nterlockingrunner|[Tt]rainresult|[Ii]nterlockingresolution</token></marker>
+        </pattern>
+        <message>Write the runtime Technical Name in PascalCase: TrainRunner, InterlockingRunner,
+          TrainResult, InterlockingResolution.</message>
+        <example correction="InterlockingRunner">The consumer ships an <marker>Interlockingrunner</marker>.</example>
+        <example>The consumer ships an InterlockingRunner.</example>
+      </rule>
+
+    </rulegroup>
+  </category>
+</rules>

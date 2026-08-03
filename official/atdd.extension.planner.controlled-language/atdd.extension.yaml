@@ -1,0 +1,66 @@
+schema_version: "1.0.0"
+
+# Official ATDD controlled-language extension.
+#
+# Authored ATDD artifacts (WMBTs, trains, features, convention nodes) are read by
+# humans AND by agents. Free-form English in those artifacts is the last
+# unenforced surface in the substrate: two authors can describe the same
+# obligation in two vocabularies and nothing notices. This package binds the
+# authored PROSE to a controlled language — ASD-STE100 Simplified Technical
+# English plus an ATDD project-terms vocabulary — so a purpose/statement/rationale
+# is mechanically checkable the same way a URN or a schema field already is.
+#
+# Boundary model (CONTRIBUTING.md "The Four Layers"):
+#   - This EXTENSION owns the rules (conventions) + the implementation (detector).
+#   - The WORKSPACE PROVIDER (atdd.workspace.python-pytest) owns the reusable
+#     runtime; referenced by id + contract range, never bundled here.
+#   - The STE rules themselves are NOT implemented here. TechScribe's checker owns
+#     them; this package speaks to it over HTTP and reports what it says. The only
+#     thing authored in-repo is the ATDD project-terms vocabulary under ste/.
+#   - core<->extension references are narrative (README), never graph edges (§6.2).
+#
+# This is the bound-convention half of the controlled-language work: it SCANS
+# authored YAML already on disk and reports through the normal enforce path. It
+# does NOT intercept writes; a core-side counterpart reuses these same rule_ids.
+extension_id: atdd.extension.planner.controlled-language
+version: "0.1.0"
+kind: extension
+
+# The governed surface is authored planner output (`atdd author` writes it), so
+# the persona lane is planner and the package role matches.
+role: planner
+flow_wagon: validate-authored-surface
+feature: controlled-language-conformance
+
+owns:
+  conventions:
+    - conventions/planner.controlled-language.ste-conformance.convention.yaml
+    - conventions/planner.controlled-language.approved-vocabulary.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations:
+    - implementations/controlled-language-check
+  schemas: []
+  gates: []
+  scopes: []
+
+# No `capabilities:` block is declared. Extension manifests are not
+# capability-validated (author_manifest.validate_extension_manifest checks
+# kind / extension_id / owns / realizes / workspace deps only), so declaring one
+# buys nothing and risks tripping the transport forcing rule.
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  # The reusable runtime the detector targets. Referenced by id + contract range;
+  # never copied in. The detector needs the v1.1 scan-mount (ATDD_SCAN_ROOTS /
+  # ATDD_SCAN_EXCLUDES) + structured report channel, so it declares 1.1.0.
+  workspaces:
+    - id: atdd.workspace.python-pytest
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true
