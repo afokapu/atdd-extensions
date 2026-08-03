@@ -146,7 +146,14 @@ def check_text(text: str, url: str, *, timeout: float = DEFAULT_TIMEOUT, opener=
         data = json.loads(payload)
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise CheckerUnavailable(f"checker answered unparseable JSON at {url}: {exc}") from exc
-    matches = data.get("matches") if isinstance(data, dict) else None
+    if not isinstance(data, dict):
+        raise CheckerUnavailable(f"checker answer is not a JSON object at {url}")
+    # A truncated answer is a PARTIAL answer, and accepting it silently would under-report — the
+    # fail-open this rule exists to prevent. The live round trip surfaced this field; the server
+    # sets it when it stops early. Treat it as the checker being unable to answer.
+    if (data.get("warnings") or {}).get("incompleteResults"):
+        raise CheckerUnavailable(f"checker reported incompleteResults (truncated answer) at {url}")
+    matches = data.get("matches")
     if not isinstance(matches, list):
         raise CheckerUnavailable(f"checker answer carries no 'matches' list at {url}")
     return [m for m in matches if isinstance(m, dict)]

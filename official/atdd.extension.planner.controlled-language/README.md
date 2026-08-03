@@ -261,11 +261,18 @@ HTML error page, a non-2xx status — is what the detector will report as `check
 | request times out (default 15s) | same, with the timeout detail |
 | non-2xx status | `checker-unavailable: checker answered HTTP <code> at …` |
 | unparseable body (an HTML error page) | `checker-unavailable: checker answered unparseable JSON at …` |
+| 2xx JSON that is not an object | `checker-unavailable: checker answer is not a JSON object at …` |
 | 2xx JSON with no `matches` array | `checker-unavailable: checker answer carries no 'matches' list at …` |
+| `warnings.incompleteResults: true` | `checker-unavailable: checker reported incompleteResults (truncated answer) at …` |
 
-All five land under `planner.controlled-language.ste-conformance` and stop the scan after the first
+All seven land under `planner.controlled-language.ste-conformance` and stop the scan after the first
 one — **one unavailable checker is one defect, not one per prose field.** Findings gathered before
 the failure are kept; they are still facts.
+
+The last row was found by the live round trip, not by design: LanguageTool's real response carries a
+`warnings.incompleteResults` flag the first cut ignored. A truncated answer is a *partial* answer, so
+accepting it silently would under-report and call the shortfall clean — the exact fail-open this rule
+exists to prevent.
 
 This is deliberate. A silent style gate is worse than no style gate, because the repo believes it
 is protected. **Do not suppress a `checker-unavailable` finding** — start the checker, or fix

@@ -149,8 +149,13 @@ def test_records_carry_the_location_and_the_v11_keys() -> None:
      _opener(raises=urllib.error.HTTPError(_URL, 503, "unavailable", {}, None)),
      _opener(status=418),
      _opener(payload=b"<html>not json</html>"),
-     _opener(payload=b'{"software": {}}')],
-    ids=["unreachable", "timeout", "http-error", "non-2xx", "bad-json", "no-matches-key"],
+     _opener(payload=b'{"software": {}}'),
+     # A truncated answer is a partial answer; accepting it would under-report. The field is real
+     # — the live round trip against LanguageTool 6.8 showed `"warnings":{"incompleteResults":…}`.
+     _opener(payload=b'{"warnings": {"incompleteResults": true}, "matches": []}'),
+     _opener(payload=b'[]')],
+    ids=["unreachable", "timeout", "http-error", "non-2xx", "bad-json", "no-matches-key",
+         "incomplete-results", "json-but-not-an-object"],
 )
 def test_checker_failures_fail_closed(opener) -> None:
     violations = _scan(opener)
