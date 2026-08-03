@@ -284,8 +284,46 @@ network. The checker is only needed where the gate actually runs against a real 
 
 `implementations/controlled-language-check/test_controlled_language.py`.
 
-**Every HTTP call is mocked.** CI needs no Java, no TechScribe install, and no network; the fake
-opener is the only thing the suite ever talks to, so a test that forgot to mock fails closed rather
-than dialling out. The suite covers extraction (prose in, structure out), exclusion globs, finding
-→ rule routing, evidence formatting, the `location` + v1.1 key shape, all six checker-failure
-modes, and the emission job.
+**Every HTTP call is mocked.** It needs no Java, no TechScribe install, and no network; the fake
+opener is the only thing it ever talks to, so a test that forgot to mock fails closed rather than
+dialling out. It covers extraction (prose in, structure out), exclusion globs, finding → rule
+routing, evidence formatting, the `location` + v1.1 key shape, all six checker-failure modes, and
+the emission job.
+
+### Live smoke — `test_live_smoke.py`
+
+Mocks prove our logic and **cannot prove the seam**: that a real server answers a shape we parse,
+that its offsets land on the prose we sent, and that a real connection refusal fails closed. That
+is what this file proves — nothing in it is mocked.
+
+| Test | Proves |
+|---|---|
+| `test_live_checker_answers_the_v2_check_contract` | real socket → real `/v2/check` → a match carrying `offset`, `length`, `message`, `rule.id`, `replacements` |
+| `test_evidence_is_computed_from_the_live_response` | every field of the emitted evidence equals the **server's own** value, and its offset/length slice the planted defect out of the prose |
+| `test_evidence_varies_with_the_response_…` | two different live defects yield different evidence — the anti-constant control |
+| `test_routing_follows_the_live_servers_own_taxonomy` | `rule_for` agrees with `VOCABULARY_TOKENS` applied to the **real** rule/category id |
+| `test_live_violation_carries_our_location_and_real_positions` | whole chain on a real artifact; `location` is the dotted prose path, `line`/`col` are derived from the file, and the adjacent URN was never sent |
+| `test_real_connection_refusal_fails_closed` | a genuine `ECONNREFUSED` against a bound-then-released port → exactly one `checker-unavailable` violation |
+| `test_a_refused_checker_makes_the_consumer_verdict_fail` | the verdict a consumer computes from that violation is FAIL |
+
+**Evidence is computed, never constant.** Every expectation is derived from the live response —
+offsets are read back out of the emitted evidence and compared to the server's numbers, and the
+flagged span is sliced out of the prose we sent. No test asserts a hard-coded evidence string. This
+mirrors core's `tester.acceptance-violation.live-smoke-evidence-must-not-be-constant`: a harness
+returning a constant dict passes for the wrong reason and hides a dead round trip.
+
+**It cannot silently skip.** Locally these tests skip unless `ATDD_STE_URL` is set. In CI,
+`ATDD_STE_LIVE=1` turns a skip into a **failure**, and the job has a final step that fails the
+build if the word "skipped" appears at all. A live smoke that can quietly skip is theatre — the
+badge still goes green while the round trip is unproven.
+
+Run it locally against your own checker:
+
+```bash
+ATDD_STE_URL=http://127.0.0.1:8081/v2/check ATDD_STE_LIVE=1 \
+  pytest official/atdd.extension.planner.controlled-language/implementations/controlled-language-check -v
+```
+
+CI job: **`controlled-language-live-smoke`** in `.github/workflows/validate-packages.yml` — the only
+job in this repo that needs a container (`erikvl87/languagetool`, host `8081` → container `8010`).
+The two fail-closed tests need no server and run everywhere.

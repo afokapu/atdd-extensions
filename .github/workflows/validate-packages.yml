@@ -127,3 +127,81 @@ jobs:
               sys.exit(f"implementations failed: {failed}")
           print("all 2 github implementations discovered and green")
           PY
+
+  # LIVE smoke for the controlled-language gate: the ONLY job that needs a container.
+  #
+  # Every other test in this repo mocks its HTTP. That proves our logic and cannot prove the seam:
+  # that a REAL LanguageTool server answers a shape we parse, that its offsets land on the prose we
+  # sent, and that a REAL connection refusal fails closed. This job proves those against a live
+  # server and a genuinely dead TCP port.
+  #
+  # ATDD_STE_LIVE=1 turns a SKIP into a FAILURE inside this job. Without it a missing/dead server
+  # would skip silently and the badge would still go green — a live smoke that can quietly skip is
+  # theatre. The mocked suite stays the fast path and runs here too, unchanged.
+  controlled-language-live-smoke:
+    runs-on: ubuntu-latest
+
+    services:
+      languagetool:
+        # Upstream LanguageTool serves the /v2/check API this gate speaks. It carries no
+        # ASD-STE100 rules — TechScribe owns those — which is fine: this job proves the ROUND TRIP
+        # and the record mapping, not the STE rule set.
+        image: erikvl87/languagetool:latest
+        ports:
+          - 8081:8010
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install pytest pyyaml
+
+      - name: Wait for LanguageTool to answer /v2/check
+        # The container is up long before the JVM serves requests, so poll the real endpoint
+        # rather than trust readiness. Failing here is a broken job, not a broken gate.
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -sf -d "language=en-US" --data-urlencode "text=ready" \
+                 http://127.0.0.1:8081/v2/check >/dev/null 2>&1; then
+              echo "LanguageTool answered after ~$((i * 2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::LanguageTool did not answer /v2/check within 120s"
+          exit 1
+
+      - name: Record the REAL response shape
+        # Diagnostics, not a gate: prints what the server actually returns so a shape change is
+        # readable straight from the log instead of inferred from an assertion failure.
+        run: |
+          curl -s -d "language=en-US" --data-urlencode "text=The wagon recieve the cargo." \
+            http://127.0.0.1:8081/v2/check | python3 -m json.tool | head -80
+
+      - name: Live round trip + real fail-closed
+        env:
+          ATDD_STE_URL: http://127.0.0.1:8081/v2/check
+          ATDD_STE_LIVE: "1"
+        run: |
+          pytest official/atdd.extension.planner.controlled-language/implementations/controlled-language-check \
+            -v -rs
+
+      - name: Prove the live tests did not skip
+        # The control on the control. If the live tests ever start skipping in the job built to run
+        # them, this fails the build instead of letting a green badge certify nothing.
+        env:
+          ATDD_STE_URL: http://127.0.0.1:8081/v2/check
+          ATDD_STE_LIVE: "1"
+        run: |
+          set -euo pipefail
+          out=$(pytest official/atdd.extension.planner.controlled-language/implementations/controlled-language-check/test_live_smoke.py -q 2>&1)
+          echo "$out"
+          if echo "$out" | grep -qi "skipped"; then
+            echo "::error::live smoke SKIPPED in the live job — the round trip is unproven"
+            exit 1
+          fi
