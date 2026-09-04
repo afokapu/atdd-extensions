@@ -1,48 +1,21 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for atdd.extension.coder.htmx. Sorted-adjacent sibling chain;
-# every owned node carries >=1 edge, so the graph has no orphans.
+# Extension-LOCAL relationship graph for atdd.extension.coder.htmx.
+#
+# Every edge below is AUTHORED and says something true about the pair. The
+# vocabulary follows atdd.extension.coder.base, the one hand-curated graph in
+# this hub:
+#   refines            B adds a constraint that only applies once A holds
+#   specializes        B is a narrower case of the general rule A
+#   complements        two halves of one discipline; neither is complete alone
+#   co-extracted-from  both fall out of one detector run or one parse
+#   relates-to         same concern, weaker link
+#
+# Cross-package linkage is expressed through metadata aliases, never as an edge:
+# an authored edge to a core node is refused by admission.
 graph_id: atdd.extension.coder.htmx.relationships
 
 nodes:
-  - coder.bun.boundaries-http-client
-  - coder.bun.commons-application-no-integration
-  - coder.bun.commons-cross-feature-imports-in
-  - coder.bun.commons-domain-no-framework-import
-  - coder.bun.commons-domain-no-outbound
-  - coder.bun.complexity-cyclomatic
-  - coder.bun.complexity-length
-  - coder.bun.complexity-nesting
-  - coder.bun.composition-consumer
-  - coder.bun.composition-root
-  - coder.bun.dead-code-reachability
-  - coder.bun.design-hierarchy-import
-  - coder.bun.dto-mapper
-  - coder.bun.dto-placement
-  - coder.bun.dto-purity
-  - coder.bun.duplication-intra-layer
-  - coder.bun.error-response-bare-string
-  - coder.bun.error-response-code-format
-  - coder.bun.green-header-order
-  - coder.bun.green-header-purpose
-  - coder.bun.green-header-runtime
-  - coder.bun.green-header-tested-by
-  - coder.bun.green-urn-layer
-  - coder.bun.green-urn-marker
-  - coder.bun.green-urn-name-matches
-  - coder.bun.green-urn-pattern
-  - coder.bun.green-urn-side
-  - coder.bun.green-urn-wagon-feature
-  - coder.bun.layer-naming
-  - coder.bun.logging-console
-  - coder.bun.logging-structured
-  - coder.bun.quality-comments
-  - coder.bun.quality-mi
-  - coder.bun.security-hardcoded-secret
-  - coder.bun.security-missing-auth
-  - coder.bun.security-sql-injection
-  - coder.bun.server-uses-bun-serve
-  - coder.bun.single-lockfile
   - coder.htmx.destructive-verb-confirms
   - coder.htmx.endpoint-not-absolute-url
   - coder.htmx.fragment-interpolation-escaped
@@ -51,175 +24,19 @@ nodes:
   - coder.htmx.oob-swap-carries-id
 
 edges:
-  - source_ref: coder.bun.boundaries-http-client
-    target_ref: coder.bun.commons-application-no-integration
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.commons-application-no-integration
-    target_ref: coder.bun.commons-cross-feature-imports-in
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.commons-cross-feature-imports-in
-    target_ref: coder.bun.commons-domain-no-framework-import
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.commons-domain-no-framework-import
-    target_ref: coder.bun.commons-domain-no-outbound
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.commons-domain-no-outbound
-    target_ref: coder.bun.complexity-cyclomatic
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.complexity-cyclomatic
-    target_ref: coder.bun.complexity-length
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.complexity-length
-    target_ref: coder.bun.complexity-nesting
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.complexity-nesting
-    target_ref: coder.bun.composition-consumer
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.composition-consumer
-    target_ref: coder.bun.composition-root
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.composition-root
-    target_ref: coder.bun.dead-code-reachability
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.dead-code-reachability
-    target_ref: coder.bun.design-hierarchy-import
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.design-hierarchy-import
-    target_ref: coder.bun.dto-mapper
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.dto-mapper
-    target_ref: coder.bun.dto-placement
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.dto-placement
-    target_ref: coder.bun.dto-purity
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.dto-purity
-    target_ref: coder.bun.duplication-intra-layer
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.duplication-intra-layer
-    target_ref: coder.bun.error-response-bare-string
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.error-response-bare-string
-    target_ref: coder.bun.error-response-code-format
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.error-response-code-format
-    target_ref: coder.bun.green-header-order
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-header-order
-    target_ref: coder.bun.green-header-purpose
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-header-purpose
-    target_ref: coder.bun.green-header-runtime
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-header-runtime
-    target_ref: coder.bun.green-header-tested-by
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-header-tested-by
-    target_ref: coder.bun.green-urn-layer
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-urn-layer
-    target_ref: coder.bun.green-urn-marker
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-urn-marker
-    target_ref: coder.bun.green-urn-name-matches
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-urn-name-matches
-    target_ref: coder.bun.green-urn-pattern
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-urn-pattern
-    target_ref: coder.bun.green-urn-side
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-urn-side
-    target_ref: coder.bun.green-urn-wagon-feature
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.green-urn-wagon-feature
-    target_ref: coder.bun.layer-naming
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.layer-naming
-    target_ref: coder.bun.logging-console
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.logging-console
-    target_ref: coder.bun.logging-structured
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.logging-structured
-    target_ref: coder.bun.quality-comments
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.quality-comments
-    target_ref: coder.bun.quality-mi
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.quality-mi
-    target_ref: coder.bun.security-hardcoded-secret
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.security-hardcoded-secret
-    target_ref: coder.bun.security-missing-auth
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.security-missing-auth
-    target_ref: coder.bun.security-sql-injection
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.security-sql-injection
-    target_ref: coder.bun.server-uses-bun-serve
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.server-uses-bun-serve
-    target_ref: coder.bun.single-lockfile
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.single-lockfile
-    target_ref: coder.htmx.destructive-verb-confirms
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.htmx.destructive-verb-confirms
-    target_ref: coder.htmx.endpoint-not-absolute-url
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.htmx.endpoint-not-absolute-url
-    target_ref: coder.htmx.fragment-interpolation-escaped
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.htmx.fragment-interpolation-escaped
     target_ref: coder.htmx.mutation-signals-progress
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.htmx.mutation-signals-progress
+    type: complements
+    reason: 'Both govern a mutating control: one guards INTENT before the request, the other FEEDBACK during it.'
+  - source_ref: coder.htmx.oob-swap-carries-id
     target_ref: coder.htmx.no-inline-event-handler
     type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+    reason: 'Both are about what survives a swap — an oob element needs an id to land, an inline handler dies when its node is replaced.'
+  - source_ref: coder.htmx.fragment-interpolation-escaped
+    target_ref: coder.htmx.endpoint-not-absolute-url
+    type: complements
+    reason: 'Both govern what reaches the live DOM: one the ORIGIN the markup came from, the other the DATA inside it.'
   - source_ref: coder.htmx.no-inline-event-handler
-    target_ref: coder.htmx.oob-swap-carries-id
+    target_ref: coder.htmx.destructive-verb-confirms
     type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+    reason: 'Both replace imperative JavaScript with a declarative hx- attribute the swap lifecycle can see.'

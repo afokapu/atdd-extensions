@@ -1,84 +1,24 @@
 schema_version: "1.0.0"
 
 # Persona-aware extension id (#1343 canonical grammar):
-#   <publisher>.extension.<persona>.<artifact-name>,  persona ∈ {planner,tester,coder,coach}
-# Sibling of the installed atdd.extension.coder.base; this one is the FULL-STACK
-# BUN + HTMX realization of the coder lane.
+#   <publisher>.extension.<persona>.<artifact-name>,  persona in {planner,tester,coder,coach}
+#
+# HYPERMEDIA obligations for htmx markup. Layered ON TOP of atdd.extension.coder.bun, never instead
+# of it: htmx is a library, Bun is the runtime underneath.
+#
+# Four extensions target atdd.workspace.bun — coder.bun / coder.htmx / tester.bun /
+# tester.htmx — the same shape frontend.extension.coder.vite and .astro use against
+# one frontend.workspace.runtime. Two axes, kept orthogonal: PERSONA (source vs
+# suite) and STACK (runtime vs library).
 extension_id: atdd.extension.coder.htmx
 version: "0.1.0"
 kind: extension
 role: coder
 flow_wagon: validate-source-surface
-feature: htmx-bun-coder-conventions
+feature: htmx-coder-conventions
 
-# Six rule families, matching the six implementations the workspace provider ships:
-#   coder.htmx.*        — hypermedia discipline over templates and rendered fragments
-#   coder.bun.*         — runtime discipline over server, package manager, test harness
-#   coder.bun.green-*   — GREEN/URN traceability, the mirror of the Python and Vite
-#                         realizations of the same stack-neutral obligation. This is
-#                         the family that binds source files to the plan graph; the
-#                         others are stack flavour layered on top of it.
-#   coder.bun.{complexity,quality,dead-code,duplication}-*
-#                       — the seven TypeScript metric obligations, ported NATIVELY
-#                         to Bun from their python-pytest realizations and verified
-#                         to produce identical numbers. Their point is independence:
-#                         a full-stack Bun repo enforces its own code quality with
-#                         no Python interpreter anywhere in the toolchain.
-#   coder.bun.{security,logging,error-response}-*
-#                       — security, logging and error-response hygiene. Only TWO of
-#                         these seven port verbatim; the other five are genuine
-#                         re-realizations, because the python-pytest siblings read a
-#                         Python AST for FastAPI decorators, Depends(), print() and
-#                         HTTPException(detail=) — constructs this stack does not
-#                         have. The obligation is shared; the detector is not.
-#   coder.bun.{commons,design-hierarchy,composition,dto,boundaries,layer}-*
-#                       — CLEAN ARCHITECTURE: layering, composition, DTOs,
-#                         boundaries and naming. Mirrored rule-for-rule from
-#                         coder.convex.* and coder.vite.*, the two existing
-#                         realizations of the same core obligations.
-# Conventions live HERE (the extension owns the obligation); the detectors live in
-# atdd.workspace.bun (the provider owns the realization). That split is what lets a
-# second runtime satisfy the same obligations without touching this package.
 owns:
   conventions:
-    - conventions/coder.bun.boundaries-http-client.convention.yaml
-    - conventions/coder.bun.commons-application-no-integration.convention.yaml
-    - conventions/coder.bun.commons-cross-feature-imports-in.convention.yaml
-    - conventions/coder.bun.commons-domain-no-framework-import.convention.yaml
-    - conventions/coder.bun.commons-domain-no-outbound.convention.yaml
-    - conventions/coder.bun.complexity-cyclomatic.convention.yaml
-    - conventions/coder.bun.complexity-length.convention.yaml
-    - conventions/coder.bun.complexity-nesting.convention.yaml
-    - conventions/coder.bun.composition-consumer.convention.yaml
-    - conventions/coder.bun.composition-root.convention.yaml
-    - conventions/coder.bun.dead-code-reachability.convention.yaml
-    - conventions/coder.bun.design-hierarchy-import.convention.yaml
-    - conventions/coder.bun.dto-mapper.convention.yaml
-    - conventions/coder.bun.dto-placement.convention.yaml
-    - conventions/coder.bun.dto-purity.convention.yaml
-    - conventions/coder.bun.duplication-intra-layer.convention.yaml
-    - conventions/coder.bun.error-response-bare-string.convention.yaml
-    - conventions/coder.bun.error-response-code-format.convention.yaml
-    - conventions/coder.bun.green-header-order.convention.yaml
-    - conventions/coder.bun.green-header-purpose.convention.yaml
-    - conventions/coder.bun.green-header-runtime.convention.yaml
-    - conventions/coder.bun.green-header-tested-by.convention.yaml
-    - conventions/coder.bun.green-urn-layer.convention.yaml
-    - conventions/coder.bun.green-urn-marker.convention.yaml
-    - conventions/coder.bun.green-urn-name-matches.convention.yaml
-    - conventions/coder.bun.green-urn-pattern.convention.yaml
-    - conventions/coder.bun.green-urn-side.convention.yaml
-    - conventions/coder.bun.green-urn-wagon-feature.convention.yaml
-    - conventions/coder.bun.layer-naming.convention.yaml
-    - conventions/coder.bun.logging-console.convention.yaml
-    - conventions/coder.bun.logging-structured.convention.yaml
-    - conventions/coder.bun.quality-comments.convention.yaml
-    - conventions/coder.bun.quality-mi.convention.yaml
-    - conventions/coder.bun.security-hardcoded-secret.convention.yaml
-    - conventions/coder.bun.security-missing-auth.convention.yaml
-    - conventions/coder.bun.security-sql-injection.convention.yaml
-    - conventions/coder.bun.server-uses-bun-serve.convention.yaml
-    - conventions/coder.bun.single-lockfile.convention.yaml
     - conventions/coder.htmx.destructive-verb-confirms.convention.yaml
     - conventions/coder.htmx.endpoint-not-absolute-url.convention.yaml
     - conventions/coder.htmx.fragment-interpolation-escaped.convention.yaml
@@ -93,12 +33,12 @@ owns:
   scopes: []
 
 depends_on:
-  core:
-    - atdd.core.convention-node-schema
-    - atdd.core.relationship-schema
-    - atdd.core.workspace-schema
-    - atdd.core.implementation-schema
-    - atdd.core.violation-output-schema
+  # NOTE: `depends_on.core` is omitted deliberately. Every other extension in this
+  # hub declares five `atdd.core.*` node ids, and NONE of them exists — the 231 real
+  # core nodes are namespaced `coder.*` / `tester.*` / `coach.*`. Admission never
+  # validates the field, so those declarations point at nothing. Rather than copy a
+  # dead list, this package declares only the dependency that IS resolved: the
+  # workspace whose implementations realize these conventions.
   workspaces:
     - id: atdd.workspace.bun
       contract: "^1.0.0"

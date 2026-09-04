@@ -3,23 +3,37 @@ schema_version: "1.0.0"
 # Persona-aware extension id (#1343 canonical grammar):
 #   <publisher>.extension.<persona>.<artifact-name>,  persona in {planner,tester,coder,coach}
 #
-# The htmx half of the tester surface: an endpoint test asserts on the returned FRAGMENT, because in
-# htmx the response contract IS the markup rather than the payload.
+# Test identity, acceptance binding and phase discipline for a `bun test` suite. Mirrors
+# convex.extension.tester.base rule for rule where the obligation applies to this stack.
 #
 # Four extensions target atdd.workspace.bun — coder.bun / coder.htmx / tester.bun /
 # tester.htmx — the same shape frontend.extension.coder.vite and .astro use against
 # one frontend.workspace.runtime. Two axes, kept orthogonal: PERSONA (source vs
 # suite) and STACK (runtime vs library).
-extension_id: atdd.extension.tester.htmx
+extension_id: atdd.extension.tester.bun
 version: "0.1.0"
 kind: extension
 role: tester
 flow_wagon: validate-test-surface
-feature: htmx-tester-conventions
+feature: bun-tester-conventions
 
 owns:
   conventions:
-    - conventions/tester.htmx.fragment-asserts-markup.convention.yaml
+    - conventions/tester.bun.acceptance-binding-declared.convention.yaml
+    - conventions/tester.bun.covers-tag-well-formed.convention.yaml
+    - conventions/tester.bun.imports-bun-test.convention.yaml
+    - conventions/tester.bun.no-self-skip.convention.yaml
+    - conventions/tester.bun.phase-declared.convention.yaml
+    - conventions/tester.bun.red-behavioral-assertion.convention.yaml
+    - conventions/tester.bun.red-fails-first.convention.yaml
+    - conventions/tester.bun.routing-runtime-family.convention.yaml
+    - conventions/tester.bun.security-auth.convention.yaml
+    - conventions/tester.bun.security-input.convention.yaml
+    - conventions/tester.bun.smoke-no-collaborator-substitution.convention.yaml
+    - conventions/tester.bun.smoke-observable-assertion.convention.yaml
+    - conventions/tester.bun.telemetry-emit.convention.yaml
+    - conventions/tester.bun.test-carries-urn-identity.convention.yaml
+    - conventions/tester.bun.test-isolation-no-live-state.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

@@ -34,7 +34,10 @@ requires_bun = pytest.mark.skipif(shutil.which("bun") is None, reason="bun not o
 _IMPLS = {p.name: p for p in (_WS / "implementations").iterdir()
           if (p / "atdd.implementation.yaml").is_file()}
 _TESTER = "bun_tester_discipline_detector"
-_CODER = sorted(n for n in _IMPLS if n != _TESTER)
+# Two tester families since the stack split: the Bun suite rules and the single
+# htmx one. Both are tester-persona and neither may read a source file.
+_TESTER_FAMILIES = {_TESTER, "htmx_tester_detector"}
+_CODER = sorted(n for n in _IMPLS if n not in _TESTER_FAMILIES)
 
 
 def _emitted(impl_name: str, root: Path) -> list[dict]:
@@ -137,7 +140,7 @@ def test_the_two_personas_declare_disjoint_rule_namespaces() -> None:
             persona = rid.split(".", 1)[0]
             assert persona in ns, f"{rid} is in neither persona namespace"
             ns[persona].add(rid)
-            expected = "tester" if name == _TESTER else "coder"
+            expected = "tester" if name in _TESTER_FAMILIES else "coder"
             assert persona == expected, f"{name} emits {rid}, which is a {persona} rule"
     assert ns["coder"] and ns["tester"]
     assert not (ns["coder"] & ns["tester"])

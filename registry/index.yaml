@@ -54,6 +54,32 @@ entries:
     contract: ^1.0.0
   - id: atdd.workspace.fastapi
     contract: ^1.0.0
+- id: atdd.extension.coder.bun
+  kind: extension
+  latest_version: 0.1.0
+  versions:
+  - 0.1.0
+  aliases:
+  - coder.bun
+  publisher: atdd
+  trust: official
+  source: official/atdd.extension.coder.bun
+  summary: "Official ATDD coder-role extension for the Bun / TypeScript runtime \u2014 38 convention nodes\
+    \ across five families: GREEN/URN traceability (extended to .html templates), TypeScript metrics ported\
+    \ natively from python-pytest, security / logging / error-response hygiene, clean architecture (layering,\
+    \ composition, DTOs, boundaries, naming), and the Bun runtime decisions themselves. Pair it with atdd.extension.tester.bun;\
+    \ add atdd.extension.coder.htmx only if the app serves hypermedia."
+  tags:
+  - coder
+  - bun
+  - typescript
+  - traceability
+  - clean-architecture
+  - source-validator
+  - official
+  workspaces:
+  - id: atdd.workspace.bun
+    contract: ^1.0.0
 - id: atdd.extension.coder.htmx
   kind: extension
   latest_version: 0.1.0
@@ -64,19 +90,15 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.htmx
-  summary: "Official ATDD coder-role extension for the full-stack Bun + htmx stack \u2014 44 convention\
-    \ nodes across six families. GREEN/URN traceability (the Bun realization of the stack-neutral header\
-    \ obligation Python and Vite also realize, extended to .html templates); hypermedia discipline (oob\
-    \ ids, confirmations, progress signals, same-origin endpoints, fragment escaping); and Bun runtime\
-    \ discipline (Bun.serve, one lockfile, bun:test); and the seven TypeScript metric obligations ported\
-    \ natively from python-pytest, so the stack needs no Python interpreter; security, logging and error-response\
-    \ hygiene; and a clean-architecture family (layering, composition, DTOs, boundaries, naming) mirrored\
-    \ from coder.convex.* and coder.vite.*."
+  summary: "Official ATDD coder-role extension for htmx hypermedia markup \u2014 6 convention nodes covering\
+    \ out- of-band swap ids, destructive-verb confirmations, in-flight progress signals, inline event\
+    \ handlers, same-origin endpoints and fragment escaping. Layered ON TOP of atdd.extension.coder.bun,\
+    \ never instead of it."
   tags:
   - coder
   - htmx
-  - bun
   - hypermedia
+  - bun
   - source-validator
   - official
   workspaces:
@@ -130,6 +152,31 @@ entries:
     contract: ^1.0.0
   - id: atdd.workspace.fastapi
     contract: ^1.0.0
+- id: atdd.extension.tester.bun
+  kind: extension
+  latest_version: 0.1.0
+  versions:
+  - 0.1.0
+  aliases:
+  - tester.bun
+  publisher: atdd
+  trust: official
+  source: official/atdd.extension.tester.bun
+  summary: "Official ATDD tester-role extension for a bun test suite \u2014 15 convention nodes covering\
+    \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
+    \ tags) and phase discipline (RED fail-markers and behavioural assertions, SMOKE observability and\
+    \ no collaborator substitution, no self-skip, no shared live state, security/input/telemetry assertion).\
+    \ Mirrors convex.extension.tester.base rule for rule."
+  tags:
+  - tester
+  - bun
+  - typescript
+  - acceptance-binding
+  - coverage
+  - official
+  workspaces:
+  - id: atdd.workspace.bun
+    contract: ^1.0.0
 - id: atdd.extension.tester.htmx
   kind: extension
   latest_version: 0.1.0
@@ -140,19 +187,13 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.htmx
-  summary: "Official ATDD tester-role extension for the full-stack Bun + htmx stack \u2014 the tester\
-    \ half of the pair whose coder half is atdd.extension.coder.htmx. Sixteen convention nodes covering\
-    \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
-    \ tags), phase discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing,\
-    \ no self-skip, no shared live state), and the htmx-native obligation that an endpoint test asserts\
-    \ on the returned fragment rather than only its status line. Mirrors convex.extension.tester.base\
-    \ rule for rule."
+  summary: "Official ATDD tester-role extension for htmx endpoint tests \u2014 the obligation that a test\
+    \ asserts on the returned FRAGMENT rather than only its status line, because in htmx the response\
+    \ contract is the markup. No other stack's tester extension carries this rule."
   tags:
   - tester
   - htmx
-  - bun
-  - acceptance-binding
-  - coverage
+  - hypermedia
   - official
   workspaces:
   - id: atdd.workspace.bun

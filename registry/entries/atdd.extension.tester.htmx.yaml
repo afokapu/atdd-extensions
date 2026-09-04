@@ -21,15 +21,10 @@ requires_workspaces:
 categories:
   - tester
   - htmx
-  - bun
-  - acceptance-binding
-  - coverage
+  - hypermedia
   - official
 
 description: >-
-  Official ATDD tester-role extension for the full-stack Bun + htmx stack — the tester half of the
-  pair whose coder half is atdd.extension.coder.htmx. Sixteen convention nodes covering test identity and
-  acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers tags), phase
-  discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing, no self-skip,
-  no shared live state), and the htmx-native obligation that an endpoint test asserts on the returned
-  fragment rather than only its status line. Mirrors convex.extension.tester.base rule for rule.
+  Official ATDD tester-role extension for htmx endpoint tests — the obligation that a test asserts
+  on the returned FRAGMENT rather than only its status line, because in htmx the response contract
+  is the markup. No other stack's tester extension carries this rule.

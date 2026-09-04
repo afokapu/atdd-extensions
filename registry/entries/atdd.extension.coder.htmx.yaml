@@ -14,9 +14,6 @@ version: "0.1.0"
 compatible_atdd_core:
   minimum: "0.1.0"
 
-# The runtime this extension's obligations are realized on. The conventions are
-# stack-bound (htmx + Bun) but runtime-agnostic in principle: a second provider
-# could realize the same nine rule_ids without this package changing.
 requires_workspaces:
   - id: atdd.workspace.bun
     contract: "^1.0.0"
@@ -24,17 +21,13 @@ requires_workspaces:
 categories:
   - coder
   - htmx
-  - bun
   - hypermedia
+  - bun
   - source-validator
   - official
 
 description: >-
-  Official ATDD coder-role extension for the full-stack Bun + htmx stack — 44 convention nodes
-  across six families. GREEN/URN traceability (the Bun realization of the stack-neutral header
-  obligation Python and Vite also realize, extended to .html templates); hypermedia discipline
-  (oob ids, confirmations, progress signals, same-origin endpoints, fragment escaping); and Bun
-  runtime discipline (Bun.serve, one lockfile, bun:test); and the seven TypeScript metric
-  obligations ported natively from python-pytest, so the stack needs no Python interpreter;
-  security, logging and error-response hygiene; and a clean-architecture family (layering,
-  composition, DTOs, boundaries, naming) mirrored from coder.convex.* and coder.vite.*.
+  Official ATDD coder-role extension for htmx hypermedia markup — 6 convention nodes covering out-
+  of-band swap ids, destructive-verb confirmations, in-flight progress signals, inline event
+  handlers, same-origin endpoints and fragment escaping. Layered ON TOP of
+  atdd.extension.coder.bun, never instead of it.

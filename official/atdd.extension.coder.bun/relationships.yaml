@@ -1,0 +1,186 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.coder.bun.
+#
+# Every edge below is AUTHORED and says something true about the pair. The
+# vocabulary follows atdd.extension.coder.base, the one hand-curated graph in
+# this hub:
+#   refines            B adds a constraint that only applies once A holds
+#   specializes        B is a narrower case of the general rule A
+#   complements        two halves of one discipline; neither is complete alone
+#   co-extracted-from  both fall out of one detector run or one parse
+#   relates-to         same concern, weaker link
+#
+# Cross-package linkage is expressed through metadata aliases, never as an edge:
+# an authored edge to a core node is refused by admission.
+graph_id: atdd.extension.coder.bun.relationships
+
+nodes:
+  - coder.bun.boundaries-http-client
+  - coder.bun.commons-application-no-integration
+  - coder.bun.commons-cross-feature-imports-in
+  - coder.bun.commons-domain-no-framework-import
+  - coder.bun.commons-domain-no-outbound
+  - coder.bun.complexity-cyclomatic
+  - coder.bun.complexity-length
+  - coder.bun.complexity-nesting
+  - coder.bun.composition-consumer
+  - coder.bun.composition-root
+  - coder.bun.dead-code-reachability
+  - coder.bun.design-hierarchy-import
+  - coder.bun.dto-mapper
+  - coder.bun.dto-placement
+  - coder.bun.dto-purity
+  - coder.bun.duplication-intra-layer
+  - coder.bun.error-response-bare-string
+  - coder.bun.error-response-code-format
+  - coder.bun.green-header-order
+  - coder.bun.green-header-purpose
+  - coder.bun.green-header-runtime
+  - coder.bun.green-header-tested-by
+  - coder.bun.green-urn-layer
+  - coder.bun.green-urn-marker
+  - coder.bun.green-urn-name-matches
+  - coder.bun.green-urn-pattern
+  - coder.bun.green-urn-side
+  - coder.bun.green-urn-wagon-feature
+  - coder.bun.layer-naming
+  - coder.bun.logging-console
+  - coder.bun.logging-structured
+  - coder.bun.quality-comments
+  - coder.bun.quality-mi
+  - coder.bun.security-hardcoded-secret
+  - coder.bun.security-missing-auth
+  - coder.bun.security-sql-injection
+  - coder.bun.server-uses-bun-serve
+  - coder.bun.single-lockfile
+
+edges:
+  - source_ref: coder.bun.green-urn-pattern
+    target_ref: coder.bun.green-urn-marker
+    type: refines
+    reason: 'The six-segment shape can only be checked once a marker is present; absence is the marker rule''s finding.'
+  - source_ref: coder.bun.green-urn-wagon-feature
+    target_ref: coder.bun.green-urn-pattern
+    type: refines
+    reason: 'Segment GRAMMAR applies only after the segment COUNT is known good.'
+  - source_ref: coder.bun.green-urn-name-matches
+    target_ref: coder.bun.green-urn-pattern
+    type: refines
+    reason: 'Reads segment 3, which only exists once the shape validates.'
+  - source_ref: coder.bun.green-urn-side
+    target_ref: coder.bun.green-urn-pattern
+    type: refines
+    reason: 'Reads segment 4, which only exists once the shape validates.'
+  - source_ref: coder.bun.green-urn-layer
+    target_ref: coder.bun.green-urn-pattern
+    type: refines
+    reason: 'Reads segment 5, which only exists once the shape validates.'
+  - source_ref: coder.bun.green-header-tested-by
+    target_ref: coder.bun.green-urn-marker
+    type: complements
+    reason: 'The URN says what the file IS; Tested-By says what PROVES it. Together they close the acceptance loop.'
+  - source_ref: coder.bun.green-header-runtime
+    target_ref: coder.bun.green-header-purpose
+    type: co-extracted-from
+    reason: 'Both are single-line header fields recovered from one parse of the same comment block.'
+  - source_ref: coder.bun.green-header-order
+    target_ref: coder.bun.green-header-tested-by
+    type: complements
+    reason: 'Order governs the arrangement of the very fields the other header rules require.'
+  - source_ref: coder.bun.green-urn-layer
+    target_ref: coder.bun.design-hierarchy-import
+    type: relates-to
+    reason: 'The layer segment this rule validates is exactly what the layering rules read to decide an import.'
+  - source_ref: coder.bun.complexity-nesting
+    target_ref: coder.bun.complexity-cyclomatic
+    type: co-extracted-from
+    reason: 'Co-emitted per function from one extraction pass over the same brace-matched body.'
+  - source_ref: coder.bun.complexity-length
+    target_ref: coder.bun.complexity-cyclomatic
+    type: co-extracted-from
+    reason: 'Co-emitted per function from one extraction pass over the same brace-matched body.'
+  - source_ref: coder.bun.quality-comments
+    target_ref: coder.bun.quality-mi
+    type: co-extracted-from
+    reason: 'The comment ratio is literally a term in the maintainability-index formula; one computation, two reported facts.'
+  - source_ref: coder.bun.quality-mi
+    target_ref: coder.bun.complexity-cyclomatic
+    type: relates-to
+    reason: 'MI judges the FILE; complexity judges its functions. A file can pass every function threshold and still be unmaintainable by size.'
+  - source_ref: coder.bun.duplication-intra-layer
+    target_ref: coder.bun.dead-code-reachability
+    type: relates-to
+    reason: 'Both read structure ACROSS files rather than within one, and both need the whole scan tree at once.'
+  - source_ref: coder.bun.dead-code-reachability
+    target_ref: coder.bun.composition-root
+    type: relates-to
+    reason: 'Reachability is measured from the structural roots that composition-root confines wiring to.'
+  - source_ref: coder.bun.security-sql-injection
+    target_ref: coder.bun.security-missing-auth
+    type: complements
+    reason: 'Authorisation decides WHO may act; parameterisation decides what their input can DO. A boundary needs both.'
+  - source_ref: coder.bun.security-hardcoded-secret
+    target_ref: coder.bun.security-missing-auth
+    type: relates-to
+    reason: 'A leaked credential defeats the authorisation check the sibling rule requires.'
+  - source_ref: coder.bun.logging-structured
+    target_ref: coder.bun.logging-console
+    type: complements
+    reason: 'One bans the wrong channel; the other requires context on the right one. Either alone leaves logs unusable.'
+  - source_ref: coder.bun.error-response-code-format
+    target_ref: coder.bun.error-response-bare-string
+    type: refines
+    reason: 'A structured payload must exist before its error code can be constrained.'
+  - source_ref: coder.bun.logging-structured
+    target_ref: coder.bun.error-response-bare-string
+    type: relates-to
+    reason: 'Both govern what a failure leaves behind — one for the operator, one for the caller.'
+  - source_ref: coder.bun.commons-domain-no-outbound
+    target_ref: coder.bun.design-hierarchy-import
+    type: specializes
+    reason: 'The general inward-only rule, narrowed to the commons domain tree.'
+  - source_ref: coder.bun.commons-application-no-integration
+    target_ref: coder.bun.design-hierarchy-import
+    type: specializes
+    reason: 'The general inward-only rule, narrowed to the commons application tree.'
+  - source_ref: coder.bun.commons-domain-no-framework-import
+    target_ref: coder.bun.commons-domain-no-outbound
+    type: refines
+    reason: 'Outbound bans project LAYERS; this additionally bans runtime machinery, so the domain runs with no server started.'
+  - source_ref: coder.bun.commons-cross-feature-imports-in
+    target_ref: coder.bun.design-hierarchy-import
+    type: complements
+    reason: 'The hierarchy governs VERTICAL edges between layers; this governs HORIZONTAL ones between sibling features.'
+  - source_ref: coder.bun.composition-consumer
+    target_ref: coder.bun.composition-root
+    type: complements
+    reason: 'One says where wiring MAY happen; the other that consumers must ACCEPT what they are given. Either alone is unenforceable.'
+  - source_ref: coder.bun.dto-placement
+    target_ref: coder.bun.dto-purity
+    type: complements
+    reason: 'Purity governs a DTO''s shape, placement its home. A pure DTO in the wrong layer still couples the boundary.'
+  - source_ref: coder.bun.dto-mapper
+    target_ref: coder.bun.dto-placement
+    type: relates-to
+    reason: 'The mapper translates the type whose home this rule fixes; both keep the boundary in one place.'
+  - source_ref: coder.bun.layer-naming
+    target_ref: coder.bun.design-hierarchy-import
+    type: complements
+    reason: 'The layering rules can only read a layer that the naming rule guarantees is declared.'
+  - source_ref: coder.bun.boundaries-http-client
+    target_ref: coder.bun.design-hierarchy-import
+    type: relates-to
+    reason: 'Confines outbound transport to integration, which is the hierarchy''s own home for it.'
+  - source_ref: coder.bun.single-lockfile
+    target_ref: coder.bun.server-uses-bun-serve
+    type: relates-to
+    reason: 'Both hold the stack decision itself: Bun''s server, Bun''s resolver. Either drifting reverts the app to node-compat.'
+  - source_ref: coder.bun.server-uses-bun-serve
+    target_ref: coder.bun.composition-root
+    type: relates-to
+    reason: 'server.ts is a composition root precisely BECAUSE Bun.serve is the assembly point of a full-stack Bun app.'
+  - source_ref: coder.bun.server-uses-bun-serve
+    target_ref: coder.bun.boundaries-http-client
+    type: relates-to
+    reason: 'One governs the server you run; the other the client you call out with.'

@@ -1,0 +1,80 @@
+schema_version: "1.0.0"
+
+# Persona-aware extension id (#1343 canonical grammar):
+#   <publisher>.extension.<persona>.<artifact-name>,  persona in {planner,tester,coder,coach}
+#
+# Bun RUNTIME + TypeScript source obligations: GREEN traceability, TS metrics, security/logging/error
+# hygiene, clean architecture, and the runtime decisions themselves. A Bun repo serving JSON wants
+# exactly this package and none of the htmx one.
+#
+# Four extensions target atdd.workspace.bun — coder.bun / coder.htmx / tester.bun /
+# tester.htmx — the same shape frontend.extension.coder.vite and .astro use against
+# one frontend.workspace.runtime. Two axes, kept orthogonal: PERSONA (source vs
+# suite) and STACK (runtime vs library).
+extension_id: atdd.extension.coder.bun
+version: "0.1.0"
+kind: extension
+role: coder
+flow_wagon: validate-source-surface
+feature: bun-coder-conventions
+
+owns:
+  conventions:
+    - conventions/coder.bun.boundaries-http-client.convention.yaml
+    - conventions/coder.bun.commons-application-no-integration.convention.yaml
+    - conventions/coder.bun.commons-cross-feature-imports-in.convention.yaml
+    - conventions/coder.bun.commons-domain-no-framework-import.convention.yaml
+    - conventions/coder.bun.commons-domain-no-outbound.convention.yaml
+    - conventions/coder.bun.complexity-cyclomatic.convention.yaml
+    - conventions/coder.bun.complexity-length.convention.yaml
+    - conventions/coder.bun.complexity-nesting.convention.yaml
+    - conventions/coder.bun.composition-consumer.convention.yaml
+    - conventions/coder.bun.composition-root.convention.yaml
+    - conventions/coder.bun.dead-code-reachability.convention.yaml
+    - conventions/coder.bun.design-hierarchy-import.convention.yaml
+    - conventions/coder.bun.dto-mapper.convention.yaml
+    - conventions/coder.bun.dto-placement.convention.yaml
+    - conventions/coder.bun.dto-purity.convention.yaml
+    - conventions/coder.bun.duplication-intra-layer.convention.yaml
+    - conventions/coder.bun.error-response-bare-string.convention.yaml
+    - conventions/coder.bun.error-response-code-format.convention.yaml
+    - conventions/coder.bun.green-header-order.convention.yaml
+    - conventions/coder.bun.green-header-purpose.convention.yaml
+    - conventions/coder.bun.green-header-runtime.convention.yaml
+    - conventions/coder.bun.green-header-tested-by.convention.yaml
+    - conventions/coder.bun.green-urn-layer.convention.yaml
+    - conventions/coder.bun.green-urn-marker.convention.yaml
+    - conventions/coder.bun.green-urn-name-matches.convention.yaml
+    - conventions/coder.bun.green-urn-pattern.convention.yaml
+    - conventions/coder.bun.green-urn-side.convention.yaml
+    - conventions/coder.bun.green-urn-wagon-feature.convention.yaml
+    - conventions/coder.bun.layer-naming.convention.yaml
+    - conventions/coder.bun.logging-console.convention.yaml
+    - conventions/coder.bun.logging-structured.convention.yaml
+    - conventions/coder.bun.quality-comments.convention.yaml
+    - conventions/coder.bun.quality-mi.convention.yaml
+    - conventions/coder.bun.security-hardcoded-secret.convention.yaml
+    - conventions/coder.bun.security-missing-auth.convention.yaml
+    - conventions/coder.bun.security-sql-injection.convention.yaml
+    - conventions/coder.bun.server-uses-bun-serve.convention.yaml
+    - conventions/coder.bun.single-lockfile.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  # NOTE: `depends_on.core` is omitted deliberately. Every other extension in this
+  # hub declares five `atdd.core.*` node ids, and NONE of them exists — the 231 real
+  # core nodes are namespaced `coder.*` / `tester.*` / `coach.*`. Admission never
+  # validates the field, so those declarations point at nothing. Rather than copy a
+  # dead list, this package declares only the dependency that IS resolved: the
+  # workspace whose implementations realize these conventions.
+  workspaces:
+    - id: atdd.workspace.bun
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

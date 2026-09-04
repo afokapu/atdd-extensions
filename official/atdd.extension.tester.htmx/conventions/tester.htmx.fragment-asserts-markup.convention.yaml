@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: tester.bun.fragment-asserts-markup
+rule_id: tester.htmx.fragment-asserts-markup
 kind: rule
 status: active
 name: htmx endpoint tests assert on the returned fragment
@@ -30,6 +30,8 @@ metadata:
   # No core counterpart: this obligation exists because htmx moves the response
   # contract from the payload into the markup. Stack-native, not inherited.
   - BUN-FRAGMENT-ASSERTS-MARKUP-001
+  # Renamed out of the tester.bun namespace when the stack split: Bun is the
+  # runtime, htmx is a library layered on it, and this rule is htmx's alone.
   severity: 3
   # Core's tester nodes are largely `documentation-only`, which core's
   # coverage_report treats as never-fails-the-build. That is right for retrofitting
@@ -40,4 +42,4 @@ metadata:
   introduced_in: 0.1.0
 implementation:
   type: validator
-  ref: bun_tester_discipline_detector
+  ref: htmx_tester_detector

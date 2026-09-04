@@ -1,0 +1,83 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.tester.bun.
+#
+# Every edge below is AUTHORED and says something true about the pair. The
+# vocabulary follows atdd.extension.coder.base, the one hand-curated graph in
+# this hub:
+#   refines            B adds a constraint that only applies once A holds
+#   specializes        B is a narrower case of the general rule A
+#   complements        two halves of one discipline; neither is complete alone
+#   co-extracted-from  both fall out of one detector run or one parse
+#   relates-to         same concern, weaker link
+#
+# Cross-package linkage is expressed through metadata aliases, never as an edge:
+# an authored edge to a core node is refused by admission.
+graph_id: atdd.extension.tester.bun.relationships
+
+nodes:
+  - tester.bun.acceptance-binding-declared
+  - tester.bun.covers-tag-well-formed
+  - tester.bun.imports-bun-test
+  - tester.bun.no-self-skip
+  - tester.bun.phase-declared
+  - tester.bun.red-behavioral-assertion
+  - tester.bun.red-fails-first
+  - tester.bun.routing-runtime-family
+  - tester.bun.security-auth
+  - tester.bun.security-input
+  - tester.bun.smoke-no-collaborator-substitution
+  - tester.bun.smoke-observable-assertion
+  - tester.bun.telemetry-emit
+  - tester.bun.test-carries-urn-identity
+  - tester.bun.test-isolation-no-live-state
+
+edges:
+  - source_ref: tester.bun.acceptance-binding-declared
+    target_ref: tester.bun.test-carries-urn-identity
+    type: refines
+    reason: 'Identity first, then what it proves; a binding with no URN has nothing to bind.'
+  - source_ref: tester.bun.phase-declared
+    target_ref: tester.bun.test-carries-urn-identity
+    type: refines
+    reason: 'The phase is read from the same header block and is meaningless without the URN.'
+  - source_ref: tester.bun.routing-runtime-family
+    target_ref: tester.bun.test-carries-urn-identity
+    type: refines
+    reason: 'Another optional header field validated from the same parse.'
+  - source_ref: tester.bun.covers-tag-well-formed
+    target_ref: tester.bun.acceptance-binding-declared
+    type: complements
+    reason: 'The two-level binding model: the header binds the FILE, a @covers tag binds one CASE.'
+  - source_ref: tester.bun.red-fails-first
+    target_ref: tester.bun.red-behavioral-assertion
+    type: complements
+    reason: 'One requires a guaranteed-fail marker, the other that the assertions are behavioural. A RED test needs both to be genuinely red.'
+  - source_ref: tester.bun.red-behavioral-assertion
+    target_ref: tester.bun.phase-declared
+    type: relates-to
+    reason: 'Only evaluable once a phase is declared; an undeclared test is exempt from the whole phase surface.'
+  - source_ref: tester.bun.smoke-no-collaborator-substitution
+    target_ref: tester.bun.smoke-observable-assertion
+    type: complements
+    reason: 'Both keep SMOKE honest: real collaborators, and an assertion on what an operator could witness.'
+  - source_ref: tester.bun.security-input
+    target_ref: tester.bun.security-auth
+    type: complements
+    reason: 'Authorisation and input validation are the two halves of one boundary; a happy-path test of either is a silent green gap.'
+  - source_ref: tester.bun.telemetry-emit
+    target_ref: tester.bun.smoke-observable-assertion
+    type: relates-to
+    reason: 'Both demand an assertion on an external EFFECT rather than on a returned value.'
+  - source_ref: tester.bun.no-self-skip
+    target_ref: tester.bun.red-fails-first
+    type: relates-to
+    reason: 'They share a vocabulary and must not contradict: `.fails`/`.failing` is an accepted RED marker, so it is deliberately NOT treated as a self-skip.'
+  - source_ref: tester.bun.test-isolation-no-live-state
+    target_ref: tester.bun.smoke-no-collaborator-substitution
+    type: relates-to
+    reason: 'Both govern what a test is allowed to touch outside itself.'
+  - source_ref: tester.bun.imports-bun-test
+    target_ref: tester.bun.routing-runtime-family
+    type: complements
+    reason: 'One checks the DECLARED runner, the other the IMPORTED harness. They must agree or the gate credits a runner that never ran the test.'
