@@ -1,0 +1,12 @@
+{
+  "t_urn_identity": "tester.bun.test-carries-urn-identity",
+  "t_acceptance_binding": "tester.bun.acceptance-binding-declared",
+  "t_phase_declared": "tester.bun.phase-declared",
+  "t_covers_tag": "tester.bun.covers-tag-well-formed",
+  "t_red_behavioral": "tester.bun.red-behavioral-assertion",
+  "t_smoke_observable": "tester.bun.smoke-observable-assertion",
+  "t_smoke_no_substitution": "tester.bun.smoke-no-collaborator-substitution",
+  "t_no_self_skip": "tester.bun.no-self-skip",
+  "t_isolation_no_live_state": "tester.bun.test-isolation-no-live-state",
+  "t_fragment_asserts_markup": "tester.bun.fragment-asserts-markup"
+}

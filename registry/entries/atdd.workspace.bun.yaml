@@ -1,0 +1,34 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.workspace.bun
+kind: workspace
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.workspace.bun
+  type: local
+
+version: "0.1.0"
+contract_version: "1.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+categories:
+  - bun
+  - typescript
+  - htmx
+  - full-stack
+  - runtime
+  - traceability
+  - workspace-provider
+  - official
+
+description: >-
+  Official ATDD full-stack Bun workspace provider — a REAL (non-stub) v1.1 runtime that runs
+  zero-dependency detectors under `bun`, which needs no build step, no node_modules and no
+  transpile config. Ships four detector families — bun_green_traceability_detector (10 rules),
+  bun_ts_metrics_detector (7, a native port of the python-pytest TS detectors),
+  htmx_hypermedia_detector (6), bun_fullstack_detector (3) and
+  bun_security_hygiene_detector (7).

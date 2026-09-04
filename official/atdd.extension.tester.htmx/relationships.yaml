@@ -1,0 +1,55 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.tester.htmx. Sorted-adjacent
+# sibling chain; every owned node carries >=1 edge, so the graph has no orphans.
+graph_id: atdd.extension.tester.htmx.relationships
+
+nodes:
+  - tester.bun.acceptance-binding-declared
+  - tester.bun.covers-tag-well-formed
+  - tester.bun.fragment-asserts-markup
+  - tester.bun.no-self-skip
+  - tester.bun.phase-declared
+  - tester.bun.red-behavioral-assertion
+  - tester.bun.smoke-no-collaborator-substitution
+  - tester.bun.smoke-observable-assertion
+  - tester.bun.test-carries-urn-identity
+  - tester.bun.test-isolation-no-live-state
+
+edges:
+  - source_ref: tester.bun.acceptance-binding-declared
+    target_ref: tester.bun.covers-tag-well-formed
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.covers-tag-well-formed
+    target_ref: tester.bun.fragment-asserts-markup
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.fragment-asserts-markup
+    target_ref: tester.bun.no-self-skip
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.no-self-skip
+    target_ref: tester.bun.phase-declared
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.phase-declared
+    target_ref: tester.bun.red-behavioral-assertion
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.red-behavioral-assertion
+    target_ref: tester.bun.smoke-no-collaborator-substitution
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.smoke-no-collaborator-substitution
+    target_ref: tester.bun.smoke-observable-assertion
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.smoke-observable-assertion
+    target_ref: tester.bun.test-carries-urn-identity
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.test-carries-urn-identity
+    target_ref: tester.bun.test-isolation-no-live-state
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'

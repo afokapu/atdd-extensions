@@ -1,0 +1,35 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.tester.htmx
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.tester.htmx
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+requires_workspaces:
+  - id: atdd.workspace.bun
+    contract: "^1.0.0"
+
+categories:
+  - tester
+  - htmx
+  - bun
+  - acceptance-binding
+  - coverage
+  - official
+
+description: >-
+  Official ATDD tester-role extension for the full-stack Bun + htmx stack — the tester half of the
+  pair whose coder half is atdd.extension.coder.htmx. Ten convention nodes covering test identity and
+  acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers tags), phase
+  discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing, no self-skip,
+  no shared live state), and the htmx-native obligation that an endpoint test asserts on the returned
+  fragment rather than only its status line.

@@ -1,0 +1,68 @@
+schema_version: "1.0.0"
+
+# Persona-aware extension id (#1343 canonical grammar):
+#   <publisher>.extension.<persona>.<artifact-name>,  persona ∈ {planner,tester,coder,coach}
+#
+# The TESTER half of the Bun + htmx pair. An ATDD extension is scoped to ONE
+# persona — that is what `role:` below declares and what the id's third segment
+# encodes — which is why every real stack in this hub ships two packages rather
+# than one: frontend.extension.vite-coder + vite-tester,
+# convex.extension.coder + convex.extension.tester, and now
+# atdd.extension.coder.htmx + atdd.extension.tester.htmx.
+#
+# The split is not bookkeeping. The coder extension governs SOURCE (what the code
+# is and how it is built); this one governs the SUITE (what is proven and how
+# honestly). They scan disjoint file sets — the coder families never read a test
+# file, this one reads nothing else — so the two can be adopted, ratcheted and
+# versioned independently.
+extension_id: atdd.extension.tester.htmx
+version: "0.1.0"
+kind: extension
+role: tester
+flow_wagon: validate-test-surface
+feature: htmx-bun-tester-conventions
+
+# Ten obligations in three groups:
+#   identity + binding  — URN, acceptance/train binding, phase, per-case @covers
+#                         tags. This group is what makes the coverage gate able to
+#                         see the suite at all; without it the gate passes
+#                         vacuously, which is the hole issue #1783 documents.
+#   phase discipline    — RED asserts behaviour, SMOKE asserts observably and does
+#                         not substitute collaborators, no test disables itself,
+#                         no test writes to shared live state.
+#   htmx-native         — an endpoint test asserts on the returned FRAGMENT, not
+#                         only the status line. No other stack's tester extension
+#                         has this rule, because no other stack puts the response
+#                         contract in the markup.
+owns:
+  conventions:
+    - conventions/tester.bun.acceptance-binding-declared.convention.yaml
+    - conventions/tester.bun.covers-tag-well-formed.convention.yaml
+    - conventions/tester.bun.fragment-asserts-markup.convention.yaml
+    - conventions/tester.bun.no-self-skip.convention.yaml
+    - conventions/tester.bun.phase-declared.convention.yaml
+    - conventions/tester.bun.red-behavioral-assertion.convention.yaml
+    - conventions/tester.bun.smoke-no-collaborator-substitution.convention.yaml
+    - conventions/tester.bun.smoke-observable-assertion.convention.yaml
+    - conventions/tester.bun.test-carries-urn-identity.convention.yaml
+    - conventions/tester.bun.test-isolation-no-live-state.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  core:
+    - atdd.core.convention-node-schema
+    - atdd.core.relationship-schema
+    - atdd.core.workspace-schema
+    - atdd.core.implementation-schema
+    - atdd.core.violation-output-schema
+  workspaces:
+    - id: atdd.workspace.bun
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

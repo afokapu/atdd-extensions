@@ -1,0 +1,34 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: bun_tester_discipline_detector
+targets_workspace: atdd.workspace.bun
+contract_version: 1.1.0
+# TESTER-persona discipline for the Bun + htmx stack. Scans TEST FILES ONLY; the
+# five coder families in this provider scan source. That split is the persona
+# boundary — an extension is scoped to one role, which is why every real stack in
+# this hub ships a coder/tester PAIR rather than one package.
+emits_rule_ids:
+- tester.bun.acceptance-binding-declared
+- tester.bun.covers-tag-well-formed
+- tester.bun.fragment-asserts-markup
+- tester.bun.no-self-skip
+- tester.bun.phase-declared
+- tester.bun.red-behavioral-assertion
+- tester.bun.smoke-no-collaborator-substitution
+- tester.bun.smoke-observable-assertion
+- tester.bun.test-carries-urn-identity
+- tester.bun.test-isolation-no-live-state
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention:
+- tester.bun.acceptance-binding-declared
+- tester.bun.covers-tag-well-formed
+- tester.bun.fragment-asserts-markup
+- tester.bun.no-self-skip
+- tester.bun.phase-declared
+- tester.bun.red-behavioral-assertion
+- tester.bun.smoke-no-collaborator-substitution
+- tester.bun.smoke-observable-assertion
+- tester.bun.test-carries-urn-identity
+- tester.bun.test-isolation-no-live-state

@@ -1,0 +1,18 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: bun_fullstack_detector
+targets_workspace: atdd.workspace.bun
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.bun.server-uses-bun-serve
+- coder.bun.single-lockfile
+- coder.bun.test-imports-bun-test
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention:
+# Family ownership, as above: all three rules are authored in
+# atdd.extension.coder.htmx and claimed by no other implementation.
+- coder.bun.server-uses-bun-serve
+- coder.bun.single-lockfile
+- coder.bun.test-imports-bun-test

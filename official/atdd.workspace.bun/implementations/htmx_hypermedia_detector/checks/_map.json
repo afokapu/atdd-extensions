@@ -1,0 +1,8 @@
+{
+  "htmx_destructive_verb_confirms": "coder.htmx.destructive-verb-confirms",
+  "htmx_endpoint_not_absolute_url": "coder.htmx.endpoint-not-absolute-url",
+  "htmx_fragment_interpolation_escaped": "coder.htmx.fragment-interpolation-escaped",
+  "htmx_mutation_signals_progress": "coder.htmx.mutation-signals-progress",
+  "htmx_no_inline_event_handler": "coder.htmx.no-inline-event-handler",
+  "htmx_oob_swap_carries_id": "coder.htmx.oob-swap-carries-id"
+}

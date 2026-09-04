@@ -1,0 +1,27 @@
+schema_version: 1.1.0
+kind: implementation
+subtype: validator
+implementation_id: htmx_hypermedia_detector
+targets_workspace: atdd.workspace.bun
+contract_version: 1.1.0
+emits_rule_ids:
+- coder.htmx.destructive-verb-confirms
+- coder.htmx.endpoint-not-absolute-url
+- coder.htmx.fragment-interpolation-escaped
+- coder.htmx.mutation-signals-progress
+- coder.htmx.no-inline-event-handler
+- coder.htmx.oob-swap-carries-id
+entrypoint: detect.mjs
+report: detect.mjs
+realizes_convention:
+# A family detector OWNS every rule it emits: all six are authored in
+# atdd.extension.coder.htmx and no other implementation claims them, so ownership
+# and co-emission coincide here. Declared as a LIST (the family form) rather than a
+# scalar — a scalar would bind one rule and leave the other five unenforced while
+# still appearing to work.
+- coder.htmx.destructive-verb-confirms
+- coder.htmx.endpoint-not-absolute-url
+- coder.htmx.fragment-interpolation-escaped
+- coder.htmx.mutation-signals-progress
+- coder.htmx.no-inline-event-handler
+- coder.htmx.oob-swap-carries-id
