@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Member check: tester.htmx.fragment-asserts-markup  (htmx tester family)
+// Member check: tester.bun.fragment-asserts-markup  (tester discipline family)
 //
 // THE htmx-SPECIFIC TESTER RULE, and the one with no counterpart in any other
 // stack's tester extension.
@@ -16,7 +16,7 @@
 // on the status line.
 import { runCheck, testCases, caseBody } from "../test_header.mjs";
 
-const RULE = "tester.htmx.fragment-asserts-markup";
+const RULE = "tester.bun.fragment-asserts-markup";
 
 // The case performs an HTTP round trip.
 const DOES_FETCH = /\b(?:fetch|request)\s*\(|\.\s*fetch\s*\(/;

@@ -34,9 +34,7 @@ requires_bun = pytest.mark.skipif(shutil.which("bun") is None, reason="bun not o
 _IMPLS = {p.name: p for p in (_WS / "implementations").iterdir()
           if (p / "atdd.implementation.yaml").is_file()}
 _TESTER = "bun_tester_discipline_detector"
-# Two tester families since the stack split: the Bun suite rules and the single
-# htmx one. Both are tester-persona and neither may read a source file.
-_TESTER_FAMILIES = {_TESTER, "htmx_tester_detector"}
+_TESTER_FAMILIES = {_TESTER}
 _CODER = sorted(n for n in _IMPLS if n not in _TESTER_FAMILIES)
 
 

@@ -36,7 +36,7 @@ REQUIRED = {"source_ref", "target_ref", "type"}
 # The four extensions this provider realizes. Other hub packages are out of scope:
 # this suite asserts what THIS provider serves, not what the hub happens to contain.
 OURS = ["atdd.extension.coder.bun", "atdd.extension.coder.htmx",
-        "atdd.extension.tester.bun", "atdd.extension.tester.htmx"]
+        "atdd.extension.tester.bun"]
 
 
 def _graph(ext: str) -> dict:
@@ -65,8 +65,9 @@ def test_every_node_is_covered_by_an_edge(ext: str) -> None:
     refused. A single-node package is the one honest exception — there is no pair."""
     g = _graph(ext)
     nodes = set(g.get("nodes") or [])
-    if len(nodes) <= 1:
-        pytest.skip(f"{ext} is a single-node package; no intra-package pair exists")
+    # No skip: core's `atdd validate package` refuses an orphan node with no
+    # exemption, so a single-node extension cannot exist. That constraint is why
+    # the one htmx tester rule lives in tester.bun rather than its own package.
     linked = {r for e in (g.get("edges") or []) for r in (e["source_ref"], e["target_ref"])}
     assert nodes - linked == set(), f"{ext}: orphan nodes {sorted(nodes - linked)}"
     assert linked - nodes == set(), f"{ext}: edges reference unknown nodes {sorted(linked - nodes)}"

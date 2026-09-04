@@ -24,6 +24,7 @@ graph_id: atdd.extension.tester.bun.relationships
 nodes:
   - tester.bun.acceptance-binding-declared
   - tester.bun.covers-tag-well-formed
+  - tester.bun.fragment-asserts-markup
   - tester.bun.imports-bun-test
   - tester.bun.no-self-skip
   - tester.bun.phase-declared
@@ -147,3 +148,12 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'One checks the DECLARED runner, the other the IMPORTED harness; they must agree or the gate credits a runner that never ran the test.'
+  - source_ref: tester.bun.fragment-asserts-markup
+    target_ref: tester.bun.smoke-observable-assertion
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Both name what a test must observe rather than construct; in htmx the observable channel IS the returned markup, so this is that rule read for a hypermedia response.'

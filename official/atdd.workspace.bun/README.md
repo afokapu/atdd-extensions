@@ -58,8 +58,7 @@ convention the coder extension itself enforces.
 | `htmx_hypermedia_detector` | 6 × `coder.htmx.*` | `.html`, `.htm`, and JS/TS source (htmx markup lives in template literals) |
 | `bun_fullstack_detector` | 2 × `coder.bun.*` | JS/TS source and repo lockfiles |
 | `bun_security_hygiene_detector` | 7 × security / logging / error-response | JS/TS source and templates |
-| `bun_tester_discipline_detector` | 15 × `tester.bun.*` | **test files only** — the persona boundary |
-| `htmx_tester_detector` | 1 × `tester.htmx.*` | test files only — the htmx half of the tester surface |
+| `bun_tester_discipline_detector` | 16 × `tester.bun.*` | **test files only** — the persona boundary |
 | `bun_clean_architecture_detector` | 12 × layering / composition / DTO / boundaries | `.ts`, `.tsx` — reads the import graph |
 
 All three declare their full rule set in `realizes_convention` as a **list**. A scalar
@@ -68,9 +67,8 @@ the failure mode the conformance suite's `test_every_declared_rule_id_actually_f
 exists to catch. The Vite sibling `vite_green_traceability_detector` declares a
 scalar while emitting ten rule ids, so nine of its ten rules bind to nothing.
 
-The conventions those rules belong to are owned by four extensions —
-`coder.bun` / `coder.htmx` (source) and `tester.bun` / `tester.htmx` (suite) —
-never here: the extension owns the obligation, the
+The conventions those rules belong to are owned by three extensions —
+`coder.bun` / `coder.htmx` (source) and `tester.bun` (suite) — never here: the extension owns the obligation, the
 provider owns the realization. That split is what lets a second runtime satisfy the
 same nine obligations without this package changing.
 
@@ -118,9 +116,9 @@ versioning, separate documentation, and a consumer installs only what applies.
 
 They do **not** currently give modular **enforcement**. The binding plan is computed
 from the implementations this workspace ships, not from which extensions are
-installed: remove `coder.htmx` and `tester.htmx`, rebind, and all 60 conventions are
-still in `binding.lock.yaml` — because `htmx_hypermedia_detector` and
-`htmx_tester_detector` still claim theirs via `realizes_convention`.
+installed: remove `coder.htmx`, rebind, and its 6 conventions are still in
+`binding.lock.yaml` — because `htmx_hypermedia_detector` still claims them via
+`realizes_convention`.
 
 Closing that needs core to intersect the binding plan with the convention nodes the
 installed extensions actually own. Splitting the workspace instead would be the

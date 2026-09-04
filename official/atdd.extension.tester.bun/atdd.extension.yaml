@@ -21,6 +21,7 @@ owns:
   conventions:
     - conventions/tester.bun.acceptance-binding-declared.convention.yaml
     - conventions/tester.bun.covers-tag-well-formed.convention.yaml
+    - conventions/tester.bun.fragment-asserts-markup.convention.yaml
     - conventions/tester.bun.imports-bun-test.convention.yaml
     - conventions/tester.bun.no-self-skip.convention.yaml
     - conventions/tester.bun.phase-declared.convention.yaml
