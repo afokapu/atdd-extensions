@@ -1,0 +1,5 @@
+{
+  "t_fragment_asserts_markup": "tester.htmx.fragment-asserts-markup",
+  "t_endpoint_coverage": "tester.htmx.endpoint-coverage",
+  "t_oob_target_asserted": "tester.htmx.oob-target-asserted"
+}

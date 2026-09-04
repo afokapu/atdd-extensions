@@ -66,3 +66,12 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both replace imperative JavaScript with a declarative hx- attribute the swap lifecycle can see.'
+  - source_ref: coder.htmx.endpoint-not-absolute-url
+    target_ref: coder.htmx.mutation-signals-progress
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Both read the same hx- verb attributes: one judges WHERE the request goes, the other what the user sees while it is in flight.'

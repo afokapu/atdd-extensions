@@ -36,7 +36,7 @@ REQUIRED = {"source_ref", "target_ref", "type"}
 # The four extensions this provider realizes. Other hub packages are out of scope:
 # this suite asserts what THIS provider serves, not what the hub happens to contain.
 OURS = ["atdd.extension.coder.bun", "atdd.extension.coder.htmx",
-        "atdd.extension.tester.bun"]
+        "atdd.extension.tester.bun", "atdd.extension.tester.htmx"]
 
 
 def _graph(ext: str) -> dict:

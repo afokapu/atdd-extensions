@@ -350,3 +350,12 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'One governs the server you run, the other the client you call out with.'
+  - source_ref: coder.bun.green-header-order
+    target_ref: coder.bun.green-header-runtime
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The canonical order this rule enforces is URN -> Tested-By -> Runtime -> Purpose; Runtime and Purpose are the second half of the very sequence it governs, so they were never a separate concern.'

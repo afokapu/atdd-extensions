@@ -37,7 +37,7 @@ import yaml
 _WS = Path(__file__).resolve().parent.parent
 _HUB = _WS.parent.parent
 EXTENSIONS = ["atdd.extension.coder.bun", "atdd.extension.coder.htmx",
-              "atdd.extension.tester.bun"]
+              "atdd.extension.tester.bun", "atdd.extension.tester.htmx"]
 
 
 def _core():

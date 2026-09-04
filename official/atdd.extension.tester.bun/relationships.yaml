@@ -24,7 +24,6 @@ graph_id: atdd.extension.tester.bun.relationships
 nodes:
   - tester.bun.acceptance-binding-declared
   - tester.bun.covers-tag-well-formed
-  - tester.bun.fragment-asserts-markup
   - tester.bun.imports-bun-test
   - tester.bun.no-self-skip
   - tester.bun.phase-declared
@@ -148,12 +147,21 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'One checks the DECLARED runner, the other the IMPORTED harness; they must agree or the gate credits a runner that never ran the test.'
-  - source_ref: tester.bun.fragment-asserts-markup
-    target_ref: tester.bun.smoke-observable-assertion
-    type: runs_alongside
-    foundation: start_to_start
+  - source_ref: tester.bun.smoke-observable-assertion
+    target_ref: tester.bun.phase-declared
+    type: requires
+    foundation: finish_to_start
     constraint: mandatory
     control: internal
     strength: important
     confidence: 1.0
-    reason: 'Both name what a test must observe rather than construct; in htmx the observable channel IS the returned markup, so this is that rule read for a hypermedia response.'
+    reason: 'Only evaluable once a phase is declared, exactly as red-behavioral-assertion is; an undeclared test escapes the SMOKE surface entirely.'
+  - source_ref: tester.bun.security-auth
+    target_ref: tester.bun.telemetry-emit
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'One shape, three kinds: a test whose URN declares its kind must carry the assertion that kind implies, or it is a silent green gap.'

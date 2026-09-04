@@ -17,4 +17,5 @@ entries:
   - entries/atdd.extension.coder.bun.yaml
   - entries/atdd.extension.coder.htmx.yaml
   - entries/atdd.extension.tester.bun.yaml
+  - entries/atdd.extension.tester.htmx.yaml
   - entries/acme.extension.component-header-validator.yaml

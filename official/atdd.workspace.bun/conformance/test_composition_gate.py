@@ -34,8 +34,8 @@ _HUB = _WS.parent.parent
 
 # The packages this provider serves. Other hub packages are CI's business, not this
 # suite's — asserting on them would make this provider fail for a neighbour's bug.
-OURS = ["atdd.workspace.bun", "atdd.extension.coder.bun",
-        "atdd.extension.coder.htmx", "atdd.extension.tester.bun"]
+OURS = ["atdd.workspace.bun", "atdd.extension.coder.bun", "atdd.extension.coder.htmx",
+        "atdd.extension.tester.bun", "atdd.extension.tester.htmx"]
 
 _ATDD = shutil.which("atdd")
 requires_atdd = pytest.mark.skipif(_ATDD is None, reason="atdd CLI not on PATH")

@@ -162,7 +162,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.bun
-  summary: "Official ATDD tester-role extension for a bun test suite \u2014 16 convention nodes covering\
+  summary: "Official ATDD tester-role extension for a bun test suite \u2014 15 convention nodes covering\
     \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
     \ tags) and phase discipline (RED fail-markers and behavioural assertions, SMOKE observability and\
     \ no collaborator substitution, no self-skip, no shared live state, security/input/telemetry assertion).\
@@ -172,6 +172,31 @@ entries:
   - bun
   - typescript
   - acceptance-binding
+  - coverage
+  - official
+  workspaces:
+  - id: atdd.workspace.bun
+    contract: ^1.0.0
+- id: atdd.extension.tester.htmx
+  kind: extension
+  latest_version: 0.1.0
+  versions:
+  - 0.1.0
+  aliases:
+  - tester.htmx
+  publisher: atdd
+  trust: official
+  source: official/atdd.extension.tester.htmx
+  summary: "Official ATDD tester-role extension for htmx endpoint tests \u2014 the tester half of the\
+    \ pair whose coder half is atdd.extension.coder.htmx. Three convention nodes: every hx- endpoint declared\
+    \ in markup is exercised by a test (mirroring tester.convex.interlocking-route-coverage, with the\
+    \ markup as this stack's route space), an endpoint test asserts on the returned fragment rather than\
+    \ only its status line, and a test asserting an out-of-band swap also asserts the destination id \u2014\
+    \ the tester half of coder.htmx.oob-swap-carries-id."
+  tags:
+  - tester
+  - htmx
+  - hypermedia
   - coverage
   - official
   workspaces:

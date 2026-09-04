@@ -1,0 +1,34 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.tester.htmx.
+#
+# CONFORMS TO CORE'S EDGE SCHEMA — src/atdd/planner/schemas/author/
+# relationship.schema.json, "ATDD relationship edge (spec 6)": a closed type
+# vocabulary plus typed metadata (foundation, constraint, control, strength,
+# confidence, reason).
+graph_id: atdd.extension.tester.htmx.relationships
+
+nodes:
+  - tester.htmx.endpoint-coverage
+  - tester.htmx.fragment-asserts-markup
+  - tester.htmx.oob-target-asserted
+
+edges:
+  - source_ref: tester.htmx.oob-target-asserted
+    target_ref: tester.htmx.fragment-asserts-markup
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Asserting the destination id is a specific case of asserting the fragment at all: a test that never reaches the body cannot reach the id inside it.'
+  - source_ref: tester.htmx.endpoint-coverage
+    target_ref: tester.htmx.fragment-asserts-markup
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Two halves of one guarantee: coverage says every declared endpoint HAS a test, fragment-asserts-markup says that test looks at what the endpoint actually returns.'

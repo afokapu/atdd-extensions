@@ -1,0 +1,34 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.tester.htmx
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.tester.htmx
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+requires_workspaces:
+  - id: atdd.workspace.bun
+    contract: "^1.0.0"
+
+categories:
+  - tester
+  - htmx
+  - hypermedia
+  - coverage
+  - official
+
+description: >-
+  Official ATDD tester-role extension for htmx endpoint tests — the tester half of the pair whose
+  coder half is atdd.extension.coder.htmx. Three convention nodes: every hx- endpoint declared in
+  markup is exercised by a test (mirroring tester.convex.interlocking-route-coverage, with the
+  markup as this stack's route space), an endpoint test asserts on the returned fragment rather
+  than only its status line, and a test asserting an out-of-band swap also asserts the destination
+  id — the tester half of coder.htmx.oob-swap-carries-id.

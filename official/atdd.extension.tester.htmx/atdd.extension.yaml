@@ -1,0 +1,43 @@
+schema_version: "1.0.0"
+
+# Persona-aware extension id (#1343 canonical grammar):
+#   <publisher>.extension.<persona>.<artifact-name>,  persona in {planner,tester,coder,coach}
+#
+# The htmx half of the tester surface, paired with atdd.extension.coder.htmx. Bun is
+# the RUNTIME and htmx a library layered on it, so a Bun repo serving JSON installs
+# coder.bun + tester.bun and neither of these.
+#
+# Three rules, and the count is load-bearing: core refuses an orphan convention node
+# (compose.extension_orphan_nodes, extending planner.relationship.no-orphan-nodes)
+# and admission refuses cross-package edges, so a ONE-rule stack extension is
+# structurally impossible — its only node could never be an endpoint. An earlier cut
+# of this package shipped a single rule and `atdd validate package` rejected it.
+extension_id: atdd.extension.tester.htmx
+version: "0.1.0"
+kind: extension
+role: tester
+flow_wagon: validate-test-surface
+feature: htmx-tester-conventions
+
+owns:
+  conventions:
+    - conventions/tester.htmx.endpoint-coverage.convention.yaml
+    - conventions/tester.htmx.fragment-asserts-markup.convention.yaml
+    - conventions/tester.htmx.oob-target-asserted.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  # `core: []` — present and EMPTY, which is what `atdd author extension init`
+  # scaffolds. The five `atdd.core.*` ids every other extension lists do not exist.
+  core: []
+  workspaces:
+    - id: atdd.workspace.bun
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true
