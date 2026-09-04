@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Member check: tester.htmx.endpoint-coverage  (htmx tester family)
+// Member check: tester.htmx.verb-endpoint-coverage  (htmx tester family)
 //
 // Mirrors tester.convex.interlocking-route-coverage — "every admissible route
 // declared in the guarded route space MUST have at least one end-to-end test that
@@ -16,7 +16,7 @@
 // findings on a source-only tree.
 import { walk, readRoots, readExcludes, readText, emit, locate, SOURCE_EXT, TEMPLATE_EXT, TEST_RE } from "../../../lib/scan.mjs";
 
-const RULE = "tester.htmx.endpoint-coverage";
+const RULE = "tester.htmx.verb-endpoint-coverage";
 const VERB_ATTR = /\bhx-(?:get|post|put|patch|delete)\s*=\s*(['"])(\/[^'"]*)\1/g;
 const EXTS = new Set([...SOURCE_EXT, ...TEMPLATE_EXT]);
 

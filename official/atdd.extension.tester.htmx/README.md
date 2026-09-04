@@ -25,7 +25,7 @@ shape as the frontend provider's design-no-op pattern.
 
 ## One defect, two personas
 
-`oob-target-asserted` and `coder.htmx.oob-swap-carries-id` are the same failure seen
+`oob-target-asserted` and `coder.htmx.swap-oob-carries-id` are the same failure seen
 from source and from suite, and neither closes it alone:
 
 - the **coder** rule makes the server *emit* an id on an out-of-band element

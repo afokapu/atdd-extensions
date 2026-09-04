@@ -9,13 +9,13 @@ schema_version: "1.0.0"
 graph_id: atdd.extension.tester.htmx.relationships
 
 nodes:
-  - tester.htmx.endpoint-coverage
-  - tester.htmx.fragment-asserts-markup
-  - tester.htmx.oob-target-asserted
+  - tester.htmx.verb-endpoint-coverage
+  - tester.htmx.fragment-asserts-returned-markup
+  - tester.htmx.swap-oob-asserts-destination-id
 
 edges:
-  - source_ref: tester.htmx.oob-target-asserted
-    target_ref: tester.htmx.fragment-asserts-markup
+  - source_ref: tester.htmx.swap-oob-asserts-destination-id
+    target_ref: tester.htmx.fragment-asserts-returned-markup
     type: requires
     foundation: finish_to_start
     constraint: mandatory
@@ -23,8 +23,8 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'Asserting the destination id is a specific case of asserting the fragment at all: a test that never reaches the body cannot reach the id inside it.'
-  - source_ref: tester.htmx.endpoint-coverage
-    target_ref: tester.htmx.fragment-asserts-markup
+  - source_ref: tester.htmx.verb-endpoint-coverage
+    target_ref: tester.htmx.fragment-asserts-returned-markup
     type: runs_alongside
     foundation: start_to_start
     constraint: mandatory

@@ -10,12 +10,12 @@ contract_version: 1.1.0
 # Three rules, which is what makes the package viable at all: core refuses an orphan
 # convention node, and a one-rule extension has no intra-package pair to relate.
 emits_rule_ids:
-- tester.htmx.endpoint-coverage
-- tester.htmx.fragment-asserts-markup
-- tester.htmx.oob-target-asserted
+- tester.htmx.verb-endpoint-coverage
+- tester.htmx.fragment-asserts-returned-markup
+- tester.htmx.swap-oob-asserts-destination-id
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention:
-- tester.htmx.endpoint-coverage
-- tester.htmx.fragment-asserts-markup
-- tester.htmx.oob-target-asserted
+- tester.htmx.verb-endpoint-coverage
+- tester.htmx.fragment-asserts-returned-markup
+- tester.htmx.swap-oob-asserts-destination-id

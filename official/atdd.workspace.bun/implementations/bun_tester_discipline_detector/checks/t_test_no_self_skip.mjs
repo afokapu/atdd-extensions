@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Member check: tester.bun.no-self-skip  (tester discipline family)
+// Member check: tester.bun.test-no-self-skip  (tester discipline family)
 //
 // CONTRACT (v1.1): reads ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES, writes RAW
 // {rule_id,file,line,col,evidence,source_line} violations to ATDD_VIOLATIONS_REPORT,
@@ -16,7 +16,7 @@ const SELF_SKIP = /\b(?:it|test|describe)\s*\.\s*(skip|todo)\s*\(/g;
 // wearing a disguise — the suite reports green having exercised nothing.
 const GUARDED_BAIL = /if\s*\([^)]*process\.env[^)]*\)\s*\{?\s*return\b/g;
 
-runCheck("tester.bun.no-self-skip", (H, file, text) => {
+runCheck("tester.bun.test-no-self-skip", (H, file, text) => {
   const out = [];
   text.split(/\r?\n/).forEach((line, i) => {
     for (const re of [SELF_SKIP, GUARDED_BAIL]) {

@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: coder.htmx.destructive-verb-confirms
+rule_id: coder.htmx.verb-destructive-confirms
 kind: rule
 status: active
 name: Destructive htmx requests declare a confirmation
@@ -15,7 +15,7 @@ terms:
 - term_id: destructive_verb
   text: >-
     `hx-delete`. `hx-post`/`hx-put`/`hx-patch` are mutating but not inherently destructive — they are
-    governed by `coder.htmx.mutation-signals-progress` instead.
+    governed by `coder.htmx.verb-mutation-signals-progress` instead.
 - term_id: declared_confirmation
   text: >-
     `hx-confirm="…"` (a yes/no gate) or `hx-prompt="…"` (a gate requiring typed input). Either

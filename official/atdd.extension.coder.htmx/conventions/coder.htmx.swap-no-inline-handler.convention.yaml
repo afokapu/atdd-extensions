@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: coder.htmx.no-inline-event-handler
+rule_id: coder.htmx.swap-no-inline-handler
 kind: rule
 status: active
 name: htmx-driven markup declares behaviour with hx-attributes, not inline handlers

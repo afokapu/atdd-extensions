@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.bun.single-lockfile  (disposition: strict)
+// Detector: coder.bun.runtime-single-lockfile  (disposition: strict)
 //
 // Bun is this stack's package manager, so `bun.lock` (or `bun.lockb`) is the ONE
 // resolution source of truth. A `package-lock.json`, `yarn.lock` or
@@ -13,7 +13,7 @@
 // offending lockfile.
 import { walkByName, readRoots, readExcludes, emit } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.bun.single-lockfile";
+const RULE_ID = "coder.bun.runtime-single-lockfile";
 const FOREIGN_LOCKFILES = new Map([
   ["package-lock.json", "npm"],
   ["yarn.lock", "Yarn"],

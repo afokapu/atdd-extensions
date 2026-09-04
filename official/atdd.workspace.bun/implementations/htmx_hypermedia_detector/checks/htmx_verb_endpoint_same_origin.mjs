@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.htmx.endpoint-not-absolute-url  (disposition: strict)
+// Detector: coder.htmx.verb-endpoint-same-origin  (disposition: strict)
 //
 // An htmx verb attribute (hx-get/post/put/patch/delete) must address a
 // SAME-ORIGIN path, not a hardcoded absolute URL. htmx swaps the response body
@@ -9,7 +9,7 @@
 // production. The hypermedia control belongs to the origin that served the page.
 import { walk, readRoots, readExcludes, readText, emit, locate, SOURCE_EXT, TEMPLATE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.htmx.endpoint-not-absolute-url";
+const RULE_ID = "coder.htmx.verb-endpoint-same-origin";
 const ABSOLUTE_VERB_RE = /\bhx-(get|post|put|patch|delete)\s*=\s*(['"])(https?:)?\/\/[^'"]*\2/gi;
 const EXTS = new Set([...SOURCE_EXT, ...TEMPLATE_EXT]);
 

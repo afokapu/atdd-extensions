@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: coder.htmx.mutation-signals-progress
+rule_id: coder.htmx.verb-mutation-signals-progress
 kind: rule
 status: active
 name: Mutating htmx requests signal that they are in flight

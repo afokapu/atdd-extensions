@@ -22,16 +22,16 @@ schema_version: "1.0.0"
 graph_id: atdd.extension.coder.htmx.relationships
 
 nodes:
-  - coder.htmx.destructive-verb-confirms
-  - coder.htmx.endpoint-not-absolute-url
-  - coder.htmx.fragment-interpolation-escaped
-  - coder.htmx.mutation-signals-progress
-  - coder.htmx.no-inline-event-handler
-  - coder.htmx.oob-swap-carries-id
+  - coder.htmx.verb-destructive-confirms
+  - coder.htmx.verb-endpoint-same-origin
+  - coder.htmx.fragment-escapes-interpolation
+  - coder.htmx.verb-mutation-signals-progress
+  - coder.htmx.swap-no-inline-handler
+  - coder.htmx.swap-oob-carries-id
 
 edges:
-  - source_ref: coder.htmx.destructive-verb-confirms
-    target_ref: coder.htmx.mutation-signals-progress
+  - source_ref: coder.htmx.verb-destructive-confirms
+    target_ref: coder.htmx.verb-mutation-signals-progress
     type: runs_alongside
     foundation: start_to_start
     constraint: mandatory
@@ -39,8 +39,8 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'Both govern a mutating control: one guards INTENT before the request, the other FEEDBACK during it.'
-  - source_ref: coder.htmx.oob-swap-carries-id
-    target_ref: coder.htmx.no-inline-event-handler
+  - source_ref: coder.htmx.swap-oob-carries-id
+    target_ref: coder.htmx.swap-no-inline-handler
     type: runs_alongside
     foundation: start_to_start
     constraint: discretionary
@@ -48,8 +48,8 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both concern what survives a swap: an oob element needs an id to land, an inline handler dies when its node is replaced.'
-  - source_ref: coder.htmx.fragment-interpolation-escaped
-    target_ref: coder.htmx.endpoint-not-absolute-url
+  - source_ref: coder.htmx.fragment-escapes-interpolation
+    target_ref: coder.htmx.verb-endpoint-same-origin
     type: runs_alongside
     foundation: start_to_start
     constraint: mandatory
@@ -57,8 +57,8 @@ edges:
     strength: critical
     confidence: 1.0
     reason: 'Both govern what reaches the live DOM: one the ORIGIN the markup came from, the other the DATA inside it.'
-  - source_ref: coder.htmx.no-inline-event-handler
-    target_ref: coder.htmx.destructive-verb-confirms
+  - source_ref: coder.htmx.swap-no-inline-handler
+    target_ref: coder.htmx.verb-destructive-confirms
     type: runs_alongside
     foundation: start_to_start
     constraint: discretionary
@@ -66,8 +66,8 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both replace imperative JavaScript with a declarative hx- attribute the swap lifecycle can see.'
-  - source_ref: coder.htmx.endpoint-not-absolute-url
-    target_ref: coder.htmx.mutation-signals-progress
+  - source_ref: coder.htmx.verb-endpoint-same-origin
+    target_ref: coder.htmx.verb-mutation-signals-progress
     type: runs_alongside
     foundation: start_to_start
     constraint: mandatory

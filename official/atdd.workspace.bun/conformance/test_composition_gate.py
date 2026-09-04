@@ -10,7 +10,7 @@ It caught one here that no other check did. A single-rule extension was shipped
 (`atdd.extension.tester.htmx`, one node) and the gate refused it:
 
     package validation failed: orphan convention node(s) referenced by no
-    relationship edge: tester.htmx.fragment-asserts-markup
+    relationship edge: tester.htmx.fragment-asserts-returned-markup
 
 `compose.extension_orphan_nodes` extends core's `planner.relationship.no-orphan-nodes`
 to extensions with NO exemption for package size, and admission separately refuses an
@@ -67,7 +67,7 @@ def test_the_gate_still_has_teeth(tmp_path: Path) -> None:
     mf = broken / "atdd.extension.yaml"
     d = yaml.safe_load(mf.read_text())
     d.setdefault("realizes", []).append({
-        "extension_node": "coder.htmx.oob-swap-carries-id",
+        "extension_node": "coder.htmx.swap-oob-carries-id",
         "core_node": "coach.bogus.does-not-exist",
     })
     mf.write_text(yaml.safe_dump(d, sort_keys=False))

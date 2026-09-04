@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: coder.htmx.oob-swap-carries-id
+rule_id: coder.htmx.swap-oob-carries-id
 kind: rule
 status: active
 name: Out-of-band swap elements declare the id they swap into

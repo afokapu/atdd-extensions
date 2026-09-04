@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-// Member check: tester.htmx.oob-target-asserted  (htmx tester family)
+// Member check: tester.htmx.swap-oob-asserts-destination-id  (htmx tester family)
 //
-// The tester half of `coder.htmx.oob-swap-carries-id`. That rule makes the SERVER
+// The tester half of `coder.htmx.swap-oob-carries-id`. That rule makes the SERVER
 // emit an id on an out-of-band element; this one makes the TEST prove the id is the
 // one the page will actually match.
 //
@@ -15,7 +15,7 @@
 // assertion on a runtime artefact must bind back to the declaration it came from.
 import { runCheck, testCases, caseBody } from "../test_header.mjs";
 
-const RULE = "tester.htmx.oob-target-asserted";
+const RULE = "tester.htmx.swap-oob-asserts-destination-id";
 const MENTIONS_OOB = /hx-swap-oob/;
 // An assertion that reaches the destination id: an `id=` in an expected string, or
 // a DOM lookup by id.

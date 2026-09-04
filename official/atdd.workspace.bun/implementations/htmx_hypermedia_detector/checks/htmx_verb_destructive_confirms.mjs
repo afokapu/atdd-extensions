@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.htmx.destructive-verb-confirms  (disposition: strict)
+// Detector: coder.htmx.verb-destructive-confirms  (disposition: strict)
 //
 // An element issuing `hx-delete` must carry `hx-confirm` (or `hx-prompt`). In
 // htmx a delete is one attribute on a clickable element — there is no form
@@ -9,7 +9,7 @@
 // destroys data on a single mis-click.
 import { walk, readRoots, readExcludes, readText, emit, locate, enclosingTag, SOURCE_EXT, TEMPLATE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.htmx.destructive-verb-confirms";
+const RULE_ID = "coder.htmx.verb-destructive-confirms";
 const DELETE_RE = /\bhx-delete\s*=/gi;
 const CONFIRMS_RE = /\bhx-(confirm|prompt)\s*=/i;
 const EXTS = new Set([...SOURCE_EXT, ...TEMPLATE_EXT]);

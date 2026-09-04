@@ -19,12 +19,12 @@ feature: htmx-coder-conventions
 
 owns:
   conventions:
-    - conventions/coder.htmx.destructive-verb-confirms.convention.yaml
-    - conventions/coder.htmx.endpoint-not-absolute-url.convention.yaml
-    - conventions/coder.htmx.fragment-interpolation-escaped.convention.yaml
-    - conventions/coder.htmx.mutation-signals-progress.convention.yaml
-    - conventions/coder.htmx.no-inline-event-handler.convention.yaml
-    - conventions/coder.htmx.oob-swap-carries-id.convention.yaml
+    - conventions/coder.htmx.verb-destructive-confirms.convention.yaml
+    - conventions/coder.htmx.verb-endpoint-same-origin.convention.yaml
+    - conventions/coder.htmx.fragment-escapes-interpolation.convention.yaml
+    - conventions/coder.htmx.verb-mutation-signals-progress.convention.yaml
+    - conventions/coder.htmx.swap-no-inline-handler.convention.yaml
+    - conventions/coder.htmx.swap-oob-carries-id.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

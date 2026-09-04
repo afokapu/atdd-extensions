@@ -1,5 +1,5 @@
 {
-  "t_fragment_asserts_markup": "tester.htmx.fragment-asserts-markup",
-  "t_endpoint_coverage": "tester.htmx.endpoint-coverage",
-  "t_oob_target_asserted": "tester.htmx.oob-target-asserted"
+  "t_fragment_asserts_returned_markup": "tester.htmx.fragment-asserts-returned-markup",
+  "t_verb_endpoint_coverage": "tester.htmx.verb-endpoint-coverage",
+  "t_swap_oob_asserts_destination_id": "tester.htmx.swap-oob-asserts-destination-id"
 }

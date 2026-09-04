@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: tester.bun.phase-declared
+rule_id: tester.bun.test-phase-declared
 kind: rule
 status: active
 name: Every test declares its ATDD phase

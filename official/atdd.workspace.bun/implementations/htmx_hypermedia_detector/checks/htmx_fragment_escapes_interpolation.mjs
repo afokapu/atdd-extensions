@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.htmx.fragment-interpolation-escaped  (disposition: strict)
+// Detector: coder.htmx.fragment-escapes-interpolation  (disposition: strict)
 //
 // In a full-stack Bun + htmx app the server RENDERS HTML FRAGMENTS as template
 // literals and htmx injects them into the live DOM. That makes every bare
@@ -17,7 +17,7 @@
 // always wrong: raw data dropped straight into markup.
 import { walk, readRoots, readExcludes, readText, emit, locate, templateLiterals, SOURCE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.htmx.fragment-interpolation-escaped";
+const RULE_ID = "coder.htmx.fragment-escapes-interpolation";
 // The literal emits markup — an opening tag, not merely a stray `<`.
 const EMITS_HTML_RE = /<[a-zA-Z][\w-]*[\s/>]/;
 // A bare variable or property chain: no call, no operator, no literal.

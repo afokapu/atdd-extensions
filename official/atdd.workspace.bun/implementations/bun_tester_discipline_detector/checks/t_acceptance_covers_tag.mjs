@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Member check: tester.bun.covers-tag-well-formed  (tester discipline family)
+// Member check: tester.bun.acceptance-covers-tag-well-formed  (tester discipline family)
 //
 // CONTRACT (v1.1): reads ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES, writes RAW
 // {rule_id,file,line,col,evidence,source_line} violations to ATDD_VIOLATIONS_REPORT,
@@ -9,7 +9,7 @@ import { runCheck } from "../test_header.mjs";
 
 import { testCases } from "../test_header.mjs";
 
-runCheck("tester.bun.covers-tag-well-formed", (H, file, text) => {
+runCheck("tester.bun.acceptance-covers-tag-well-formed", (H, file, text) => {
   const out = [];
   for (const c of testCases(text)) {
     for (const tag of c.covers) {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Member check: tester.bun.phase-declared  (tester discipline family)
+// Member check: tester.bun.test-phase-declared  (tester discipline family)
 //
 // CONTRACT (v1.1): reads ATDD_SCAN_ROOTS / ATDD_SCAN_EXCLUDES, writes RAW
 // {rule_id,file,line,col,evidence,source_line} violations to ATDD_VIOLATIONS_REPORT,
@@ -9,7 +9,7 @@ import { runCheck } from "../test_header.mjs";
 
 import { PHASES } from "../test_header.mjs";
 
-runCheck("tester.bun.phase-declared", (H) => {
+runCheck("tester.bun.test-phase-declared", (H) => {
   if (!H.urn) return null;
   if (!H.phase) return { line: H.urn.no,
     evidence: "test declares no `// Phase:`; the gate cannot tell a RED test from a SMOKE one",

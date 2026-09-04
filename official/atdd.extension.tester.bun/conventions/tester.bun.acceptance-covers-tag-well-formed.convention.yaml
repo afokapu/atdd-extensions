@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: tester.bun.covers-tag-well-formed
+rule_id: tester.bun.acceptance-covers-tag-well-formed
 kind: rule
 status: active
 name: Per-case @covers tags are well-formed acceptance URNs

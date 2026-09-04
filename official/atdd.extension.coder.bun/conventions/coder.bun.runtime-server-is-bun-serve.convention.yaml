@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: coder.bun.server-uses-bun-serve
+rule_id: coder.bun.runtime-server-is-bun-serve
 kind: rule
 status: active
 name: The HTTP server is Bun.serve, not a node-compat framework

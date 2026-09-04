@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.htmx.no-inline-event-handler  (disposition: suppress-and-clean)
+// Detector: coder.htmx.swap-no-inline-handler  (disposition: suppress-and-clean)
 //
 // In htmx-driven markup, behaviour is declared with hypermedia attributes
 // (hx-trigger / hx-on) — not with inline `onclick="..."` JavaScript. An inline
@@ -13,7 +13,7 @@
 // prop, not an inline HTML handler) is never flagged.
 import { walk, readRoots, readExcludes, readText, emit, locate, SOURCE_EXT, TEMPLATE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.htmx.no-inline-event-handler";
+const RULE_ID = "coder.htmx.swap-no-inline-handler";
 const IS_HTMX_FILE_RE = /\bhx-(get|post|put|patch|delete|trigger|target|swap|on)\b/;
 const INLINE_HANDLER_RE =
   /\son(click|submit|change|input|load|error|focus|blur|keyup|keydown|mouseover|mouseout)\s*=\s*['"]/g;

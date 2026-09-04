@@ -31,4 +31,4 @@ description: >-
   markup is exercised by a test (mirroring tester.convex.interlocking-route-coverage, with the
   markup as this stack's route space), an endpoint test asserts on the returned fragment rather
   than only its status line, and a test asserting an out-of-band swap also asserts the destination
-  id — the tester half of coder.htmx.oob-swap-carries-id.
+  id — the tester half of coder.htmx.swap-oob-carries-id.

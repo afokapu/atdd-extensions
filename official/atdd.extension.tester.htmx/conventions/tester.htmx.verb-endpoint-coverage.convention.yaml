@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: tester.htmx.endpoint-coverage
+rule_id: tester.htmx.verb-endpoint-coverage
 kind: rule
 status: active
 name: Every htmx endpoint declared in markup has a test
@@ -40,7 +40,7 @@ content:
   exceptions:
   - A mount containing no test files is skipped entirely.
   - A dynamic segment matches on its static prefix, so a test hitting a concrete id covers the template.
-  - An absolute-URL endpoint is `coder.htmx.endpoint-not-absolute-url`'s finding, not this rule's.
+  - An absolute-URL endpoint is `coder.htmx.verb-endpoint-same-origin`'s finding, not this rule's.
 metadata:
   aliases:
   # Mirrored from convex.extension.tester.base :: tester.convex.interlocking-route-coverage

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.bun.server-uses-bun-serve  (disposition: strict)
+// Detector: coder.bun.runtime-server-is-bun-serve  (disposition: strict)
 //
 // A full-stack Bun app serves HTTP with `Bun.serve`, not with Express, Fastify,
 // Koa or `node:http`. This is not taste. `Bun.serve` is the only server in this
@@ -14,7 +14,7 @@
 // (a doc line, an error message, a migration note) never trips the rule.
 import { walk, readRoots, readExcludes, readText, emit, locate, maskLiteralsAndComments, SOURCE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.bun.server-uses-bun-serve";
+const RULE_ID = "coder.bun.runtime-server-is-bun-serve";
 const FOREIGN_SERVER_RE =
   /\b(?:express\s*\(\s*\)|fastify\s*\(|new\s+Koa\s*\(|http\.createServer\s*\(|https\.createServer\s*\(|createServer\s*\()/g;
 

@@ -21,9 +21,9 @@ feature: htmx-tester-conventions
 
 owns:
   conventions:
-    - conventions/tester.htmx.endpoint-coverage.convention.yaml
-    - conventions/tester.htmx.fragment-asserts-markup.convention.yaml
-    - conventions/tester.htmx.oob-target-asserted.convention.yaml
+    - conventions/tester.htmx.verb-endpoint-coverage.convention.yaml
+    - conventions/tester.htmx.fragment-asserts-returned-markup.convention.yaml
+    - conventions/tester.htmx.swap-oob-asserts-destination-id.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

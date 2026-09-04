@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.htmx.mutation-signals-progress  (disposition: suppress-and-clean)
+// Detector: coder.htmx.verb-mutation-signals-progress  (disposition: suppress-and-clean)
 //
 // A mutating htmx request (hx-post/put/patch/delete) must declare either
 // `hx-indicator` or `hx-disabled-elt`. htmx swaps in place with no navigation, so
@@ -12,7 +12,7 @@
 // harmless and an indicator there is a UX preference, not an obligation.
 import { walk, readRoots, readExcludes, readText, emit, locate, enclosingTag, SOURCE_EXT, TEMPLATE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.htmx.mutation-signals-progress";
+const RULE_ID = "coder.htmx.verb-mutation-signals-progress";
 const MUTATING_RE = /\bhx-(post|put|patch|delete)\s*=/gi;
 const SIGNALS_RE = /\bhx-(indicator|disabled-elt)\s*=/i;
 const EXTS = new Set([...SOURCE_EXT, ...TEMPLATE_EXT]);

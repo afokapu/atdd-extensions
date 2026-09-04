@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Detector: coder.htmx.oob-swap-carries-id  (disposition: strict)
+// Detector: coder.htmx.swap-oob-carries-id  (disposition: strict)
 //
 // An out-of-band swap is matched to its destination BY ID: htmx takes the
 // `hx-swap-oob` element out of the response and replaces the existing element
@@ -9,7 +9,7 @@
 // returning it but the page doesn't change".
 import { walk, readRoots, readExcludes, readText, emit, locate, enclosingTag, SOURCE_EXT, TEMPLATE_EXT } from "../../../lib/scan.mjs";
 
-const RULE_ID = "coder.htmx.oob-swap-carries-id";
+const RULE_ID = "coder.htmx.swap-oob-carries-id";
 const OOB_RE = /\bhx-swap-oob\s*=/gi;
 // `id="x"` in markup, or `id={expr}` in JSX — both are a real destination id.
 const HAS_ID_RE = /\bid\s*=\s*(['"][^'"]*['"]|\{)/i;

@@ -23,10 +23,10 @@ graph_id: atdd.extension.tester.bun.relationships
 
 nodes:
   - tester.bun.acceptance-binding-declared
-  - tester.bun.covers-tag-well-formed
-  - tester.bun.imports-bun-test
-  - tester.bun.no-self-skip
-  - tester.bun.phase-declared
+  - tester.bun.acceptance-covers-tag-well-formed
+  - tester.bun.test-imports-bun-test
+  - tester.bun.test-no-self-skip
+  - tester.bun.test-phase-declared
   - tester.bun.red-behavioral-assertion
   - tester.bun.red-fails-first
   - tester.bun.routing-runtime-family
@@ -48,7 +48,7 @@ edges:
     strength: critical
     confidence: 1.0
     reason: 'Identity first, then what it proves; a binding with no URN has nothing to bind.'
-  - source_ref: tester.bun.phase-declared
+  - source_ref: tester.bun.test-phase-declared
     target_ref: tester.bun.test-carries-urn-identity
     type: requires
     foundation: finish_to_start
@@ -66,7 +66,7 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Another optional header field validated from the same parse.'
-  - source_ref: tester.bun.covers-tag-well-formed
+  - source_ref: tester.bun.acceptance-covers-tag-well-formed
     target_ref: tester.bun.acceptance-binding-declared
     type: runs_alongside
     foundation: start_to_start
@@ -85,7 +85,7 @@ edges:
     confidence: 1.0
     reason: 'One requires a guaranteed-fail marker, the other that the assertions are behavioural; a RED test needs both.'
   - source_ref: tester.bun.red-behavioral-assertion
-    target_ref: tester.bun.phase-declared
+    target_ref: tester.bun.test-phase-declared
     type: requires
     foundation: finish_to_start
     constraint: mandatory
@@ -120,7 +120,7 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both demand an assertion on an external EFFECT rather than on a returned value.'
-  - source_ref: tester.bun.no-self-skip
+  - source_ref: tester.bun.test-no-self-skip
     target_ref: tester.bun.red-fails-first
     type: runs_alongside
     foundation: start_to_start
@@ -138,7 +138,7 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both govern what a test is allowed to touch outside itself.'
-  - source_ref: tester.bun.imports-bun-test
+  - source_ref: tester.bun.test-imports-bun-test
     target_ref: tester.bun.routing-runtime-family
     type: runs_alongside
     foundation: start_to_start
@@ -148,7 +148,7 @@ edges:
     confidence: 1.0
     reason: 'One checks the DECLARED runner, the other the IMPORTED harness; they must agree or the gate credits a runner that never ran the test.'
   - source_ref: tester.bun.smoke-observable-assertion
-    target_ref: tester.bun.phase-declared
+    target_ref: tester.bun.test-phase-declared
     type: requires
     foundation: finish_to_start
     constraint: mandatory

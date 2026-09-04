@@ -12,10 +12,10 @@ contract_version: 1.1.0
 # claims — coder families never open a test file. Its own normative text makes a
 # coverage-gate argument, which is tester territory.
 emits_rule_ids:
-- coder.bun.server-uses-bun-serve
-- coder.bun.single-lockfile
+- coder.bun.runtime-server-is-bun-serve
+- coder.bun.runtime-single-lockfile
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention:
-- coder.bun.server-uses-bun-serve
-- coder.bun.single-lockfile
+- coder.bun.runtime-server-is-bun-serve
+- coder.bun.runtime-single-lockfile

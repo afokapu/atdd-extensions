@@ -1,8 +1,8 @@
 {
-  "htmx_destructive_verb_confirms": "coder.htmx.destructive-verb-confirms",
-  "htmx_endpoint_not_absolute_url": "coder.htmx.endpoint-not-absolute-url",
-  "htmx_fragment_interpolation_escaped": "coder.htmx.fragment-interpolation-escaped",
-  "htmx_mutation_signals_progress": "coder.htmx.mutation-signals-progress",
-  "htmx_no_inline_event_handler": "coder.htmx.no-inline-event-handler",
-  "htmx_oob_swap_carries_id": "coder.htmx.oob-swap-carries-id"
+  "htmx_verb_destructive_confirms": "coder.htmx.verb-destructive-confirms",
+  "htmx_verb_endpoint_same_origin": "coder.htmx.verb-endpoint-same-origin",
+  "htmx_fragment_escapes_interpolation": "coder.htmx.fragment-escapes-interpolation",
+  "htmx_verb_mutation_signals_progress": "coder.htmx.verb-mutation-signals-progress",
+  "htmx_swap_no_inline_handler": "coder.htmx.swap-no-inline-handler",
+  "htmx_swap_oob_carries_id": "coder.htmx.swap-oob-carries-id"
 }

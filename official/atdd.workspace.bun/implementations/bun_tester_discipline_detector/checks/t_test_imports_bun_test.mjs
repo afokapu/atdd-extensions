@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Member check: tester.bun.imports-bun-test  (tester discipline family)
+// Member check: tester.bun.test-imports-bun-test  (tester discipline family)
 //
 // MOVED from bun_fullstack_detector, where it was a `coder.bun.*` rule. It reads
 // TEST files, and `conformance/test_persona_scoping.py` proved that broke the
@@ -9,7 +9,7 @@
 // that is a tester obligation, not a source one.
 import { runCheck } from "../test_header.mjs";
 
-const RULE = "tester.bun.imports-bun-test";
+const RULE = "tester.bun.test-imports-bun-test";
 const FOREIGN_HARNESS_RE =
   /\b(?:import|from|require\s*\()\s*['"](vitest|@jest\/globals|jest|mocha|chai)['"]/g;
 

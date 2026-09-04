@@ -58,8 +58,8 @@ nodes:
   - coder.bun.security-hardcoded-secret
   - coder.bun.security-missing-auth
   - coder.bun.security-sql-injection
-  - coder.bun.server-uses-bun-serve
-  - coder.bun.single-lockfile
+  - coder.bun.runtime-server-is-bun-serve
+  - coder.bun.runtime-single-lockfile
 
 edges:
   - source_ref: coder.bun.green-urn-pattern
@@ -323,8 +323,8 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Confines outbound transport to integration, which is the hierarchy''s own home for it.'
-  - source_ref: coder.bun.single-lockfile
-    target_ref: coder.bun.server-uses-bun-serve
+  - source_ref: coder.bun.runtime-single-lockfile
+    target_ref: coder.bun.runtime-server-is-bun-serve
     type: runs_alongside
     foundation: start_to_start
     constraint: mandatory
@@ -332,7 +332,7 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'Both hold the stack decision itself: Bun''s server, Bun''s resolver.'
-  - source_ref: coder.bun.server-uses-bun-serve
+  - source_ref: coder.bun.runtime-server-is-bun-serve
     target_ref: coder.bun.composition-root
     type: enables
     foundation: finish_to_start
@@ -341,7 +341,7 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'server.ts is a composition root precisely BECAUSE Bun.serve is the assembly point of a full-stack Bun app.'
-  - source_ref: coder.bun.server-uses-bun-serve
+  - source_ref: coder.bun.runtime-server-is-bun-serve
     target_ref: coder.bun.boundaries-http-client
     type: runs_alongside
     foundation: start_to_start
