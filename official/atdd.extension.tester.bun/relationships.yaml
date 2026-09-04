@@ -2,17 +2,23 @@ schema_version: "1.0.0"
 
 # Extension-LOCAL relationship graph for atdd.extension.tester.bun.
 #
-# Every edge below is AUTHORED and says something true about the pair. The
-# vocabulary follows atdd.extension.coder.base, the one hand-curated graph in
-# this hub:
-#   refines            B adds a constraint that only applies once A holds
-#   specializes        B is a narrower case of the general rule A
-#   complements        two halves of one discipline; neither is complete alone
-#   co-extracted-from  both fall out of one detector run or one parse
-#   relates-to         same concern, weaker link
+# CONFORMS TO CORE'S EDGE SCHEMA — src/atdd/planner/schemas/author/
+# relationship.schema.json, "ATDD relationship edge (spec 6)". That schema
+# defines a CLOSED type vocabulary (requires / blocks / enables / follows /
+# awaits / triggered_by / starts_with / runs_alongside / finishes_with /
+# relieves) plus typed metadata: foundation, constraint, control, strength,
+# confidence, reason.
 #
-# Cross-package linkage is expressed through metadata aliases, never as an edge:
-# an authored edge to a core node is refused by admission.
+# The metadata is what an ad-hoc verb set reaches for and misses. `complements`
+# is runs_alongside + mandatory + critical. `co-extracted-from` is
+# runs_alongside + start_to_start. `refines` is requires + finish_to_start.
+# Fewer verbs, more precision, and machine-checkable — every other extension in
+# this hub (and core's own coach graph) currently uses types outside the enum,
+# because nothing validates an extension's graph against it. This provider's
+# conformance suite does.
+#
+# Cross-package linkage travels through metadata aliases, never an edge: an
+# authored edge to a core node is refused by admission.
 graph_id: atdd.extension.tester.bun.relationships
 
 nodes:
@@ -35,49 +41,109 @@ nodes:
 edges:
   - source_ref: tester.bun.acceptance-binding-declared
     target_ref: tester.bun.test-carries-urn-identity
-    type: refines
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
     reason: 'Identity first, then what it proves; a binding with no URN has nothing to bind.'
   - source_ref: tester.bun.phase-declared
     target_ref: tester.bun.test-carries-urn-identity
-    type: refines
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
     reason: 'The phase is read from the same header block and is meaningless without the URN.'
   - source_ref: tester.bun.routing-runtime-family
     target_ref: tester.bun.test-carries-urn-identity
-    type: refines
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: minor
+    confidence: 1.0
     reason: 'Another optional header field validated from the same parse.'
   - source_ref: tester.bun.covers-tag-well-formed
     target_ref: tester.bun.acceptance-binding-declared
-    type: complements
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
     reason: 'The two-level binding model: the header binds the FILE, a @covers tag binds one CASE.'
   - source_ref: tester.bun.red-fails-first
     target_ref: tester.bun.red-behavioral-assertion
-    type: complements
-    reason: 'One requires a guaranteed-fail marker, the other that the assertions are behavioural. A RED test needs both to be genuinely red.'
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'One requires a guaranteed-fail marker, the other that the assertions are behavioural; a RED test needs both.'
   - source_ref: tester.bun.red-behavioral-assertion
     target_ref: tester.bun.phase-declared
-    type: relates-to
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
     reason: 'Only evaluable once a phase is declared; an undeclared test is exempt from the whole phase surface.'
   - source_ref: tester.bun.smoke-no-collaborator-substitution
     target_ref: tester.bun.smoke-observable-assertion
-    type: complements
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
     reason: 'Both keep SMOKE honest: real collaborators, and an assertion on what an operator could witness.'
   - source_ref: tester.bun.security-input
     target_ref: tester.bun.security-auth
-    type: complements
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
     reason: 'Authorisation and input validation are the two halves of one boundary; a happy-path test of either is a silent green gap.'
   - source_ref: tester.bun.telemetry-emit
     target_ref: tester.bun.smoke-observable-assertion
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
     reason: 'Both demand an assertion on an external EFFECT rather than on a returned value.'
   - source_ref: tester.bun.no-self-skip
     target_ref: tester.bun.red-fails-first
-    type: relates-to
-    reason: 'They share a vocabulary and must not contradict: `.fails`/`.failing` is an accepted RED marker, so it is deliberately NOT treated as a self-skip.'
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'They share a vocabulary and must not contradict: `.fails`/`.failing` is an accepted RED marker, so it is deliberately not treated as a self-skip.'
   - source_ref: tester.bun.test-isolation-no-live-state
     target_ref: tester.bun.smoke-no-collaborator-substitution
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
     reason: 'Both govern what a test is allowed to touch outside itself.'
   - source_ref: tester.bun.imports-bun-test
     target_ref: tester.bun.routing-runtime-family
-    type: complements
-    reason: 'One checks the DECLARED runner, the other the IMPORTED harness. They must agree or the gate credits a runner that never ran the test.'
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'One checks the DECLARED runner, the other the IMPORTED harness; they must agree or the gate credits a runner that never ran the test.'
