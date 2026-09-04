@@ -11,8 +11,8 @@ entries:
   - entries/atdd.workspace.supabase.yaml
   - entries/atdd.workspace.fastapi.yaml
   - entries/atdd.extension.github.yaml
-  - entries/atdd.extension.coder.yaml
-  - entries/atdd.extension.tester.yaml
+  - entries/atdd.extension.coder.base.yaml
+  - entries/atdd.extension.tester.base.yaml
   - entries/atdd.extension.train-interlocking-enforcement.yaml
   - entries/atdd.extension.coder.htmx.yaml
   - entries/atdd.extension.tester.htmx.yaml

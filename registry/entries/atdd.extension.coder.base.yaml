@@ -1,12 +1,12 @@
 schema_version: "1.0.0"
 
-artifact_id: atdd.extension.coder
+artifact_id: atdd.extension.coder.base
 kind: extension
 status: official
 publisher: atdd
 
 source:
-  repository: ./official/atdd.extension.coder
+  repository: ./official/atdd.extension.coder.base
   type: local
 
 version: "0.1.0"

@@ -1,12 +1,12 @@
 schema_version: "1.0.0"
 
-artifact_id: atdd.extension.tester
+artifact_id: atdd.extension.tester.base
 kind: extension
 status: official
 publisher: atdd
 
 source:
-  repository: ./official/atdd.extension.tester
+  repository: ./official/atdd.extension.tester.base
   type: local
 
 version: "0.1.0"

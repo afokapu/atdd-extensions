@@ -46,7 +46,8 @@ _DIRTY = _IMPL_DIR / "fixtures" / "dirty"
 # Both families this provider ships, exercised identically by the parametrised tests.
 _FAMILIES = ("htmx_hypermedia_detector", "bun_fullstack_detector",
              "bun_green_traceability_detector", "bun_ts_metrics_detector",
-             "bun_security_hygiene_detector", "bun_tester_discipline_detector")
+             "bun_security_hygiene_detector", "bun_tester_discipline_detector",
+             "bun_clean_architecture_detector")
 
 requires_bun = pytest.mark.skipif(shutil.which("bun") is None, reason="bun not on PATH")
 

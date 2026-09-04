@@ -248,40 +248,18 @@ export function fragments(source, minLines, hasher) {
 
 // ── import graph (dead_code_typescript.py) — THE ONE UPGRADE ─────────────────
 //
-// The Python detector reads imports with five regexes over the source text. That
-// is the best a Python process can do without a TypeScript parser, and it has a
-// known imprecision it cannot fix: `import type { T } from "./types"` matches the
-// import regex and is counted as a real edge, even though a type-only import is
-// ERASED at compile time and makes the target reachable by nothing at runtime. A
-// module whose only referrer is a type import is dead code that the regex reports
-// as live.
+// The Python detector reads imports with five regexes — the best a Python process
+// can do without a TypeScript parser — and cannot distinguish
+// `import type { T } from "./t"` from a value import, so a module whose only
+// referrer is a TYPE import is counted as reachable. A type-only import is erased
+// at compile time and creates no runtime edge, so that module is dead and the regex
+// reports it alive.
 //
-// Bun ships a real TypeScript parser in-process (`Bun.Transpiler.scan`), which
-// returns the actual import records and omits type-only imports. So this is not a
-// looser port — it is the same obligation measured correctly, and it is available
-// here precisely BECAUSE the runtime is Bun. Falls back to the regex set when the
-// transpiler cannot parse a file, so a syntax error degrades to the Python
-// behaviour rather than silently reporting zero imports.
-const FALLBACK_IMPORT_RES = [
-  /(?:^|\n)\s*import\s+(?:[\s\S]*?)\s+from\s+['"]([^'"]+)['"]/g,
-  /(?:^|\n)\s*export\s+(?:[\s\S]*?)\s+from\s+['"]([^'"]+)['"]/g,
-  /(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g,
-  /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-  /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-];
-
-export function moduleImports(source, file) {
-  try {
-    const loader = extname(file) === ".tsx" ? "tsx" : "ts";
-    return new Bun.Transpiler({ loader }).scan(source).imports.map((i) => i.path);
-  } catch {
-    const found = new Set();
-    for (const re of FALLBACK_IMPORT_RES) {
-      for (const m of source.matchAll(re)) found.add(m[1]);
-    }
-    return [...found];
-  }
-}
+// Bun ships a real TypeScript parser in-process, which omits type-only imports.
+// Same obligation, measured correctly — and available only because the runtime is
+// Bun. The resolver itself now lives in ../../lib/imports.mjs, shared with the
+// clean-architecture family.
+export { moduleImports } from "../../lib/imports.mjs";
 
 export const ROOT_FILENAMES = new Set(["index.ts", "index.tsx", "wagon.ts", "composition.ts"]);
 export const ENTRY_FILENAMES = new Set(["main.ts", "main.tsx", "app.ts", "app.tsx"]);

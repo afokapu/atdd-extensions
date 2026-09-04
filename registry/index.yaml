@@ -25,16 +25,16 @@ entries:
   workspaces:
   - id: atdd.workspace.python-pytest
     contract: ^1.0.0
-- id: atdd.extension.coder
+- id: atdd.extension.coder.base
   kind: extension
   latest_version: 0.1.0
   versions:
   - 0.1.0
   aliases:
-  - coder
+  - coder.base
   publisher: atdd
   trust: official
-  source: official/atdd.extension.coder
+  source: official/atdd.extension.coder.base
   summary: "Official ATDD coder-role extension \u2014 owns the stack-bound coder convention nodes (per-language\
     \ suffixes, JSX/React detectors, Flutter design-system, TS/Python metrics, FastAPI route auth) that\
     \ realize the core coder principles. Skeleton in this slice."
@@ -64,13 +64,14 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.htmx
-  summary: "Official ATDD coder-role extension for the full-stack Bun + htmx stack \u2014 33 convention\
-    \ nodes across five families. GREEN/URN traceability (the Bun realization of the stack-neutral header\
+  summary: "Official ATDD coder-role extension for the full-stack Bun + htmx stack \u2014 45 convention\
+    \ nodes across six families. GREEN/URN traceability (the Bun realization of the stack-neutral header\
     \ obligation Python and Vite also realize, extended to .html templates); hypermedia discipline (oob\
     \ ids, confirmations, progress signals, same-origin endpoints, fragment escaping); and Bun runtime\
     \ discipline (Bun.serve, one lockfile, bun:test); and the seven TypeScript metric obligations ported\
-    \ natively from python-pytest, so the stack needs no Python interpreter; and security, logging and\
-    \ error-response hygiene. Coder persona only \u2014 no tester extension yet."
+    \ natively from python-pytest, so the stack needs no Python interpreter; security, logging and error-response\
+    \ hygiene; and a clean-architecture family (layering, composition, DTOs, boundaries, naming) mirrored\
+    \ from coder.convex.* and coder.vite.*."
   tags:
   - coder
   - htmx
@@ -102,16 +103,16 @@ entries:
   workspaces:
   - id: atdd.workspace.python-pytest
     contract: ^1.0.0
-- id: atdd.extension.tester
+- id: atdd.extension.tester.base
   kind: extension
   latest_version: 0.1.0
   versions:
   - 0.1.0
   aliases:
-  - tester
+  - tester.base
   publisher: atdd
   trust: official
-  source: official/atdd.extension.tester
+  source: official/atdd.extension.tester.base
   summary: "Official ATDD tester-role extension \u2014 owns the stack-bound tester convention nodes (test\
     \ filename mechanics, Supabase/Postgres migration naming, runtime-path routing, preact-DOM presentation\
     \ smoke, contract persistence + api_structure bindings). Skeleton in this slice."
@@ -140,11 +141,12 @@ entries:
   trust: official
   source: official/atdd.extension.tester.htmx
   summary: "Official ATDD tester-role extension for the full-stack Bun + htmx stack \u2014 the tester\
-    \ half of the pair whose coder half is atdd.extension.coder.htmx. Ten convention nodes covering test\
-    \ identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers tags),\
-    \ phase discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing, no self-skip,\
-    \ no shared live state), and the htmx-native obligation that an endpoint test asserts on the returned\
-    \ fragment rather than only its status line."
+    \ half of the pair whose coder half is atdd.extension.coder.htmx. Fifteen convention nodes covering\
+    \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
+    \ tags), phase discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing,\
+    \ no self-skip, no shared live state), and the htmx-native obligation that an endpoint test asserts\
+    \ on the returned fragment rather than only its status line. Mirrors convex.extension.tester.base\
+    \ rule for rule."
   tags:
   - tester
   - htmx
@@ -193,9 +195,10 @@ entries:
   source: official/atdd.workspace.bun
   summary: "Official ATDD full-stack Bun workspace provider \u2014 a REAL (non-stub) v1.1 runtime that\
     \ runs zero-dependency detectors under `bun`, which needs no build step, no node_modules and no transpile\
-    \ config. Ships four detector families \u2014 bun_green_traceability_detector (10 rules), bun_ts_metrics_detector\
-    \ (7, a native port of the python-pytest TS detectors), htmx_hypermedia_detector (6), bun_fullstack_detector\
-    \ (3) and bun_security_hygiene_detector (7)."
+    \ config. Ships six detector families \u2014 bun_green_traceability_detector (10 rules), bun_ts_metrics_detector\
+    \ (7, a native port of the python-pytest TS detectors), bun_tester_discipline_detector (15), bun_clean_architecture_detector\
+    \ (12), bun_security_hygiene_detector (7), htmx_hypermedia_detector (6) and bun_fullstack_detector\
+    \ (3)."
   tags:
   - bun
   - typescript

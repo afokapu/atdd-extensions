@@ -7,7 +7,11 @@
 // lives in ../test_header.mjs.
 import { runCheck, testCases, caseBody } from "../test_header.mjs";
 
-const SELF_SKIP = /\b(?:it|test|describe)\s*\.\s*(skip|todo|failing)\s*\(/g;
+// `.fails` / `.failing` are deliberately ABSENT here: core's RED marker vocabulary
+// lists `it.fails(` / `test.fails(` as an accepted guaranteed-fail marker, so flagging
+// them would refuse the very construct `red-fails-first` REQUIRES. Only genuine
+// disabling modifiers are self-skips.
+const SELF_SKIP = /\b(?:it|test|describe)\s*\.\s*(skip|todo)\s*\(/g;
 // A guarded bail-out: `if (!process.env.X) return;` at the top of a case is a skip
 // wearing a disguise — the suite reports green having exercised nothing.
 const GUARDED_BAIL = /if\s*\([^)]*process\.env[^)]*\)\s*\{?\s*return\b/g;

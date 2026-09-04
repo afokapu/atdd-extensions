@@ -11,7 +11,7 @@ role: coder
 flow_wagon: validate-source-surface
 feature: htmx-bun-coder-conventions
 
-# Five rule families, matching the five implementations the workspace provider ships:
+# Six rule families, matching the six implementations the workspace provider ships:
 #   coder.htmx.*        — hypermedia discipline over templates and rendered fragments
 #   coder.bun.*         — runtime discipline over server, package manager, test harness
 #   coder.bun.green-*   — GREEN/URN traceability, the mirror of the Python and Vite
@@ -31,15 +31,31 @@ feature: htmx-bun-coder-conventions
 #                         Python AST for FastAPI decorators, Depends(), print() and
 #                         HTTPException(detail=) — constructs this stack does not
 #                         have. The obligation is shared; the detector is not.
+#   coder.bun.{commons,design-hierarchy,composition,dto,boundaries,layer}-*
+#                       — CLEAN ARCHITECTURE: layering, composition, DTOs,
+#                         boundaries and naming. Mirrored rule-for-rule from
+#                         coder.convex.* and coder.vite.*, the two existing
+#                         realizations of the same core obligations.
 # Conventions live HERE (the extension owns the obligation); the detectors live in
 # atdd.workspace.bun (the provider owns the realization). That split is what lets a
 # second runtime satisfy the same obligations without touching this package.
 owns:
   conventions:
+    - conventions/coder.bun.boundaries-http-client.convention.yaml
+    - conventions/coder.bun.commons-application-no-integration.convention.yaml
+    - conventions/coder.bun.commons-cross-feature-imports-in.convention.yaml
+    - conventions/coder.bun.commons-domain-no-framework-import.convention.yaml
+    - conventions/coder.bun.commons-domain-no-outbound.convention.yaml
     - conventions/coder.bun.complexity-cyclomatic.convention.yaml
     - conventions/coder.bun.complexity-length.convention.yaml
     - conventions/coder.bun.complexity-nesting.convention.yaml
+    - conventions/coder.bun.composition-consumer.convention.yaml
+    - conventions/coder.bun.composition-root.convention.yaml
     - conventions/coder.bun.dead-code-reachability.convention.yaml
+    - conventions/coder.bun.design-hierarchy-import.convention.yaml
+    - conventions/coder.bun.dto-mapper.convention.yaml
+    - conventions/coder.bun.dto-placement.convention.yaml
+    - conventions/coder.bun.dto-purity.convention.yaml
     - conventions/coder.bun.duplication-intra-layer.convention.yaml
     - conventions/coder.bun.error-response-bare-string.convention.yaml
     - conventions/coder.bun.error-response-code-format.convention.yaml
@@ -53,6 +69,7 @@ owns:
     - conventions/coder.bun.green-urn-pattern.convention.yaml
     - conventions/coder.bun.green-urn-side.convention.yaml
     - conventions/coder.bun.green-urn-wagon-feature.convention.yaml
+    - conventions/coder.bun.layer-naming.convention.yaml
     - conventions/coder.bun.logging-console.convention.yaml
     - conventions/coder.bun.logging-structured.convention.yaml
     - conventions/coder.bun.quality-comments.convention.yaml

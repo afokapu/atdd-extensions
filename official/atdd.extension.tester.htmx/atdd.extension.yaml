@@ -22,7 +22,7 @@ role: tester
 flow_wagon: validate-test-surface
 feature: htmx-bun-tester-conventions
 
-# Ten obligations in three groups:
+# Fifteen obligations in four groups:
 #   identity + binding  — URN, acceptance/train binding, phase, per-case @covers
 #                         tags. This group is what makes the coverage gate able to
 #                         see the suite at all; without it the gate passes
@@ -30,10 +30,16 @@ feature: htmx-bun-tester-conventions
 #   phase discipline    — RED asserts behaviour, SMOKE asserts observably and does
 #                         not substitute collaborators, no test disables itself,
 #                         no test writes to shared live state.
+#   kind-specific       — a security test asserts denial, an input test asserts
+#                         rejection, a telemetry test asserts emission, a RED test
+#                         carries a guaranteed-fail marker, a declared runtime is in
+#                         the JS/TS family. Mirrored rule-for-rule from
+#                         convex.extension.tester.base, the most complete tester
+#                         realization in the hub.
 #   htmx-native         — an endpoint test asserts on the returned FRAGMENT, not
-#                         only the status line. No other stack's tester extension
-#                         has this rule, because no other stack puts the response
-#                         contract in the markup.
+#                         only the status line. ADDED, not mirrored: no other stack's
+#                         tester extension has this rule, because no other stack puts
+#                         the response contract in the markup.
 owns:
   conventions:
     - conventions/tester.bun.acceptance-binding-declared.convention.yaml
@@ -42,8 +48,13 @@ owns:
     - conventions/tester.bun.no-self-skip.convention.yaml
     - conventions/tester.bun.phase-declared.convention.yaml
     - conventions/tester.bun.red-behavioral-assertion.convention.yaml
+    - conventions/tester.bun.red-fails-first.convention.yaml
+    - conventions/tester.bun.routing-runtime-family.convention.yaml
+    - conventions/tester.bun.security-auth.convention.yaml
+    - conventions/tester.bun.security-input.convention.yaml
     - conventions/tester.bun.smoke-no-collaborator-substitution.convention.yaml
     - conventions/tester.bun.smoke-observable-assertion.convention.yaml
+    - conventions/tester.bun.telemetry-emit.convention.yaml
     - conventions/tester.bun.test-carries-urn-identity.convention.yaml
     - conventions/tester.bun.test-isolation-no-live-state.convention.yaml
   relationships:

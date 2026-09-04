@@ -1,7 +1,7 @@
 # `atdd.extension.coder.htmx`
 
-Coder-role conventions for the **full-stack Bun + htmx** stack. Thirty-three rule
-nodes, realized by the five detector families in `atdd.workspace.bun` — with **no
+Coder-role conventions for the **full-stack Bun + htmx** stack. Forty-five rule
+nodes, realized by the six detector families in `atdd.workspace.bun` — with **no
 Python anywhere in the toolchain**.
 
 > **This is the CODER half.** An ATDD extension is scoped to one persona (`role:` ∈
@@ -92,16 +92,35 @@ sql`SELECT * FROM orders WHERE id = ${id}`        // safe — Bun.sql BINDS the 
 db.query(`SELECT * FROM orders WHERE id = ${id}`) // injectable — the value is spliced
 ```
 
+## Clean architecture — `coder.bun.{commons,design-hierarchy,composition,dto,boundaries,layer}-*`
+
+Twelve rules, mirrored rule-for-rule from `coder.convex.*` and `coder.vite.*`:
+layering (`commons-domain-no-outbound`, `commons-application-no-integration`,
+`commons-cross-feature-imports-in`, `commons-domain-no-framework-import`,
+`design-hierarchy-import`), composition (`composition-root`,
+`composition-consumer`), DTOs (`dto-purity`, `dto-placement`, `dto-mapper`),
+boundaries (`boundaries-http-client`) and naming (`layer-naming`).
+
+These read the **declared** dependency, so they include type-only imports: an
+`import type` from domain into integration is erased at runtime but is still a
+design coupling a reader must follow. That is the opposite call from
+`dead-code-reachability`, deliberately — the two rules ask different questions of
+the same graph.
+
+Two places the stack changes the reading rather than the obligation:
+
+- `commons-domain-no-framework-import` — Vite forbids react/preact/gsap because
+  those are *its* frameworks. Here the machinery is `bun:*`, `node:*` and the `Bun.`
+  global. The practical test is unchanged: the domain must be runnable with no
+  server started.
+- `composition-root` — `server.ts` is a root because `Bun.serve` **is** the assembly
+  point of a full-stack Bun app. Convex has no equivalent; its function tree has no
+  single entry.
+
 ## What is still missing
 
-- **No clean-architecture family.** The layering obligations (`boundaries.*`,
-  `commons.*`, `composition.*`, `dto.*`, `presentation.layer-is-thin`) have Vite
-  realizations but no Bun/htmx ones. They are the most stack-dependent rules of all,
-  because an htmx "presentation layer" is a server-rendered fragment rather than a
-  component tree — so they need genuinely new readings, not ports.
-- **No planner or coach extension.** Both personas exist in the grammar; neither has
-  a Bun/htmx realization. Whether they need one is a real question, not an oversight:
-  planner and coach obligations are largely stack-neutral.
+- **No planner or coach extension** — and by decision, not oversight: those
+  obligations are stack-agnostic, so a Bun-specific realization would add nothing.
 
 ## Hypermedia discipline — `coder.htmx.*`
 

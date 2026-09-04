@@ -36,11 +36,12 @@ adapter/discover.py   find implementations whose contract this provider satisfie
 adapter/run.py        run one detector under `bun`; read back RAW v1.1 violations
 cli/scan.py           the subprocess boundary core shells out to
 lib/scan.mjs          shared scan-mount plumbing (walk, mask, locate, emit)
+lib/imports.mjs       module import graph + architectural layer resolution
 implementations/      the detector corpus, one directory per family
 conformance/          18 tests proving this runtime satisfies the shared contract
 ```
 
-`lib/scan.mjs` is this provider's one structural departure from its parent. The
+`lib/` is this provider's one structural departure from its parent. The
 node-runtime detectors each re-implement their own directory walk; here the walk,
 the literal/comment masker and the report emitter are factored once, so a check
 contains only its detection logic — and so the checks stay under the duplication
@@ -55,7 +56,8 @@ convention the coder extension itself enforces.
 | `htmx_hypermedia_detector` | 6 × `coder.htmx.*` | `.html`, `.htm`, and JS/TS source (htmx markup lives in template literals) |
 | `bun_fullstack_detector` | 3 × `coder.bun.*` | JS/TS source, test files, and repo lockfiles |
 | `bun_security_hygiene_detector` | 7 × security / logging / error-response | JS/TS source and templates |
-| `bun_tester_discipline_detector` | 10 × `tester.bun.*` | **test files only** — the persona boundary |
+| `bun_tester_discipline_detector` | 15 × `tester.bun.*` | **test files only** — the persona boundary |
+| `bun_clean_architecture_detector` | 12 × layering / composition / DTO / boundaries | `.ts`, `.tsx` — reads the import graph |
 
 All three declare their full rule set in `realizes_convention` as a **list**. A scalar
 would bind one rule and leave the rest unenforced while still appearing to work —

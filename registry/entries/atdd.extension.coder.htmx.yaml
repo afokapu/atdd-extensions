@@ -30,10 +30,11 @@ categories:
   - official
 
 description: >-
-  Official ATDD coder-role extension for the full-stack Bun + htmx stack — 33 convention nodes
-  across five families. GREEN/URN traceability (the Bun realization of the stack-neutral header
+  Official ATDD coder-role extension for the full-stack Bun + htmx stack — 45 convention nodes
+  across six families. GREEN/URN traceability (the Bun realization of the stack-neutral header
   obligation Python and Vite also realize, extended to .html templates); hypermedia discipline
   (oob ids, confirmations, progress signals, same-origin endpoints, fragment escaping); and Bun
   runtime discipline (Bun.serve, one lockfile, bun:test); and the seven TypeScript metric
   obligations ported natively from python-pytest, so the stack needs no Python interpreter;
-  and security, logging and error-response hygiene. Coder persona only — no tester extension yet.
+  security, logging and error-response hygiene; and a clean-architecture family (layering,
+  composition, DTOs, boundaries, naming) mirrored from coder.convex.* and coder.vite.*.

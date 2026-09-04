@@ -28,7 +28,8 @@ categories:
 description: >-
   Official ATDD full-stack Bun workspace provider — a REAL (non-stub) v1.1 runtime that runs
   zero-dependency detectors under `bun`, which needs no build step, no node_modules and no
-  transpile config. Ships four detector families — bun_green_traceability_detector (10 rules),
+  transpile config. Ships six detector families — bun_green_traceability_detector (10 rules),
   bun_ts_metrics_detector (7, a native port of the python-pytest TS detectors),
-  htmx_hypermedia_detector (6), bun_fullstack_detector (3) and
-  bun_security_hygiene_detector (7).
+  bun_tester_discipline_detector (15), bun_clean_architecture_detector (12),
+  bun_security_hygiene_detector (7), htmx_hypermedia_detector (6) and
+  bun_fullstack_detector (3).

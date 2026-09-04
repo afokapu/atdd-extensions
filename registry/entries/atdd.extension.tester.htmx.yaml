@@ -28,8 +28,8 @@ categories:
 
 description: >-
   Official ATDD tester-role extension for the full-stack Bun + htmx stack — the tester half of the
-  pair whose coder half is atdd.extension.coder.htmx. Ten convention nodes covering test identity and
+  pair whose coder half is atdd.extension.coder.htmx. Fifteen convention nodes covering test identity and
   acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers tags), phase
   discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing, no self-skip,
   no shared live state), and the htmx-native obligation that an endpoint test asserts on the returned
-  fragment rather than only its status line.
+  fragment rather than only its status line. Mirrors convex.extension.tester.base rule for rule.

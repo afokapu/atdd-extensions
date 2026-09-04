@@ -76,9 +76,11 @@ export function parseHeader(text) {
     firstMeaningfulNo: firstMeaningful >= 0 ? firstMeaningful + 1 : 0,
     firstMeaningfulText: firstMeaningful >= 0 ? lines[firstMeaningful].trim() : "",
     urn: null, acceptance: null, wmbt: null, train: null, phase: null, layer: null,
+    runtime: null,
   };
   const FIELDS = [["URN", "urn"], ["Acceptance", "acceptance"], ["WMBT", "wmbt"],
-                  ["Train", "train"], ["Phase", "phase"], ["Layer", "layer"]];
+                  ["Train", "train"], ["Phase", "phase"], ["Layer", "layer"],
+                  ["Runtime", "runtime"]];
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
     const t = raw.trim();

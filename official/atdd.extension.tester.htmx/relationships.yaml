@@ -11,8 +11,13 @@ nodes:
   - tester.bun.no-self-skip
   - tester.bun.phase-declared
   - tester.bun.red-behavioral-assertion
+  - tester.bun.red-fails-first
+  - tester.bun.routing-runtime-family
+  - tester.bun.security-auth
+  - tester.bun.security-input
   - tester.bun.smoke-no-collaborator-substitution
   - tester.bun.smoke-observable-assertion
+  - tester.bun.telemetry-emit
   - tester.bun.test-carries-urn-identity
   - tester.bun.test-isolation-no-live-state
 
@@ -38,6 +43,22 @@ edges:
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
   - source_ref: tester.bun.red-behavioral-assertion
+    target_ref: tester.bun.red-fails-first
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.red-fails-first
+    target_ref: tester.bun.routing-runtime-family
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.routing-runtime-family
+    target_ref: tester.bun.security-auth
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.security-auth
+    target_ref: tester.bun.security-input
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.security-input
     target_ref: tester.bun.smoke-no-collaborator-substitution
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
@@ -46,6 +67,10 @@ edges:
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
   - source_ref: tester.bun.smoke-observable-assertion
+    target_ref: tester.bun.telemetry-emit
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.telemetry-emit
     target_ref: tester.bun.test-carries-urn-identity
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'

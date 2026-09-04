@@ -8,5 +8,10 @@
   "t_smoke_no_substitution": "tester.bun.smoke-no-collaborator-substitution",
   "t_no_self_skip": "tester.bun.no-self-skip",
   "t_isolation_no_live_state": "tester.bun.test-isolation-no-live-state",
-  "t_fragment_asserts_markup": "tester.bun.fragment-asserts-markup"
+  "t_fragment_asserts_markup": "tester.bun.fragment-asserts-markup",
+  "t_red_fails_first": "tester.bun.red-fails-first",
+  "t_routing_runtime": "tester.bun.routing-runtime-family",
+  "t_security_auth": "tester.bun.security-auth",
+  "t_security_input": "tester.bun.security-input",
+  "t_telemetry_emit": "tester.bun.telemetry-emit"
 }
