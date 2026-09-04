@@ -57,12 +57,11 @@ owns:
   gates: []
   scopes: []
 depends_on:
-  core:
-    - atdd.core.convention-node-schema
-    - atdd.core.relationship-schema
-    - atdd.core.workspace-schema
-    - atdd.core.implementation-schema
-    - atdd.core.violation-output-schema
+  # `core: []` — the five `atdd.core.*` ids previously listed here do not exist.
+  # The 231 real core nodes are namespaced coder.* / tester.* / coach.*, and
+  # admission never validates this field, so the declaration pointed at nothing.
+  # An empty list is what `atdd author extension init` scaffolds.
+  core: []
   workspaces:
     - id: frontend.workspace.runtime
       contract: "^1.0.0"

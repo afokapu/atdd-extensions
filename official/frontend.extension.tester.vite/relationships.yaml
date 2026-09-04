@@ -2,6 +2,11 @@ schema_version: "1.0.0"
 
 # Extension-LOCAL relationship graph for frontend.extension.tester.vite. Sorted-adjacent sibling
 # chain (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
+# EDGE VOCABULARY MIGRATED to core's relationship.schema.json enum (spec 6).
+# Each edge keeps its authored verb in `authored_type`, and the typed metadata
+# below carries the nuance that verb implied: `complements` became
+# runs_alongside + mandatory + critical, `refines` became requires +
+# finish_to_start. Reasons are verbatim. See tools/validate_graphs.py.
 graph_id: frontend.extension.tester.vite.relationships
 
 nodes:
@@ -20,42 +25,101 @@ nodes:
 edges:
   - source_ref: tester.vite.a11y-harness
     target_ref: tester.vite.e2e-names-valid-train
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.e2e-names-valid-train
     target_ref: tester.vite.journey-layer-assembly
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.journey-layer-assembly
     target_ref: tester.vite.journey-no-acceptance-marker
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.journey-no-acceptance-marker
     target_ref: tester.vite.journey-train-header
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.journey-train-header
     target_ref: tester.vite.journey-urn-format
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.journey-urn-format
     target_ref: tester.vite.presentation-smoke-coverage
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.presentation-smoke-coverage
     target_ref: tester.vite.train-e2e-coverage
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
   - source_ref: tester.vite.train-e2e-coverage
     target_ref: tester.vite.visual-harness
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the frontend test-surface stack.'
-
   - source_ref: tester.vite.interlocking-route-e2e-coverage
     target_ref: tester.vite.train-e2e-coverage
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Frontend E2E coverage sibling — interlocking-route coverage parallels train E2E coverage.'
   - source_ref: tester.vite.interlocking-station-master-smoke
     target_ref: tester.vite.interlocking-route-e2e-coverage
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Station-master smoke coverage complements interlocking route E2E coverage.'

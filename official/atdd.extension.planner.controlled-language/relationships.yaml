@@ -6,6 +6,11 @@ schema_version: "1.0.0"
 # The core planner surface these rules govern (`atdd author` output) is named
 # narratively in atdd.extension.yaml and in the README, never as a graph edge.
 # Only extension-internal edges live here.
+# EDGE VOCABULARY MIGRATED to core's relationship.schema.json enum (spec 6).
+# Each edge keeps its authored verb in `authored_type`, and the typed metadata
+# below carries the nuance that verb implied: `complements` became
+# runs_alongside + mandatory + critical, `refines` became requires +
+# finish_to_start. Reasons are verbatim. See tools/validate_graphs.py.
 graph_id: atdd.extension.planner.controlled-language.relationships
 
 nodes:
@@ -13,14 +18,13 @@ nodes:
   - planner.controlled-language.approved-vocabulary
 
 edges:
-  # The two halves of one gate. They are split because they fail for different
-  # reasons and are fixed by different acts (rewrite a sentence vs. extend the
-  # reviewed project vocabulary), but one detector emits both from one checker
-  # round-trip, so neither is meaningful without the other.
-  - from: planner.controlled-language.approved-vocabulary
-    to: planner.controlled-language.ste-conformance
-    type: complements
-    rationale: >-
-      Word choice and writing rules are the two layers of the same controlled language.
-      One checker call answers both; the detector routes each finding to whichever rule owns it,
-      so a repo that enforces one and not the other has a controlled language with a hole in it.
+  - source_ref: planner.controlled-language.approved-vocabulary
+    target_ref: planner.controlled-language.ste-conformance
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    authored_type: complements
+    reason: 'Word choice and writing rules are the two layers of the same controlled language. One checker call answers both; the detector routes each finding to whichever rule owns it, so a repo that enforces one and not the other has a controlled language with a hole in it.'

@@ -8,6 +8,11 @@ schema_version: "1.0.0"
 # coach.extension.*). The core targets a github node *realizes* are declared
 # narratively in atdd.extension.yaml::depends_on.targets and in the README
 # mapping table — NOT as graph edges. Only extension-internal edges live here.
+# EDGE VOCABULARY MIGRATED to core's relationship.schema.json enum (spec 6).
+# Each edge keeps its authored verb in `authored_type`, and the typed metadata
+# below carries the nuance that verb implied: `complements` became
+# runs_alongside + mandatory + critical, `refines` became requires +
+# finish_to_start. Reasons are verbatim. See tools/validate_graphs.py.
 graph_id: atdd.extension.github.relationships
 
 # After the coach-orchestration decommission this graph holds only the surviving
@@ -20,14 +25,23 @@ nodes:
   - github.state.sync-store-from-issues
 
 edges:
-  # store<->GitHub sync reads the atdd:{PHASE} label the taxonomy defines.
-  - from: github.state.sync-store-from-issues
-    to: github.issue.label-taxonomy
-    type: depends_on
-    rationale: Ingest maps each issue's atdd:{PHASE} label (defined by the taxonomy) to the canonical inbox state event.
-
-  # the two surviving post-merge provider side-effects are siblings.
-  - from: github.release.version-decided-drains-to-tag-and-publish
-    to: github.state.sync-store-from-issues
-    type: complements
-    rationale: Both are post-merge GitHub-provider side-effects that drain a provider-neutral core outbox signal (version_decided -> tag + publish; sync outbox -> GitHub), keeping core decision-only and the GitHub effect in the extension.
+  - source_ref: github.state.sync-store-from-issues
+    target_ref: github.issue.label-taxonomy
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    authored_type: depends_on
+    reason: 'Ingest maps each issue''s atdd:{PHASE} label (defined by the taxonomy) to the canonical inbox state event.'
+  - source_ref: github.release.version-decided-drains-to-tag-and-publish
+    target_ref: github.state.sync-store-from-issues
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    authored_type: complements
+    reason: 'Both are post-merge GitHub-provider side-effects that drain a provider-neutral core outbox signal (version_decided -> tag + publish; sync outbox -> GitHub), keeping core decision-only and the GitHub effect in the extension.'

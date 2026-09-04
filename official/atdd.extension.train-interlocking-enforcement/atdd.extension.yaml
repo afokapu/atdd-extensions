@@ -82,12 +82,11 @@ owns:
     - scopes/interlocking-targets.scope.yaml
 
 depends_on:
-  core:
-    - atdd.core.convention-node-schema
-    - atdd.core.relationship-schema
-    - atdd.core.workspace-schema
-    - atdd.core.implementation-schema
-    - atdd.core.violation-output-schema
+  # `core: []` — the five `atdd.core.*` ids previously listed here do not exist.
+  # The 231 real core nodes are namespaced coder.* / tester.* / coach.*, and
+  # admission never validates this field, so the declaration pointed at nothing.
+  # An empty list is what `atdd author extension init` scaffolds.
+  core: []
   # The reusable runtime all three implementations target. The infrastructure
   # validator (scans python/ runtime code), the coverage validator (scans e2e/
   # production tests), and the bilateral-binding validator (#27; scans the

@@ -40,6 +40,21 @@ jobs:
           done
           if [ "$found" = 0 ]; then echo "::error::no official packages discovered to validate"; exit 1; fi
 
+      - name: Every relationship graph conforms to core's edge schema
+        # `atdd validate package` enforces planner.relationship.no-orphan-nodes but
+        # never applies relationship.schema.json to an extension's edges, and never
+        # checks the reverse direction — an edge citing a node that does not exist.
+        # Both gaps were live in this repo: 188 edges used `type` values outside
+        # core's enum, three packages used a second key shape (from/to/rationale),
+        # and one graph referenced a node after it had moved packages.
+        run: python3 tools/validate_graphs.py
+
+      - name: The registry index still matches its authored entries
+        # registry/index.yaml is the core-consumable projection of registry.yaml +
+        # entries/. Regenerate it after editing any entry, or `atdd substrate add
+        # <ref>` resolves against a stale catalog.
+        run: python3 tools/build_registry_index.py --check
+
       - name: Negative canary — the gate rejects an invalid realization
         # Proves the gate has teeth (criteria 3-6). The full negative contract — bad
         # manifest shape, unresolved core node, realized design_candidate, authored

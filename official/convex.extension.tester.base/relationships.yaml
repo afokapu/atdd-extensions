@@ -2,6 +2,11 @@ schema_version: "1.0.0"
 
 # Extension-LOCAL relationship graph for convex.extension.tester.base. Sorted-adjacent sibling chain
 # (same-domain nodes are neighbours); every owned node carries >=1 edge (no orphans).
+# EDGE VOCABULARY MIGRATED to core's relationship.schema.json enum (spec 6).
+# Each edge keeps its authored verb in `authored_type`, and the typed metadata
+# below carries the nuance that verb implied: `complements` became
+# runs_alongside + mandatory + critical, `refines` became requires +
+# finish_to_start. Reasons are verbatim. See tools/validate_graphs.py.
 graph_id: convex.extension.tester.base.relationships
 
 nodes:
@@ -24,57 +29,141 @@ nodes:
 edges:
   - source_ref: tester.convex.filename-urn
     target_ref: tester.convex.interlocking-production-runner-used
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.interlocking-production-runner-used
     target_ref: tester.convex.interlocking-route-coverage
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.interlocking-route-coverage
     target_ref: tester.convex.interlocking-smoke-coverage-for-station-master
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.interlocking-smoke-coverage-for-station-master
     target_ref: tester.convex.interlocking-trace-binds-declared-route
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.interlocking-trace-binds-declared-route
     target_ref: tester.convex.live-smoke-no-self-skip
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.live-smoke-no-self-skip
     target_ref: tester.convex.migration-naming
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.migration-naming
     target_ref: tester.convex.red-fails-first
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.red-fails-first
     target_ref: tester.convex.routing-path
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.routing-path
     target_ref: tester.convex.security-auth
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.security-auth
     target_ref: tester.convex.security-input
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.security-input
     target_ref: tester.convex.smoke-no-collaborator-substitution
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.smoke-no-collaborator-substitution
     target_ref: tester.convex.smoke-observable-assertion
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.smoke-observable-assertion
     target_ref: tester.convex.telemetry-emit
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: tester.convex.telemetry-emit
     target_ref: tester.convex.test-isolation-no-polluting-patterns
-    type: relates-to
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
