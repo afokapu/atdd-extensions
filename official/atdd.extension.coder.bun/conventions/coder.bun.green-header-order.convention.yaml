@@ -7,6 +7,15 @@ statement: >-
   Where present, header fields MUST appear as URN -> Tested-By -> Runtime -> Purpose. Stack-neutral
   obligation, Bun-specific detector; realized by `bun_green_traceability_detector` (core alias GREEN-
   HEADER-004).
+terms:
+- term_id: canonical_order
+  text: >-
+    URN -> Tested-By -> Runtime -> Purpose. Identity, then proof, then execution context, then
+    intent.
+- term_id: present_field
+  text: >-
+    a header field the file actually carries. Absent fields are skipped so this rule never
+    double-reports what another rule owns.
 content:
   summary: >-
     An "ordered header" obligation. The detector collects the line numbers of the fields that are present

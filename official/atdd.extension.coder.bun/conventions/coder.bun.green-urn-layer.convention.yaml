@@ -7,6 +7,14 @@ statement: >-
   The `{layer}` segment of a URN MUST be one of `domain`, `application`, `integration`, `presentation`,
   `assembly`. Stack-neutral obligation, Bun-specific detector; realized by
   `bun_green_traceability_detector` (core alias GREEN-URN-006).
+terms:
+- term_id: layer_segment
+  text: >-
+    segment 5: domain, application, integration, presentation or assembly.
+- term_id: layering_input
+  text: >-
+    the fact the boundary and dependency-flow rules read to judge an import. A layer outside the
+    vocabulary makes the file unreachable by every layering rule.
 content:
   summary: >-
     A "layer is declared from the closed vocabulary" obligation, checked against segment 5.

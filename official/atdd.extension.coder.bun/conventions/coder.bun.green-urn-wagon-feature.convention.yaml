@@ -7,6 +7,14 @@ statement: >-
   The `{wagon}` and `{feature}` segments of a URN MUST match `^[a-z][a-z0-9-]*$`. Stack-neutral
   obligation, Bun-specific detector; realized by `bun_green_traceability_detector` (core alias GREEN-
   URN-003).
+terms:
+- term_id: kebab_identifier
+  text: >-
+    `^[a-z][a-z0-9-]*$` — the plan's own grammar for wagon and feature names.
+- term_id: silent_join_failure
+  text: >-
+    the state where a header reads correctly to a human but binds to nothing, because a case- or
+    separator-sensitive key did not match.
 content:
   summary: >-
     A "URN identifiers are kebab-case" obligation. The detector applies the pattern to segments 1 and 2 of

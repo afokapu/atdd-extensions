@@ -8,6 +8,14 @@ statement: >-
   an authentication/authorisation assertion — an expectation tied to 401, 403, unauthorised, forbidden,
   denied, permission, `.rejects` or `toThrow`. Bun realization of core `tester.security.auth`, mirroring
   `tester.convex.security-auth`.
+terms:
+- term_id: security_test
+  text: >-
+    a test whose URN carries a SEC, RLS or AUTH kind segment.
+- term_id: denial_assertion
+  text: >-
+    an expectation tied to 401, 403, unauthorised, forbidden, denied, permission, .rejects or
+    toThrow. Its absence makes the test a silent green gap.
 content:
   summary: >-
     Identifies security tests from the URN and flags those whose body contains no denial assertion.

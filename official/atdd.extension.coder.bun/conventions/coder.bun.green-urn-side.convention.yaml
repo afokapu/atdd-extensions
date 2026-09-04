@@ -6,6 +6,14 @@ name: The URN side segment is frontend or backend
 statement: >-
   The `{side}` segment of a URN MUST be `frontend` or `backend`. Stack-neutral obligation, Bun-specific
   detector; realized by `bun_green_traceability_detector` (core alias GREEN-URN-005).
+terms:
+- term_id: side_segment
+  text: >-
+    segment 4: `frontend` or `backend`. Which half of the application the file belongs to.
+- term_id: stack_spanning_repo
+  text: >-
+    a repo where one language and one runtime serve both halves, so side cannot be inferred from
+    the stack and must be declared per file.
 content:
   summary: >-
     A "side is declared from the closed vocabulary" obligation, checked against segment 4.

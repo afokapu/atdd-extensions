@@ -7,6 +7,14 @@ statement: >-
   A module inside a `features/` or `wagons/` tree MUST name its architectural layer — either by filename
   (`domain.ts`, `application.ts`, `api.ts`, …) or by living in a directory named for the layer. Bun
   realization mirroring `coder.convex.layer-naming`; core obligation `coder.backend.code-is-organized`.
+terms:
+- term_id: layer_declaration
+  text: >-
+    how a module names its layer: either the filename (domain.ts, api.ts) or a directory named
+    for the layer. Both accepted, because a nested Bun repo is idiomatic.
+- term_id: feature_tree
+  text: >-
+    a path under `features/` or `wagons/` — the only place this rule applies.
 content:
   summary: >-
     Flags a feature-tree module whose path carries no layer directory and whose basename is not a layer

@@ -7,6 +7,14 @@ statement: >-
   The `{Name}` segment of a URN MUST match the file's basename, compared case- and separator-
   insensitively, unless the name is a structural role. Stack-neutral obligation, Bun-specific detector;
   realized by `bun_green_traceability_detector` (core alias GREEN-URN-004).
+terms:
+- term_id: name_segment
+  text: >-
+    segment 3 of the URN, which identifies the component the file implements.
+- term_id: structural_role_name
+  text: >-
+    a filename naming a ROLE rather than a component — index, server, routes, layout, partial,
+    composition, wagon. Exempt, because the file assembles rather than implements.
 content:
   summary: >-
     A "the URN names this file" obligation. The detector normalises both sides to lowercase alphanumerics

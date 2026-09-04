@@ -8,6 +8,13 @@ statement: >-
   rules in this family that PORTS verbatim: the payload is JSON, so the pattern and the case test carry
   over from the python-pytest sibling `coder.error-response.code-format` unchanged. Realized by
   `bun_security_hygiene_detector` (core alias ERROR-CODE-FORMAT-001).
+terms:
+- term_id: error_code
+  text: >-
+    the machine key a client branches on. Once it does, the spelling is API surface.
+- term_id: upper_snake_case
+  text: >-
+    `^[A-Z][A-Z0-9_]+$`. The convention itself is arbitrary; that it is uniform is not.
 content:
   summary: >-
     Matches `"error_code": "<value>"` (and the `errorCode` spelling) and tests the value against

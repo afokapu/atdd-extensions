@@ -8,6 +8,16 @@ statement: >-
   SAME architectural layer. Stack-neutral obligation, NATIVE BUN detector transcribed from the python-
   pytest sibling `coder.duplication.no-intra-layer-code-typescript`, including the normalization table and
   the sha256-prefix fingerprint. Realized by `bun_ts_metrics_detector` (core alias DUPLICATION-TS-001).
+terms:
+- term_id: normalized_fragment
+  text: >-
+    a window of 7 non-trivial lines with comments stripped, string literals folded to "S",
+    numbers to 0 and non-keyword identifiers to ID, so renaming a variable cannot hide a
+    duplicate.
+- term_id: intra_layer
+  text: >-
+    within one architectural layer. The same shape in two different layers is usually two
+    obligations that happen to look alike.
 content:
   summary: >-
     Each line is normalized — comments stripped, string literals folded to "S", numbers to 0, non-keyword

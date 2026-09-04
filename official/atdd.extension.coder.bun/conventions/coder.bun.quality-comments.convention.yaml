@@ -8,6 +8,15 @@ statement: >-
   obligation, NATIVE BUN detector transcribed from the python-pytest sibling `coder.refactor.quality-
   comments-typescript` and verified numerically identical. Realized by `bun_ts_metrics_detector` (core
   alias REFACTOR-QUALITY-COMMENTS-TS-001).
+terms:
+- term_id: comment_ratio
+  text: >-
+    comment lines over non-blank lines, counting line comments, block comments and `*`
+    continuations.
+- term_id: floor_against_absence
+  text: >-
+    what this rule is. It cannot tell a good comment from a bad one; it catches the file that
+    documents nothing.
 content:
   summary: >-
     Counts line comments, block comments and continuation lines beginning `*` against all non-blank lines.

@@ -7,6 +7,14 @@ statement: >-
   A module in the `presentation/` or `application/` layer MUST receive its collaborators by injection
   rather than constructing them. Bun realization mirroring `coder.convex.composition-consumer`; core
   obligation `coder.refactor.composition-consumer`.
+terms:
+- term_id: consumer_layer
+  text: >-
+    presentation or application — a layer that USES collaborators rather than assembling them.
+- term_id: injection
+  text: >-
+    receiving a collaborator as a parameter or pre-wired. A consumer that builds its own cannot
+    be tested without them.
 content:
   summary: >-
     Flags a `new <Collaborator>()` inside a consumer layer.

@@ -10,6 +10,14 @@ statement: >-
   `coder.dead-code.reachability-typescript`, but the import graph is built by Bun's in-process TypeScript
   parser rather than by regex. Realized by `bun_ts_metrics_detector` (core alias DEAD-CODE-REACHABILITY-
   TS-001).
+terms:
+- term_id: structural_root
+  text: >-
+    a file the graph is walked from: index, wagon, composition, main or app.
+- term_id: type_only_import
+  text: >-
+    an `import type` edge. Erased at compile time, so it creates no runtime edge and cannot keep
+    a module alive — a distinction a regex cannot make and Bun's parser can.
 content:
   summary: >-
     Builds the file import graph, walks it from the structural roots in both directions, and reports every

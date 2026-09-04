@@ -8,6 +8,15 @@ statement: >-
   by `*.telemetry.test.*` colocation MUST contain an emission assertion — `toHaveBeenCalled[With|Times]`,
   or an expectation on `.emit` / `.emitted` / `.capture` / `.track` / `.record`. Bun realization of core
   `tester.telemetry.emit`, mirroring `tester.convex.telemetry-emit`.
+terms:
+- term_id: telemetry_test
+  text: >-
+    a test identified by a TELEMETRY, EVENT or METRIC URN segment, or by `*.telemetry.test.*`
+    colocation.
+- term_id: emission_assertion
+  text: >-
+    toHaveBeenCalled[With|Times], or an expectation on .emit / .emitted / .capture / .track. A
+    return-value check proves the function ran, not that the event fired.
 content:
   summary: >-
     Identifies telemetry tests from the URN or the filename and flags those with no emission assertion.

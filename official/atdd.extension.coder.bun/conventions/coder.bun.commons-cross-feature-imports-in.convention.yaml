@@ -7,6 +7,14 @@ statement: >-
   A module at `commons/<layer>/<feature>/…` MUST NOT import directly into a SIBLING feature's internals;
   cross-feature use goes through the layer root. Bun realization mirroring `coder.convex.commons-cross-
   feature-imports-in`; core obligation `coder.boundaries.no-cross-wagon-imports`.
+terms:
+- term_id: commons_feature
+  text: >-
+    a directory under `commons/<layer>/`, whose internals belong to it alone.
+- term_id: layer_root
+  text: >-
+    the surface a feature deliberately exposes. Cross-feature use goes through it, or two
+    features are coupled through a path neither published.
 content:
   summary: >-
     Resolves each import and flags one whose target sits inside a different commons feature directory.

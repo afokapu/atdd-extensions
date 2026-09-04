@@ -7,6 +7,14 @@ statement: >-
   A test file that declares a `// Runtime:` MUST name a runtime in the JS/TS family (`bun`, `browser`,
   `isomorphic`, `typescript`, `ts`, `node`, `js`, `javascript`, `deno`, `vite`, `astro`, `preact`). Bun
   realization mirroring `tester.convex.routing-path`, which makes the same argument for Vitest.
+terms:
+- term_id: declared_runtime
+  text: >-
+    the optional `// Runtime:` field on a test.
+- term_id: js_family
+  text: >-
+    bun, browser, isomorphic, typescript, ts, node, js, javascript, deno, vite, astro, preact —
+    the runtimes `bun test` actually executes under.
 content:
   summary: >-
     Flags a declared `Runtime:` outside the JS/TS family. Declaring a runtime is optional.

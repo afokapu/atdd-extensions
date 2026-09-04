@@ -7,6 +7,15 @@ statement: >-
   A test MUST NOT mutate `process.env` nor write to a filesystem path outside a temp directory. Stack-
   neutral obligation, RE-REALIZED for this stack: core's sibling detects Python bare-mode-init patterns,
   which do not exist here. Realized by `bun_tester_discipline_detector`.
+terms:
+- term_id: shared_live_state
+  text: >-
+    process.env, or a filesystem path outside a temp directory — anything a later test also
+    sees.
+- term_id: displaced_failure
+  text: >-
+    the signature of pollution: a DIFFERENT test fails, later, often only under a different
+    order, and the failure points at the victim rather than the culprit.
 content:
   summary: >-
     Flags `process.env.X =` assignments and write-family `fs` calls whose literal path is not scoped to

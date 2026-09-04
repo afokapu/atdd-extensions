@@ -7,6 +7,15 @@ statement: >-
   A test MUST NOT disable itself with `.skip` / `.todo` / `.failing`, nor bail out early on an environment
   check. Stack-neutral obligation, Bun-specific detector over `bun:test` modifiers. Realized by
   `bun_tester_discipline_detector`.
+terms:
+- term_id: self_skip
+  text: >-
+    `.skip` or `.todo` on it / test / describe. Deliberately excludes `.fails` / `.failing`,
+    which core's RED vocabulary lists as accepted markers.
+- term_id: guarded_bail
+  text: >-
+    `if (!process.env.X) return` inside a test — the same fault in disguise, and the more common
+    one, since it does nothing in exactly the environment nobody watches.
 content:
   summary: >-
     Flags `it.skip` / `test.skip` / `describe.skip` (and `.todo` / `.failing`), and a guarded `if

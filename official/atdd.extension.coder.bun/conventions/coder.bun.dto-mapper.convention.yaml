@@ -7,6 +7,13 @@ statement: >-
   A function mapping between a DTO and a domain entity (`to*DTO`, `from*DTO`, `map*DTO*`) MUST live in the
   `integration/` layer. Bun realization mirroring `coder.convex.dto-mapper`; core obligation
   `coder.dto.mapper`.
+terms:
+- term_id: dto_mapper
+  text: >-
+    a function translating between a DTO and a domain entity: `to*DTO`, `from*DTO`, `map*DTO*`.
+- term_id: translation_layer
+  text: >-
+    integration — where a boundary crossing legitimately sees both sides.
 content:
   summary: >-
     Flags a DTO-mapper function declared in any layer other than integration.

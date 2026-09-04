@@ -8,6 +8,15 @@ statement: >-
   `*Gateway`, `*Store`, `*Provider`, `*Factory`) MUST happen only in a composition root —
   `composition.ts`, `wagon.ts`, `server.ts`, `index.ts`. Bun realization mirroring
   `coder.convex.composition-root`; core obligation `coder.refactor.composition-root`.
+terms:
+- term_id: composition_root
+  text: >-
+    composition.ts, wagon.ts, server.ts or index.ts. server.ts counts because Bun.serve IS the
+    assembly point of a full-stack Bun app.
+- term_id: collaborator
+  text: >-
+    a *Repository, *Client, *Service, *Adapter, *Gateway, *Store, *Provider or *Factory — the
+    things whose wiring must be confined.
 content:
   summary: >-
     Flags a `new <Collaborator>()` outside a composition root, over string- and comment-masked source.

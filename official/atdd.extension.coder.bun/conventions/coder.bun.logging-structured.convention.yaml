@@ -9,6 +9,15 @@ statement: >-
   sibling `coder.logging.structured`, but the argument shape does not — a JS logger takes a context OBJECT
   where the Python one takes `extra=` or kwargs. Realized by `bun_security_hygiene_detector` (core alias
   LOGGING-STRUCTURED-001).
+terms:
+- term_id: context_object
+  text: >-
+    the second argument carrying the fields a line will be searched by. A JS logger takes an
+    object where a Python one takes `extra=`.
+- term_id: bare_string_log
+  text: >-
+    a logger call whose only argument is a string literal. Greppable and nothing more, at the
+    one moment it matters.
 content:
   summary: >-
     Flags a call on a logger receiver (`logger` / `log` / `_logger` / `_log` / `LOG`) whose sole argument

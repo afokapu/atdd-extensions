@@ -7,6 +7,14 @@ statement: >-
   A module in the `domain/` layer MUST NOT import runtime machinery (`bun:*`, `node:*`, `htmx`, `express`,
   `fastify`, `koa`) nor reach the `Bun.` global. Bun realization mirroring `coder.vite.commons-domain-no-
   framework-import`; core obligation `coder.commons.domain-layer-purity`.
+terms:
+- term_id: runtime_machinery
+  text: >-
+    `bun:*`, `node:*`, an HTTP framework, or the `Bun.` global — this stack's equivalent of the
+    UI frameworks the Vite sibling forbids.
+- term_id: server_free_domain
+  text: >-
+    the practical test: the domain must be runnable with no server started.
 content:
   summary: >-
     Flags framework/runtime import specifiers in a domain module, and any use of the `Bun.` global.

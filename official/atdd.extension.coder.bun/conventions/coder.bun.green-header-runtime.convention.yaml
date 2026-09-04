@@ -7,6 +7,14 @@ statement: >-
   Every implementation file MUST carry a `Runtime:` declaration naming `bun`, `browser` or `isomorphic`.
   Stack-neutral obligation, Bun-specific vocabulary; realized by `bun_green_traceability_detector` (core
   alias GREEN-HEADER-001).
+terms:
+- term_id: runtime_field
+  text: >-
+    the `Runtime:` header line naming where the file executes.
+- term_id: isomorphic
+  text: >-
+    a module that genuinely runs both server-side and in the browser. Bun decides at run time
+    what a bundler decides at build time, so the value must exist.
 content:
   summary: >-
     A "the file says where it runs" obligation. The vocabulary is this stack's: Vite reads

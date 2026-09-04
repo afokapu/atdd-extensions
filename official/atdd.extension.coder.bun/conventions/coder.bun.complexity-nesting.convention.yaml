@@ -8,6 +8,15 @@ statement: >-
   neutral obligation, NATIVE BUN detector transcribed from the python-pytest sibling
   `coder.refactor.complexity-nesting-typescript` and verified numerically identical. Realized by
   `bun_ts_metrics_detector` (core alias COMPLEXITY-NESTING-TS-001).
+terms:
+- term_id: control_depth
+  text: >-
+    the maximum brace depth reached on lines carrying a control keyword, measured relative to
+    the function's own base depth.
+- term_id: guard_clause
+  text: >-
+    an inverted condition returning early. The usual way to remove a level without changing
+    behaviour.
 content:
   summary: >-
     Depth is measured by brace balance on lines that also carry a control keyword (if / else / for / while

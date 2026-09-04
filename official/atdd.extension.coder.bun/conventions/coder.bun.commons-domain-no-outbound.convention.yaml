@@ -7,6 +7,15 @@ statement: >-
   A module under a `commons/domain/` or `shared/domain/` tree MUST NOT import from the commons
   `application/` or `integration/` layers. Bun realization mirroring `coder.convex.commons-domain-no-
   outbound`; core obligation `coder.commons.domain-layer-purity`.
+terms:
+- term_id: commons_domain
+  text: >-
+    a module under a `commons/domain/` or `shared/domain/` tree — the shared centre holding
+    rules.
+- term_id: outbound_import
+  text: >-
+    an import resolving into the application or integration layer. Dependencies point inward
+    only.
 content:
   summary: >-
     Flags an import from a commons domain module that resolves into the application or integration layer.

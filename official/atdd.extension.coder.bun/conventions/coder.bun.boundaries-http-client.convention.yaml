@@ -8,6 +8,15 @@ statement: >-
   primitive or a bare `axios` call; outbound HTTP goes through the project's centralized, contract-driven
   client. Bun realization mirroring `coder.vite.boundaries-http-client`; core obligation
   `coder.boundaries.http-client`.
+terms:
+- term_id: centralized_client
+  text: >-
+    the project's contract-driven HTTP client, where retries, timeouts, auth headers, tracing
+    and error translation live.
+- term_id: bare_primitive
+  text: >-
+    a direct `fetch(` or `axios(` in a consumer layer — a call site with none of those, which
+    will not acquire them because nobody remembers it exists.
 content:
   summary: >-
     Flags a bare `fetch(`/`axios(` in a consumer layer, over masked source. Integration is excluded — that

@@ -9,6 +9,15 @@ statement: >-
   `coder.refactor.quality-mi-typescript` — the Halstead volume, the log terms and the comment term are the
   same formula, verified identical to ten decimal places. Realized by `bun_ts_metrics_detector` (core
   alias REFACTOR-QUALITY-MI-TS-001).
+terms:
+- term_id: maintainability_index
+  text: >-
+    the approximate SEI composite: 171 - 5.2*ln(V) - 0.23*avgCC - 16.2*ln(LOC) +
+    50*sin(sqrt(2.4*CM)), clamped to 0..100.
+- term_id: halstead_volume
+  text: >-
+    V — a regex-approximated operator/operand count standing in for the file's information
+    content. No AST, no external library.
 content:
   summary: >-
     MI = 171 - 5.2*ln(V) - 0.23*avgCC - 16.2*ln(LOC) + 50*sin(sqrt(2.4*CM)), clamped to 0..100, where V is

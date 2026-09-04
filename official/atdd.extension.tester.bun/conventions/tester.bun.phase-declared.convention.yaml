@@ -6,6 +6,14 @@ name: Every test declares its ATDD phase
 statement: >-
   A test file carrying a URN MUST declare `// Phase:` with one of RED, UNIT, SMOKE, E2E. Stack-neutral
   obligation, Bun-specific detector. Realized by `bun_tester_discipline_detector`.
+terms:
+- term_id: phase_field
+  text: >-
+    `// Phase:` with RED, UNIT, SMOKE or E2E.
+- term_id: phase_gated_rule
+  text: >-
+    a rule that only applies to one phase. Without a declared phase a test is exempt from the
+    whole quality surface by omission.
 content:
   summary: >-
     Requires a `Phase:` field from the closed vocabulary.

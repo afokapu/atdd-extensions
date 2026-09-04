@@ -7,6 +7,15 @@ statement: >-
   A module under a `commons/application/` or `shared/application/` tree MUST NOT import from the commons
   `integration/` layer. Bun realization mirroring `coder.convex.commons-application-no-integration`; core
   obligation `coder.commons.domain-layer-purity`.
+terms:
+- term_id: commons_application
+  text: >-
+    a module under `commons/application/` or `shared/application/` — orchestration over ports it
+    defines.
+- term_id: inverted_dependency
+  text: >-
+    reaching into integration from application, which welds orchestration to a specific
+    transport.
 content:
   summary: >-
     Flags an import from a commons application module that resolves into the integration layer.

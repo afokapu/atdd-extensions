@@ -7,6 +7,14 @@ statement: >-
   Every implementation file MUST carry a `Purpose:` description of at most 80 characters. Stack-neutral
   obligation, Bun-specific detector; realized by `bun_green_traceability_detector` (core alias GREEN-
   HEADER-002).
+terms:
+- term_id: purpose_line
+  text: >-
+    a single `Purpose:` line of at most 80 characters stating the file's one job.
+- term_id: length_cap
+  text: >-
+    the 80-character limit. It forces one job to be named, and a purpose that will not fit is
+    evidence the file has more than one.
 content:
   summary: >-
     A "one-line purpose" obligation: present, and 80 characters or fewer.

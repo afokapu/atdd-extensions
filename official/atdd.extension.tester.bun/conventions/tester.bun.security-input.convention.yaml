@@ -8,6 +8,14 @@ statement: >-
   `-VALIDATE-`) MUST contain a rejection assertion — `.rejects`, `toThrow`, 400, 422, invalid, reject, or
   an error expectation. Bun realization of core `tester.security.input`, mirroring
   `tester.convex.security-input`.
+terms:
+- term_id: input_validation_test
+  text: >-
+    a test whose URN carries an INPUT, VALIDATION or VALIDATE kind segment.
+- term_id: rejection_assertion
+  text: >-
+    an expectation on refusal — .rejects, toThrow, 400, 422, invalid. A well-formed payload
+    proves nothing about adversarial input.
 content:
   summary: >-
     Identifies input-validation tests from the URN and flags those with no rejection assertion.

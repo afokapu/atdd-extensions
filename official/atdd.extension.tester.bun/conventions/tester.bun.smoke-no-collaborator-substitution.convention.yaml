@@ -8,6 +8,14 @@ statement: >-
   `jest.mock`/`spyOn`, `vi.mock`/`spyOn`. Stack-neutral obligation, Bun-specific substitution vocabulary
   (`bun:test` exposes `mock` and `spyOn` where pytest uses `monkeypatch`). Realized by
   `bun_tester_discipline_detector`.
+terms:
+- term_id: substitution
+  text: >-
+    mock.module, spyOn, jest.mock/spyOn, vi.mock/spyOn — replacing a production collaborator.
+- term_id: false_evidence
+  text: >-
+    what a substituted SMOKE test gives the gate: credit that the real path works, when the real
+    path is precisely what was replaced.
 content:
   summary: >-
     Flags any substitution call in a SMOKE-phase file, reporting the exact line.

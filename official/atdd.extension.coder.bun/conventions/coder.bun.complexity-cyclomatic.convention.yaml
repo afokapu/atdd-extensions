@@ -10,6 +10,15 @@ statement: >-
   `coder.refactor.complexity-cyclomatic-typescript` and verified to produce identical numbers, so this
   repo enforces its own metrics without a Python interpreter. Realized by `bun_ts_metrics_detector` (core
   alias COMPLEXITY-CYCLOMATIC-TS-001).
+terms:
+- term_id: decision_point
+  text: >-
+    a construct adding an independent path: if / else if / for / while / do / catch / case, a
+    `&&` / `||` / `??`, or a ternary.
+- term_id: trivial_function
+  text: >-
+    a function under three code lines. Not scored, because a two-line arrow is not a complexity
+    problem.
 content:
   summary: >-
     Complexity is 1 plus each decision keyword (if / else if / for / while / do / catch / case), each

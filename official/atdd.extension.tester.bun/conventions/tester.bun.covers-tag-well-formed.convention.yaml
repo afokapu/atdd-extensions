@@ -7,6 +7,14 @@ statement: >-
   A `// @covers` tag above an `it()` MUST name a well-formed `acc:{wagon}:{ACCEPTANCE-ID}` URN. Stack-
   neutral obligation, Bun-specific detector implementing the two-level binding model. Realized by
   `bun_tester_discipline_detector`.
+terms:
+- term_id: covers_tag
+  text: >-
+    `// @covers acc:…` above an `it()`, binding one CASE rather than the file.
+- term_id: two_level_binding
+  text: >-
+    file header plus per-case tags. Gives many-cases-to-one-acceptance precision without forcing
+    one acceptance per file.
 content:
   summary: >-
     Collects the `// @covers` comment block immediately above each `it()` / `test()` and validates every

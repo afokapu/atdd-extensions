@@ -8,6 +8,15 @@ statement: >-
   (`toBeDefined` / `toBeTruthy` / `toBeFalsy` / `toBeNull` / `toBeUndefined`), or which asserts nothing at
   all, is refused. Stack-neutral obligation, Bun-specific detector over `bun:test` matchers. Realized by
   `bun_tester_discipline_detector`.
+terms:
+- term_id: vacuous_assertion
+  text: >-
+    an existence check — toBeDefined, toBeTruthy, toBeFalsy, toBeNull, toBeUndefined. Passes the
+    moment a stub is exported.
+- term_id: behavioural_assertion
+  text: >-
+    an assertion on what the code DOES, which is the one that must fail before the
+    implementation exists.
 content:
   summary: >-
     For each `it()` in a RED-phase file, brace-matches the case body and reports it when it contains no

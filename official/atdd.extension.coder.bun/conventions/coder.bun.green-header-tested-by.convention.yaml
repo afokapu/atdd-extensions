@@ -7,6 +7,14 @@ statement: >-
   Every implementation file MUST carry a `Tested-By:` block containing at least one `- test:…` acceptance
   URN. Stack-neutral obligation, Bun-specific detector; realized by `bun_green_traceability_detector`
   (core alias GREEN-HEADER-003).
+terms:
+- term_id: tested_by_block
+  text: >-
+    the `Tested-By:` line followed by one or more `- test:` acceptance URNs.
+- term_id: empty_block
+  text: >-
+    a `Tested-By:` line with no entries. Treated as absent, because it is the shape a half-
+    finished backfill leaves and would otherwise report full coverage with zero bindings.
 content:
   summary: >-
     A "the file names the acceptances that cover it" obligation: the `Tested-By:` line must be present AND

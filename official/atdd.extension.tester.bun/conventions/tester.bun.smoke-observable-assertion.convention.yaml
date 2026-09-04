@@ -8,6 +8,15 @@ statement: >-
   body, rendered markup, stdout/stderr, exit code — and not only on objects the test constructed itself.
   Stack-neutral obligation, Bun/htmx-specific channel vocabulary. Realized by
   `bun_tester_discipline_detector`.
+terms:
+- term_id: observable_channel
+  text: >-
+    an HTTP response status or body, rendered markup, stdout/stderr, an exit code, or persisted
+    state.
+- term_id: self_constructed_object
+  text: >-
+    a value the test built itself. Asserting on it proves the constructor works, which is a unit
+    test's job under a SMOKE label.
 content:
   summary: >-
     Reports a SMOKE case that makes assertions but touches none of the observable channels.

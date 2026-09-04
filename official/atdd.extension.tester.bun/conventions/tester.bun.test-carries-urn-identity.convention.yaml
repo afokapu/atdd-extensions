@@ -8,6 +8,14 @@ statement: >-
   Stack-neutral obligation, Bun-specific line-comment detector. Core's counterpart is explicit that a
   test's authoritative identity is its HEADER and not its filename, and this realization follows that
   exactly — it never parses a filename for identity. Realized by `bun_tester_discipline_detector`.
+terms:
+- term_id: test_urn
+  text: >-
+    `test:{wagon}:{feature}:{ACCEPTANCE-ID}` in the file's leading comment block.
+- term_id: header_authority
+  text: >-
+    core's rule that a test's identity is its HEADER, not its filename — so a wagon-level file
+    covering several acceptances needs no rename to be bound.
 content:
   summary: >-
     Parses the leading comment block for a `URN:` field and requires the `test:` scheme. The header region

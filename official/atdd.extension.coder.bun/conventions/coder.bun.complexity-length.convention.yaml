@@ -8,6 +8,14 @@ statement: >-
   Stack-neutral obligation, NATIVE BUN detector transcribed from the python-pytest sibling
   `coder.refactor.complexity-length-typescript` and verified numerically identical. Realized by
   `bun_ts_metrics_detector` (core alias COMPLEXITY-LENGTH-TS-001).
+terms:
+- term_id: code_line
+  text: >-
+    a line inside the function body that is neither blank nor a comment.
+- term_id: internal_seam
+  text: >-
+    a boundary inside a long function, usually marked by the comment introducing each block.
+    Each is a candidate helper whose comment is its name.
 content:
   summary: >-
     Counts non-blank, non-comment lines between the function's signature and its matching closing brace,

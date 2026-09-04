@@ -10,6 +10,15 @@ statement: >-
   `expect(true).toBe(false)`, `expect.fail(…)`, `return Promise.reject(…)`, and `it.fails(` /
   `test.failing(`. Bun realization of core `tester.red.test-must-fail-first`, mirroring
   `tester.convex.red-fails-first` rule for rule.
+terms:
+- term_id: red_marker
+  text: >-
+    a guaranteed-fail construct: throw new Error('Not implemented…'), expect.fail(…),
+    expect(false).toBe(true), return Promise.reject(…), it.fails( / test.failing(.
+- term_id: structural_proxy
+  text: >-
+    what this rule checks. Whether a test ACTUALLY fails first is a runtime property; core
+    supplies the decidable stand-in.
 content:
   summary: >-
     Flags any `Phase: RED` file containing none of the core TypeScript RED markers. `test.failing(` is

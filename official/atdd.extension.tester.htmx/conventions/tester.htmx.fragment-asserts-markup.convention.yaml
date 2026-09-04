@@ -7,6 +7,15 @@ statement: >-
   A test case that performs an HTTP request and asserts on the response status MUST also assert on the
   response BODY. Bun/htmx-specific obligation with no counterpart in any other stack's tester extension.
   Realized by `bun_tester_discipline_detector`.
+terms:
+- term_id: fragment_contract
+  text: >-
+    the returned markup itself — hx-attributes, the element ids later out-of-band swaps target,
+    and the structure. In htmx this IS the interface, where a JSON API has a payload.
+- term_id: status_only_test
+  text: >-
+    a case asserting on status or ok and never reaching the body. It proves the route exists and
+    nothing about what the user will see.
 content:
   summary: >-
     Flags a case that fetches, asserts on `status`/`ok`, and never reaches `.text()` / `.json()` / a

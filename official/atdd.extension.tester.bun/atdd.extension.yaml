@@ -42,12 +42,12 @@ owns:
   scopes: []
 
 depends_on:
-  # NOTE: `depends_on.core` is omitted deliberately. Every other extension in this
-  # hub declares five `atdd.core.*` node ids, and NONE of them exists — the 231 real
-  # core nodes are namespaced `coder.*` / `tester.*` / `coach.*`. Admission never
-  # validates the field, so those declarations point at nothing. Rather than copy a
-  # dead list, this package declares only the dependency that IS resolved: the
-  # workspace whose implementations realize these conventions.
+  # `core: []` — present and EMPTY, which is exactly what
+  # `atdd author extension init` scaffolds. Every other extension in this hub
+  # instead lists five `atdd.core.*` node ids, and none of them exists: the 231
+  # real core nodes are namespaced coder.* / tester.* / coach.*, and admission
+  # never validates the field. An empty list is the honest declaration.
+  core: []
   workspaces:
     - id: atdd.workspace.bun
       contract: "^1.0.0"

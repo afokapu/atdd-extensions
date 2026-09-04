@@ -7,6 +7,15 @@ statement: >-
   A `URN:` marker MUST read `component:{wagon}:{feature}:{Name}:{side}:{layer}` — literal `component`
   first, then exactly five non-empty segments. Stack-neutral obligation, Bun-specific detector; realized
   by `bun_green_traceability_detector` (core alias GREEN-URN-002).
+terms:
+- term_id: six_segment_urn
+  text: >-
+    `component:{wagon}:{feature}:{Name}:{side}:{layer}` — the literal `component` plus five non-
+    empty segments.
+- term_id: join_key
+  text: >-
+    a URN segment used to resolve the file against plan/. A missing segment does not degrade: it
+    resolves to nothing while still looking traceable.
 content:
   summary: >-
     A "the URN is well-formed" obligation. The detector splits the marker on `:` and requires six

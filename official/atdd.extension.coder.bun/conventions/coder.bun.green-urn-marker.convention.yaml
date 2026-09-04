@@ -10,6 +10,15 @@ statement: >-
   URN: … -->` in a template. The Python realization writes `# URN:` and the Vite one `// URN:`; this is
   the same obligation with a third comment syntax. Realized by the family validator
   `bun_green_traceability_detector` (core alias GREEN-URN-001).
+terms:
+- term_id: traceability_header
+  text: >-
+    the leading comment block binding a file to the plan graph: URN, Tested-By, Runtime,
+    Purpose. `//` in source, `<!-- … -->` in an .html template.
+- term_id: first_meaningful_line
+  text: >-
+    the first line that is neither blank nor a preamble. A shebang or `<!doctype>` may precede
+    the marker without displacing it, because neither is content.
 content:
   summary: >-
     A "every file declares its component URN" obligation. The detector treats the leading run of blank

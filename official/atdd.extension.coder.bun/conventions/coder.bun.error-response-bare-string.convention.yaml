@@ -9,6 +9,14 @@ statement: >-
   sibling matches FastAPI's `HTTPException(detail="...")`, which does not exist here — a Bun error IS a
   `Response` with a status. Realized by `bun_security_hygiene_detector` (core alias ERROR-BARE-
   STRING-001).
+terms:
+- term_id: error_response
+  text: >-
+    a `Response` carrying a 4xx or 5xx status.
+- term_id: rendered_verbatim
+  text: >-
+    what htmx does with a bare error string: swaps it into the live DOM, internal detail
+    included. The structured payload is also the boundary that stops leakage.
 content:
   summary: >-
     Flags `new Response("<literal>", { status: 4xx|5xx })`.

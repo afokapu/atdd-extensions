@@ -9,6 +9,15 @@ statement: >-
   `execute` / `executemany` / `raw` / `execute_sql` and its own manifest scopes it "python stack only".
   Bun's sinks are `bun:sqlite` (`query` / `run` / `exec` / `prepare`), `Bun.sql` and the postgres/mysql
   clients. Realized by `bun_security_hygiene_detector` (core alias SECURITY-SQL-INJECTION-001).
+terms:
+- term_id: query_sink
+  text: >-
+    a call that executes SQL: bun:sqlite's query / run / exec / prepare, or a postgres/mysql
+    client method.
+- term_id: tagged_template
+  text: >-
+    `sql`…`` — a template invoking a function that PARAMETERISES each substitution. Safe by
+    construction, and visually almost identical to the untagged form that is not.
 content:
   summary: >-
     Flags a query-sink call whose first argument is a template literal containing both a SQL keyword and a
