@@ -1,5 +1,5 @@
 schema_version: 1.1.0
-rule_id: coder.bun.test-imports-bun-test
+rule_id: tester.bun.imports-bun-test
 kind: rule
 status: active
 name: Tests import their harness from bun:test
@@ -52,4 +52,4 @@ metadata:
   introduced_in: 0.1.0
 implementation:
   type: validator
-  ref: bun_fullstack_detector
+  ref: bun_tester_discipline_detector

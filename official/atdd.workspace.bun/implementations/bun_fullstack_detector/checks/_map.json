@@ -1,5 +1,4 @@
 {
   "bun_server_uses_bun_serve": "coder.bun.server-uses-bun-serve",
-  "bun_single_lockfile": "coder.bun.single-lockfile",
-  "bun_test_imports_bun_test": "coder.bun.test-imports-bun-test"
+  "bun_single_lockfile": "coder.bun.single-lockfile"
 }

@@ -1,13 +1,14 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for atdd.extension.tester.htmx. Sorted-adjacent
-# sibling chain; every owned node carries >=1 edge, so the graph has no orphans.
+# Extension-LOCAL relationship graph for atdd.extension.tester.htmx. Sorted-adjacent sibling chain;
+# every owned node carries >=1 edge, so the graph has no orphans.
 graph_id: atdd.extension.tester.htmx.relationships
 
 nodes:
   - tester.bun.acceptance-binding-declared
   - tester.bun.covers-tag-well-formed
   - tester.bun.fragment-asserts-markup
+  - tester.bun.imports-bun-test
   - tester.bun.no-self-skip
   - tester.bun.phase-declared
   - tester.bun.red-behavioral-assertion
@@ -31,6 +32,10 @@ edges:
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
   - source_ref: tester.bun.fragment-asserts-markup
+    target_ref: tester.bun.imports-bun-test
+    type: relates-to
+    reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'
+  - source_ref: tester.bun.imports-bun-test
     target_ref: tester.bun.no-self-skip
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the tester/stack surface.'

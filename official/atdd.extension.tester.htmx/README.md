@@ -1,6 +1,6 @@
 # `atdd.extension.tester.htmx`
 
-The **tester** half of the Bun + htmx pair. Ten rule nodes, realized by
+The **tester** half of the Bun + htmx pair. Sixteen rule nodes, realized by
 `bun_tester_discipline_detector` in `atdd.workspace.bun`.
 
 ## Why a separate package
@@ -91,5 +91,5 @@ ratchet should hold an existing suite flat while it migrates.
 atdd substrate add bun            # the runtime
 atdd substrate add coder.htmx     # source obligations
 atdd substrate add tester.htmx    # suite obligations
-atdd substrate bind               # → 43 bound, 0 legacy-fallback
+atdd substrate bind               # → 60 bound, 0 legacy-fallback
 ```

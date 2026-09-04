@@ -30,6 +30,6 @@ description: >-
   zero-dependency detectors under `bun`, which needs no build step, no node_modules and no
   transpile config. Ships six detector families — bun_green_traceability_detector (10 rules),
   bun_ts_metrics_detector (7, a native port of the python-pytest TS detectors),
-  bun_tester_discipline_detector (15), bun_clean_architecture_detector (12),
+  bun_tester_discipline_detector (16), bun_clean_architecture_detector (12),
   bun_security_hygiene_detector (7), htmx_hypermedia_detector (6) and
   bun_fullstack_detector (3).

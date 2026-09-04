@@ -1,7 +1,7 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for atdd.extension.coder.htmx. Sorted-adjacent
-# sibling chain; every owned node carries >=1 edge, so the graph has no orphans.
+# Extension-LOCAL relationship graph for atdd.extension.coder.htmx. Sorted-adjacent sibling chain;
+# every owned node carries >=1 edge, so the graph has no orphans.
 graph_id: atdd.extension.coder.htmx.relationships
 
 nodes:
@@ -43,7 +43,6 @@ nodes:
   - coder.bun.security-sql-injection
   - coder.bun.server-uses-bun-serve
   - coder.bun.single-lockfile
-  - coder.bun.test-imports-bun-test
   - coder.htmx.destructive-verb-confirms
   - coder.htmx.endpoint-not-absolute-url
   - coder.htmx.fragment-interpolation-escaped
@@ -201,10 +200,6 @@ edges:
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
   - source_ref: coder.bun.single-lockfile
-    target_ref: coder.bun.test-imports-bun-test
-    type: relates-to
-    reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
-  - source_ref: coder.bun.test-imports-bun-test
     target_ref: coder.htmx.destructive-verb-confirms
     type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'

@@ -30,7 +30,7 @@ categories:
   - official
 
 description: >-
-  Official ATDD coder-role extension for the full-stack Bun + htmx stack — 45 convention nodes
+  Official ATDD coder-role extension for the full-stack Bun + htmx stack — 44 convention nodes
   across six families. GREEN/URN traceability (the Bun realization of the stack-neutral header
   obligation Python and Vite also realize, extended to .html templates); hypermedia discipline
   (oob ids, confirmations, progress signals, same-origin endpoints, fragment escaping); and Bun

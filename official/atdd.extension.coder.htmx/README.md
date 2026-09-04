@@ -1,6 +1,6 @@
 # `atdd.extension.coder.htmx`
 
-Coder-role conventions for the **full-stack Bun + htmx** stack. Forty-five rule
+Coder-role conventions for the **full-stack Bun + htmx** stack. Forty-four rule
 nodes, realized by the six detector families in `atdd.workspace.bun` — with **no
 Python anywhere in the toolchain**.
 

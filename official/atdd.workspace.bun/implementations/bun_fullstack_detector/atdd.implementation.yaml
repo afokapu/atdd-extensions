@@ -4,15 +4,18 @@ subtype: validator
 implementation_id: bun_fullstack_detector
 targets_workspace: atdd.workspace.bun
 contract_version: 1.1.0
+# Bun RUNTIME discipline: the server primitive and the package manager.
+#
+# `test-imports-bun-test` used to live here and was moved to
+# bun_tester_discipline_detector: it reads TEST files, and conformance
+# (test_persona_scoping.py) proved that broke the persona boundary this provider
+# claims — coder families never open a test file. Its own normative text makes a
+# coverage-gate argument, which is tester territory.
 emits_rule_ids:
 - coder.bun.server-uses-bun-serve
 - coder.bun.single-lockfile
-- coder.bun.test-imports-bun-test
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention:
-# Family ownership, as above: all three rules are authored in
-# atdd.extension.coder.htmx and claimed by no other implementation.
 - coder.bun.server-uses-bun-serve
 - coder.bun.single-lockfile
-- coder.bun.test-imports-bun-test

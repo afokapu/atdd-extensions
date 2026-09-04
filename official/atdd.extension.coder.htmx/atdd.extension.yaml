@@ -79,7 +79,6 @@ owns:
     - conventions/coder.bun.security-sql-injection.convention.yaml
     - conventions/coder.bun.server-uses-bun-serve.convention.yaml
     - conventions/coder.bun.single-lockfile.convention.yaml
-    - conventions/coder.bun.test-imports-bun-test.convention.yaml
     - conventions/coder.htmx.destructive-verb-confirms.convention.yaml
     - conventions/coder.htmx.endpoint-not-absolute-url.convention.yaml
     - conventions/coder.htmx.fragment-interpolation-escaped.convention.yaml

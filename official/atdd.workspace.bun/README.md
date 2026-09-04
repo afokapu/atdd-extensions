@@ -38,7 +38,9 @@ cli/scan.py           the subprocess boundary core shells out to
 lib/scan.mjs          shared scan-mount plumbing (walk, mask, locate, emit)
 lib/imports.mjs       module import graph + architectural layer resolution
 implementations/      the detector corpus, one directory per family
-conformance/          18 tests proving this runtime satisfies the shared contract
+conformance/          130 tests: the shared contract, per-RULE fires-on-dirty/
+                      silent-on-clean, the .atdd substrate exclusion, and the
+                      persona boundary
 ```
 
 `lib/` is this provider's one structural departure from its parent. The
@@ -54,9 +56,9 @@ convention the coder extension itself enforces.
 | `bun_green_traceability_detector` | 10 × `coder.bun.green-*` | JS/TS source **and `.html` templates** — dual comment syntax |
 | `bun_ts_metrics_detector` | 7 × complexity / quality / dead-code / duplication | `.ts`, `.tsx` — native port of the python-pytest detectors |
 | `htmx_hypermedia_detector` | 6 × `coder.htmx.*` | `.html`, `.htm`, and JS/TS source (htmx markup lives in template literals) |
-| `bun_fullstack_detector` | 3 × `coder.bun.*` | JS/TS source, test files, and repo lockfiles |
+| `bun_fullstack_detector` | 2 × `coder.bun.*` | JS/TS source and repo lockfiles |
 | `bun_security_hygiene_detector` | 7 × security / logging / error-response | JS/TS source and templates |
-| `bun_tester_discipline_detector` | 15 × `tester.bun.*` | **test files only** — the persona boundary |
+| `bun_tester_discipline_detector` | 16 × `tester.bun.*` | **test files only** — the persona boundary |
 | `bun_clean_architecture_detector` | 12 × layering / composition / DTO / boundaries | `.ts`, `.tsx` — reads the import graph |
 
 All three declare their full rule set in `realizes_convention` as a **list**. A scalar

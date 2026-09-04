@@ -64,7 +64,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.htmx
-  summary: "Official ATDD coder-role extension for the full-stack Bun + htmx stack \u2014 45 convention\
+  summary: "Official ATDD coder-role extension for the full-stack Bun + htmx stack \u2014 44 convention\
     \ nodes across six families. GREEN/URN traceability (the Bun realization of the stack-neutral header\
     \ obligation Python and Vite also realize, extended to .html templates); hypermedia discipline (oob\
     \ ids, confirmations, progress signals, same-origin endpoints, fragment escaping); and Bun runtime\
@@ -141,7 +141,7 @@ entries:
   trust: official
   source: official/atdd.extension.tester.htmx
   summary: "Official ATDD tester-role extension for the full-stack Bun + htmx stack \u2014 the tester\
-    \ half of the pair whose coder half is atdd.extension.coder.htmx. Fifteen convention nodes covering\
+    \ half of the pair whose coder half is atdd.extension.coder.htmx. Sixteen convention nodes covering\
     \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
     \ tags), phase discipline (RED asserts behaviour, SMOKE asserts observably and substitutes nothing,\
     \ no self-skip, no shared live state), and the htmx-native obligation that an endpoint test asserts\
@@ -196,7 +196,7 @@ entries:
   summary: "Official ATDD full-stack Bun workspace provider \u2014 a REAL (non-stub) v1.1 runtime that\
     \ runs zero-dependency detectors under `bun`, which needs no build step, no node_modules and no transpile\
     \ config. Ships six detector families \u2014 bun_green_traceability_detector (10 rules), bun_ts_metrics_detector\
-    \ (7, a native port of the python-pytest TS detectors), bun_tester_discipline_detector (15), bun_clean_architecture_detector\
+    \ (7, a native port of the python-pytest TS detectors), bun_tester_discipline_detector (16), bun_clean_architecture_detector\
     \ (12), bun_security_hygiene_detector (7), htmx_hypermedia_detector (6) and bun_fullstack_detector\
     \ (3)."
   tags:
