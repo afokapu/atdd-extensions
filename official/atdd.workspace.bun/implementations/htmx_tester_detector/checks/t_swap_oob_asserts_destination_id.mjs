@@ -27,8 +27,11 @@ runCheck(RULE, (H, file, text) => {
     const body = caseBody(text, c.line);
     if (!MENTIONS_OOB.test(body)) continue;
     if (ASSERTS_ID.test(body)) continue;
+    // Name the case: the finding is per `it()`, and a report of three identical
+    // sentences makes the reader diff line numbers to tell them apart.
+    const title = (c.text.match(/["'`]([^"'`]+)["'`]/) || [])[1] || "this case";
     out.push({ line: c.line,
-      evidence: "test asserts an out-of-band swap is present but never asserts the destination id; htmx drops an oob element that matches nothing, silently",
+      evidence: `test case "${title}" asserts an hx-swap-oob element is present but never asserts the destination id; htmx drops an oob element that matches nothing, silently`,
       source_line: c.text });
   }
   return out;
