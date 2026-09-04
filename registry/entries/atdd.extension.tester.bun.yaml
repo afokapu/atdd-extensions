@@ -1,0 +1,34 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.tester.bun
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.tester.bun
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+requires_workspaces:
+  - id: atdd.workspace.bun
+    contract: "^1.0.0"
+
+categories:
+  - tester
+  - bun
+  - typescript
+  - acceptance-binding
+  - coverage
+  - official
+
+description: >-
+  Official ATDD tester-role extension for a bun test suite — 16 convention nodes covering test
+  identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers
+  tags) and phase discipline (RED fail-markers and behavioural assertions, SMOKE observability and
+  no collaborator substitution, no self-skip, no shared live state, security/input/telemetry
+  assertion). Mirrors convex.extension.tester.base rule for rule.

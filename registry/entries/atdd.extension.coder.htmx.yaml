@@ -1,0 +1,33 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.coder.htmx
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.coder.htmx
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+requires_workspaces:
+  - id: atdd.workspace.bun
+    contract: "^1.0.0"
+
+categories:
+  - coder
+  - htmx
+  - hypermedia
+  - bun
+  - source-validator
+  - official
+
+description: >-
+  Official ATDD coder-role extension for htmx hypermedia markup — 6 convention nodes covering out-
+  of-band swap ids, destructive-verb confirmations, in-flight progress signals, inline event
+  handlers, same-origin endpoints and fragment escaping. Layered ON TOP of
+  atdd.extension.coder.bun, never instead of it.

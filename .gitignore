@@ -13,3 +13,5 @@ build/
 # never committed. (Authored providers live in official/ and are tracked.)
 .atdd/resolved-workspaces/
 .atdd/runtime/
+registry/index.local.yaml
+.pytest_cache/

@@ -1,0 +1,352 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.coder.bun.
+#
+# CONFORMS TO CORE'S EDGE SCHEMA — src/atdd/planner/schemas/author/
+# relationship.schema.json, "ATDD relationship edge (spec 6)". That schema
+# defines a CLOSED type vocabulary (requires / blocks / enables / follows /
+# awaits / triggered_by / starts_with / runs_alongside / finishes_with /
+# relieves) plus typed metadata: foundation, constraint, control, strength,
+# confidence, reason.
+#
+# The metadata is what an ad-hoc verb set reaches for and misses. `complements`
+# is runs_alongside + mandatory + critical. `co-extracted-from` is
+# runs_alongside + start_to_start. `refines` is requires + finish_to_start.
+# Fewer verbs, more precision, and machine-checkable — every other extension in
+# this hub (and core's own coach graph) currently uses types outside the enum,
+# because nothing validates an extension's graph against it. This provider's
+# conformance suite does.
+#
+# Cross-package linkage travels through metadata aliases, never an edge: an
+# authored edge to a core node is refused by admission.
+graph_id: atdd.extension.coder.bun.relationships
+
+nodes:
+  - coder.bun.boundaries-http-client
+  - coder.bun.commons-application-no-integration
+  - coder.bun.commons-cross-feature-imports-in
+  - coder.bun.commons-domain-no-framework-import
+  - coder.bun.commons-domain-no-outbound
+  - coder.bun.complexity-cyclomatic
+  - coder.bun.complexity-length
+  - coder.bun.complexity-nesting
+  - coder.bun.composition-consumer
+  - coder.bun.composition-root
+  - coder.bun.dead-code-reachability
+  - coder.bun.design-hierarchy-import
+  - coder.bun.dto-mapper
+  - coder.bun.dto-placement
+  - coder.bun.dto-purity
+  - coder.bun.duplication-intra-layer
+  - coder.bun.error-response-bare-string
+  - coder.bun.error-response-code-format
+  - coder.bun.green-header-order
+  - coder.bun.green-header-purpose
+  - coder.bun.green-header-runtime
+  - coder.bun.green-header-tested-by
+  - coder.bun.green-urn-layer
+  - coder.bun.green-urn-marker
+  - coder.bun.green-urn-name-matches
+  - coder.bun.green-urn-pattern
+  - coder.bun.green-urn-side
+  - coder.bun.green-urn-wagon-feature
+  - coder.bun.layer-naming
+  - coder.bun.logging-console
+  - coder.bun.logging-structured
+  - coder.bun.quality-comments
+  - coder.bun.quality-mi
+  - coder.bun.security-hardcoded-secret
+  - coder.bun.security-missing-auth
+  - coder.bun.security-sql-injection
+  - coder.bun.server-uses-bun-serve
+  - coder.bun.single-lockfile
+
+edges:
+  - source_ref: coder.bun.green-urn-pattern
+    target_ref: coder.bun.green-urn-marker
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'The six-segment shape can only be checked once a marker is present; absence is the marker rule''s finding.'
+  - source_ref: coder.bun.green-urn-wagon-feature
+    target_ref: coder.bun.green-urn-pattern
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Segment grammar applies only after the segment count is known good.'
+  - source_ref: coder.bun.green-urn-name-matches
+    target_ref: coder.bun.green-urn-pattern
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Reads segment 3, which exists only once the shape validates.'
+  - source_ref: coder.bun.green-urn-side
+    target_ref: coder.bun.green-urn-pattern
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Reads segment 4, which exists only once the shape validates.'
+  - source_ref: coder.bun.green-urn-layer
+    target_ref: coder.bun.green-urn-pattern
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Reads segment 5, which exists only once the shape validates.'
+  - source_ref: coder.bun.green-header-tested-by
+    target_ref: coder.bun.green-urn-marker
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Two halves of the traceability loop: the URN says what the file IS, Tested-By what PROVES it.'
+  - source_ref: coder.bun.green-header-runtime
+    target_ref: coder.bun.green-header-purpose
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both single-line header fields recovered from one parse of the same comment block.'
+  - source_ref: coder.bun.green-header-order
+    target_ref: coder.bun.green-header-tested-by
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Order governs the arrangement of the very fields the other header rules require.'
+  - source_ref: coder.bun.green-urn-layer
+    target_ref: coder.bun.design-hierarchy-import
+    type: enables
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The layer segment this rule validates is what the layering rules read to judge an import.'
+  - source_ref: coder.bun.complexity-nesting
+    target_ref: coder.bun.complexity-cyclomatic
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Co-emitted per function from one extraction pass over the same brace-matched body.'
+  - source_ref: coder.bun.complexity-length
+    target_ref: coder.bun.complexity-cyclomatic
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Co-emitted per function from one extraction pass over the same brace-matched body.'
+  - source_ref: coder.bun.quality-comments
+    target_ref: coder.bun.quality-mi
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The comment ratio is literally a term in the maintainability-index formula: one computation, two reported facts.'
+  - source_ref: coder.bun.quality-mi
+    target_ref: coder.bun.complexity-cyclomatic
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'MI judges the FILE, complexity its functions; a file can pass every function threshold and still be unmaintainable by size.'
+  - source_ref: coder.bun.duplication-intra-layer
+    target_ref: coder.bun.dead-code-reachability
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both read structure ACROSS files rather than within one, and both need the whole scan tree at once.'
+  - source_ref: coder.bun.dead-code-reachability
+    target_ref: coder.bun.composition-root
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Reachability is measured FROM the structural roots that composition-root confines wiring to.'
+  - source_ref: coder.bun.security-sql-injection
+    target_ref: coder.bun.security-missing-auth
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Authorisation decides WHO may act, parameterisation what their input can DO; a boundary needs both.'
+  - source_ref: coder.bun.security-hardcoded-secret
+    target_ref: coder.bun.security-missing-auth
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'A leaked credential defeats the authorisation check the sibling rule requires.'
+  - source_ref: coder.bun.logging-structured
+    target_ref: coder.bun.logging-console
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'One bans the wrong channel, the other requires context on the right one; either alone leaves logs unusable.'
+  - source_ref: coder.bun.error-response-code-format
+    target_ref: coder.bun.error-response-bare-string
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'A structured payload must exist before its error code can be constrained.'
+  - source_ref: coder.bun.logging-structured
+    target_ref: coder.bun.error-response-bare-string
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both govern what a failure leaves behind: one for the operator, one for the caller.'
+  - source_ref: coder.bun.commons-domain-no-outbound
+    target_ref: coder.bun.design-hierarchy-import
+    type: requires
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'A specialization: the general inward-only rule, narrowed to the commons domain tree.'
+  - source_ref: coder.bun.commons-application-no-integration
+    target_ref: coder.bun.design-hierarchy-import
+    type: requires
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'A specialization: the general inward-only rule, narrowed to the commons application tree.'
+  - source_ref: coder.bun.commons-domain-no-framework-import
+    target_ref: coder.bun.commons-domain-no-outbound
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Outbound bans project LAYERS; this additionally bans runtime machinery, so the domain runs with no server started.'
+  - source_ref: coder.bun.commons-cross-feature-imports-in
+    target_ref: coder.bun.design-hierarchy-import
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The hierarchy governs VERTICAL edges between layers; this governs HORIZONTAL ones between sibling features.'
+  - source_ref: coder.bun.composition-consumer
+    target_ref: coder.bun.composition-root
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Two halves of one discipline: where wiring MAY happen, and that consumers must ACCEPT what they are given.'
+  - source_ref: coder.bun.dto-placement
+    target_ref: coder.bun.dto-purity
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Purity governs a DTO''s shape, placement its home; a pure DTO in the wrong layer still couples the boundary.'
+  - source_ref: coder.bun.dto-mapper
+    target_ref: coder.bun.dto-placement
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'The mapper translates the type whose home this rule fixes; both keep the boundary in one place.'
+  - source_ref: coder.bun.layer-naming
+    target_ref: coder.bun.design-hierarchy-import
+    type: enables
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'The layering rules can only read a layer that the naming rule guarantees is declared.'
+  - source_ref: coder.bun.boundaries-http-client
+    target_ref: coder.bun.design-hierarchy-import
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Confines outbound transport to integration, which is the hierarchy''s own home for it.'
+  - source_ref: coder.bun.single-lockfile
+    target_ref: coder.bun.server-uses-bun-serve
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Both hold the stack decision itself: Bun''s server, Bun''s resolver.'
+  - source_ref: coder.bun.server-uses-bun-serve
+    target_ref: coder.bun.composition-root
+    type: enables
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'server.ts is a composition root precisely BECAUSE Bun.serve is the assembly point of a full-stack Bun app.'
+  - source_ref: coder.bun.server-uses-bun-serve
+    target_ref: coder.bun.boundaries-http-client
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'One governs the server you run, the other the client you call out with.'

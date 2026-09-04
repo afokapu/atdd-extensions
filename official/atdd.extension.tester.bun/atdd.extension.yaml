@@ -1,0 +1,57 @@
+schema_version: "1.0.0"
+
+# Persona-aware extension id (#1343 canonical grammar):
+#   <publisher>.extension.<persona>.<artifact-name>,  persona in {planner,tester,coder,coach}
+#
+# Test identity, acceptance binding and phase discipline for a `bun test` suite. Mirrors
+# convex.extension.tester.base rule for rule where the obligation applies to this stack.
+#
+# Four extensions target atdd.workspace.bun — coder.bun / coder.htmx / tester.bun /
+# tester.htmx — the same shape frontend.extension.coder.vite and .astro use against
+# one frontend.workspace.runtime. Two axes, kept orthogonal: PERSONA (source vs
+# suite) and STACK (runtime vs library).
+extension_id: atdd.extension.tester.bun
+version: "0.1.0"
+kind: extension
+role: tester
+flow_wagon: validate-test-surface
+feature: bun-tester-conventions
+
+owns:
+  conventions:
+    - conventions/tester.bun.acceptance-binding-declared.convention.yaml
+    - conventions/tester.bun.covers-tag-well-formed.convention.yaml
+    - conventions/tester.bun.fragment-asserts-markup.convention.yaml
+    - conventions/tester.bun.imports-bun-test.convention.yaml
+    - conventions/tester.bun.no-self-skip.convention.yaml
+    - conventions/tester.bun.phase-declared.convention.yaml
+    - conventions/tester.bun.red-behavioral-assertion.convention.yaml
+    - conventions/tester.bun.red-fails-first.convention.yaml
+    - conventions/tester.bun.routing-runtime-family.convention.yaml
+    - conventions/tester.bun.security-auth.convention.yaml
+    - conventions/tester.bun.security-input.convention.yaml
+    - conventions/tester.bun.smoke-no-collaborator-substitution.convention.yaml
+    - conventions/tester.bun.smoke-observable-assertion.convention.yaml
+    - conventions/tester.bun.telemetry-emit.convention.yaml
+    - conventions/tester.bun.test-carries-urn-identity.convention.yaml
+    - conventions/tester.bun.test-isolation-no-live-state.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  # `core: []` — present and EMPTY, which is exactly what
+  # `atdd author extension init` scaffolds. Every other extension in this hub
+  # instead lists five `atdd.core.*` node ids, and none of them exists: the 231
+  # real core nodes are namespaced coder.* / tester.* / coach.*, and admission
+  # never validates the field. An empty list is the honest declaration.
+  core: []
+  workspaces:
+    - id: atdd.workspace.bun
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true

@@ -1,0 +1,36 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.coder.bun
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.coder.bun
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+requires_workspaces:
+  - id: atdd.workspace.bun
+    contract: "^1.0.0"
+
+categories:
+  - coder
+  - bun
+  - typescript
+  - traceability
+  - clean-architecture
+  - source-validator
+  - official
+
+description: >-
+  Official ATDD coder-role extension for the Bun / TypeScript runtime — 38 convention nodes across
+  five families: GREEN/URN traceability (extended to .html templates), TypeScript metrics ported
+  natively from python-pytest, security / logging / error-response hygiene, clean architecture
+  (layering, composition, DTOs, boundaries, naming), and the Bun runtime decisions themselves.
+  Pair it with atdd.extension.tester.bun; add atdd.extension.coder.htmx only if the app serves
+  hypermedia.

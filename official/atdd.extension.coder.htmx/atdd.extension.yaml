@@ -1,0 +1,47 @@
+schema_version: "1.0.0"
+
+# Persona-aware extension id (#1343 canonical grammar):
+#   <publisher>.extension.<persona>.<artifact-name>,  persona in {planner,tester,coder,coach}
+#
+# HYPERMEDIA obligations for htmx markup. Layered ON TOP of atdd.extension.coder.bun, never instead
+# of it: htmx is a library, Bun is the runtime underneath.
+#
+# Four extensions target atdd.workspace.bun — coder.bun / coder.htmx / tester.bun /
+# tester.htmx — the same shape frontend.extension.coder.vite and .astro use against
+# one frontend.workspace.runtime. Two axes, kept orthogonal: PERSONA (source vs
+# suite) and STACK (runtime vs library).
+extension_id: atdd.extension.coder.htmx
+version: "0.1.0"
+kind: extension
+role: coder
+flow_wagon: validate-source-surface
+feature: htmx-coder-conventions
+
+owns:
+  conventions:
+    - conventions/coder.htmx.destructive-verb-confirms.convention.yaml
+    - conventions/coder.htmx.endpoint-not-absolute-url.convention.yaml
+    - conventions/coder.htmx.fragment-interpolation-escaped.convention.yaml
+    - conventions/coder.htmx.mutation-signals-progress.convention.yaml
+    - conventions/coder.htmx.no-inline-event-handler.convention.yaml
+    - conventions/coder.htmx.oob-swap-carries-id.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations: []
+  schemas: []
+  gates: []
+  scopes: []
+
+depends_on:
+  # `core: []` — present and EMPTY, which is exactly what
+  # `atdd author extension init` scaffolds. Every other extension in this hub
+  # instead lists five `atdd.core.*` node ids, and none of them exists: the 231
+  # real core nodes are namespaced coder.* / tester.* / coach.*, and admission
+  # never validates the field. An empty list is the honest declaration.
+  core: []
+  workspaces:
+    - id: atdd.workspace.bun
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true
