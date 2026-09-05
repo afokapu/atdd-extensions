@@ -97,6 +97,74 @@ time, therefore not a runtime edge — is counted as reachable. On the shipped
 fixture the Python detector finds one dead file; this one finds two. Same
 obligation, measured correctly, and possible only because the runtime is Bun.
 
+## Installing into a consumer repo
+
+Verified end-to-end against a fresh `atdd init` repository (atdd 4.40.0), not
+assumed. Two steps are not obvious, and one of them is a core defect.
+
+**1. `atdd init` does not create `.atdd/substrate.yaml`.** Without it there is no
+registry and `atdd substrate add bun` fails with `no artifact matches 'bun'`. No
+command creates it either — `atdd registry` only has `update`. Author it by hand:
+
+```yaml
+# .atdd/substrate.yaml
+schema_version: "1.0.0"
+registries:
+  - id: atdd-official
+    type: path
+    source: /absolute/path/to/atdd-extensions
+    path: registry/index.yaml
+    trust: official
+```
+
+**2. Install with `--path`, not by ref.** Ref install does not work today, and the
+cause is in core rather than in this registry: `substrate/commands.py` resolves an
+entry's relative `source` against the CONSUMER root instead of the registry root, so
+the committed index's `official/atdd.workspace.bun` resolves to
+`<consumer>/official/atdd.workspace.bun` and admission refuses it. Until that is
+fixed:
+
+```bash
+H=/absolute/path/to/atdd-extensions/official
+atdd substrate add --path $H/atdd.workspace.bun          # the runtime, first
+atdd substrate add --path $H/atdd.extension.coder.bun    # source obligations
+atdd substrate add --path $H/atdd.extension.tester.bun   # suite obligations
+atdd substrate add --path $H/atdd.extension.coder.htmx   # only if you serve hypermedia
+atdd substrate add --path $H/atdd.extension.tester.htmx
+atdd substrate bind                                       # -> 62 bound, 0 legacy-fallback
+```
+
+`tools/build_registry_index.py --absolute` writes a gitignored `index.local.yaml`
+with absolute sources, which makes ref install work on one machine. It is a
+workaround, not a fix — do not commit it.
+
+## Adopting on a repo that already has code
+
+`atdd enforce` exits 1 the moment the extensions are bound, because a repo written
+before them carries debt — chiefly the GREEN traceability headers. Record a baseline
+and improve from there:
+
+```bash
+atdd enforce --paths src --record-ratchet .atdd/bun-ratchet.yaml
+atdd enforce --paths src --ratchet .atdd/bun-ratchet.yaml   # exit 0, debt held flat
+```
+
+New debt is then refused while existing debt stays green:
+
+```
+[FAIL] coder.bun.green-urn-marker 6 violation(s) — ABOVE ratchet baseline 5 (+1)
+```
+
+## The vendored substrate is excluded from your scan
+
+Installing puts ~300 files under `.atdd/extensions/**` and `.atdd/workspaces/**`,
+including 61 deliberately-dirty detector fixtures. Those are never reported as your
+violations: `adapter/run.py` and `cli/scan.py` both merge `.atdd/workspaces` and
+`.atdd/extensions` into `ATDD_SCAN_EXCLUDES` at the two chokepoints every detector
+crosses. Measured on a real install — 61 dirty fixtures vendored in, **0** findings
+from them, all 41 findings in `src/`.
+
+
 ## Running it
 
 ```bash

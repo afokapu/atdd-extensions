@@ -43,3 +43,11 @@ Core refuses an orphan convention node (`compose.extension_orphan_nodes`, extend
 **one-rule stack extension is therefore structurally impossible** — its only node can
 never be an endpoint of an intra-package edge. An earlier cut of this package shipped
 a single rule and `atdd validate package` rejected it outright.
+
+## Install
+
+The procedure, its two non-obvious steps, and the ratchet adoption path are
+documented once in [`atdd.workspace.bun`](../atdd.workspace.bun/README.md#installing-into-a-consumer-repo)
+— the runtime must be installed first, and `atdd substrate add` needs `--path` until
+core resolves a registry entry's `source` against the registry root rather than the
+consumer root.

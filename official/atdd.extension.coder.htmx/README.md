@@ -19,3 +19,11 @@ Three of these exist because **htmx removes the place the obligation used to liv
 a component framework escapes interpolation automatically, a handler is where the
 confirmation used to sit, and a page navigation gave progress feedback for free.
 The migration loses all three silently.
+
+## Install
+
+The procedure, its two non-obvious steps, and the ratchet adoption path are
+documented once in [`atdd.workspace.bun`](../atdd.workspace.bun/README.md#installing-into-a-consumer-repo)
+— the runtime must be installed first, and `atdd substrate add` needs `--path` until
+core resolves a registry entry's `source` against the registry root rather than the
+consumer root.
