@@ -492,12 +492,27 @@ function scanConsumerRoot(croot) {
       const declared = field === "interlockingId" ? declaredIds : declaredRoutes;
       if (declared.has(value)) continue;
       const line = lineOfIndex(text, m.index);
+      // ANCHORED AT THE DECLARATION, NOT THE TEST — deliberately.
+      //
+      // This is a CODER rule, and this provider's persona doctrine
+      // (conformance/test_persona_scoping.py) is that a coder family never REPORTS
+      // on a test file: a consumer adopting atdd.extension.coder.bun without the
+      // tester extension would otherwise see a coder rule_id land on a .test.ts,
+      // which is the cross-contamination that stops the two extensions being
+      // adopted and ratcheted independently.
+      //
+      // Nothing is lost. The finding is a statement about CLOSURE of the declared
+      // route space — "something asserts a route this space does not contain" — so
+      // the route space is the honest anchor, and the offending test file and line
+      // are named in the evidence. Reading the test is fine; reporting on it is not.
+      const anchor = interlockingPathFor(croot, value, field) || rel(file, croot);
       violations.push(
         mk(
-          rel(file, croot),
-          line,
+          anchor,
+          anchor === rel(file, croot) ? line : 1,
           "trace_to_declaration",
-          `interlocking trace test asserts trace.${field} === "${value}", which resolves to no declared ` +
+          `interlocking trace test "${rel(file, croot)}" (line ${line}) asserts trace.${field} === ` +
+            `"${value}", which resolves to no declared ` +
             `${field === "interlockingId" ? "interlocking" : "route"} in the YAML route space; the trace must ` +
             `bind the executed route back to its declaration`,
           lineAt(text, line),
@@ -507,6 +522,16 @@ function scanConsumerRoot(croot) {
   }
 
   return violations;
+}
+
+
+// The declaration this closure statement is about: the interlocking route space.
+// Used to anchor trace_to_declaration findings at the YAML rather than at a test file
+// (see the note at the report site). Falls back to null when no route space is found,
+// in which case the caller keeps its original anchor.
+function interlockingPathFor(croot, _value, _field) {
+  const files = interlockingFiles(croot);
+  return files.length ? rel(files[0], croot) : null;
 }
 
 function main() {

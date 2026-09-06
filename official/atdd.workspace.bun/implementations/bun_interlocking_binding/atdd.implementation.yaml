@@ -8,14 +8,20 @@ contract_version: 1.1.0
 # convex.workspace.runtime's convex_interlocking_binding 1:1. ONE rule_id, FIVE binding
 # directions — the failing direction is named in the evidence, never in a new rule_id.
 #
-# PERSONA NOTE. Four directions read SOURCE (src/trains/**, server.ts) and the declared
-# route space (plan/**). The fifth, `trace_to_declaration`, reads e2e trace tests — as it
-# does in the python original and the Convex mirror, because the obligation is FIVE-way
-# closure and dropping a direction would make the rule a partial claim. This provider's
-# conformance/test_persona_scoping.py forbids a coder family reading a test file; the
-# guard it applies is a test-ONLY tree, on which this detector finds no consumer root and
-# emits nothing. The tension is real and is flagged for a ruling rather than resolved
-# silently — see the extension README.
+# PERSONA NOTE — RESOLVED. Four directions read SOURCE (src/trains/**, server.ts) and
+# the declared route space (plan/**). The fifth, `trace_to_declaration`, READS e2e trace
+# tests, as it does in the python original and the Convex mirror, because the obligation
+# is FIVE-way closure and dropping a direction would make the rule a partial claim.
+#
+# It originally ANCHORED its finding on the .test.ts it had read, which broke this
+# provider's persona doctrine for real: a consumer adopting atdd.extension.coder.bun
+# without the tester extension would have seen a coder rule_id land on a test file. The
+# finding is now anchored at the interlocking YAML — the honest artifact, since the claim
+# is about closure of the route space — with the offending test file and line named in
+# the evidence. Reading a test is fine; reporting on one is not, and nothing is lost.
+#
+# conformance/test_persona_scoping.py now proves this over MIXED trees, not only the
+# test-only tree whose emptiness let the violation through.
 realizes_convention:
 - coder.bun.interlocking-bilateral-binding
 emits_rule_ids:
