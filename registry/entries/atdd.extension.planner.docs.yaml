@@ -1,12 +1,12 @@
 schema_version: "1.0.0"
 
-artifact_id: atdd.extension.docs.base
+artifact_id: atdd.extension.planner.docs
 kind: extension
 status: official
 publisher: atdd
 
 source:
-  repository: ./official/atdd.extension.docs.base
+  repository: ./official/atdd.extension.planner.docs
   type: local
 
 version: "0.1.0"

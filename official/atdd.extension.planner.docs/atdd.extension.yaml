@@ -21,7 +21,7 @@ schema_version: "1.0.0"
 #     runtime; referenced by id + contract range, never bundled here.
 #   - core<->extension references are NARRATIVE (README + node bodies), never graph
 #     edges (boundary spec §6.2).
-extension_id: atdd.extension.docs.base
+extension_id: atdd.extension.planner.docs
 version: "0.1.0"
 kind: extension
 role: planner

@@ -20,5 +20,5 @@ registry/index.local.yaml
 # must be proven NOT to trip the authored-format rule, and an exclusion you only
 # assert is an exclusion you have not tested. This is fixture data, not build
 # output, so the blanket `dist/` rule above must not swallow it.
-!official/atdd.extension.docs.base/implementations/docs-capability/fixtures/**/dist/
-!official/atdd.extension.docs.base/implementations/docs-capability/fixtures/**/dist/**
+!official/atdd.extension.planner.docs/implementations/docs-capability/fixtures/**/dist/
+!official/atdd.extension.planner.docs/implementations/docs-capability/fixtures/**/dist/**

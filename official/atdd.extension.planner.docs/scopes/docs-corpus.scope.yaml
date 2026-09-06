@@ -7,27 +7,37 @@ schema_version: "1.0.0"
 # extension's knowledge and no part of it appears in core (companion §8's
 # anti-theatre test).
 #
-# `docs/dist/**` is deliberately NOT a selector. It is render OUTPUT: excluded from
-# the authored-format rule, never an input to the render, and never required to be
-# declared. The detector excludes it by PATH rather than by gitignore status, so the
-# check is identical whether or not the tree has been built.
-scope_id: atdd.extension.docs.base.corpus
+# `docs/dist/**` is excluded on every selector that could otherwise reach it. It is
+# render OUTPUT: excluded from the authored-format rule, never an input to the
+# render, and never required to be declared. The detector excludes it by PATH rather
+# than by gitignore status, so the check is identical whether or not the tree has
+# been built — and the clean fixture ships a `docs/dist/` tree to prove it.
+scope_id: atdd.extension.planner.docs.corpus
+artifact_kind: source_file
+platform: local_fs
 
 selectors:
   # --- the authored corpus: every document identity + relationship edge (§5) ---
-  - id: authored_adoc
+  - selector_id: planner.docs.authored-adoc
+    type: path_glob
     description: Authored AsciiDoc documents. The corpus over which doc-id uniqueness and edge resolution are computed.
     include:
       - "docs/**/*.adoc"
+    exclude:
+      - "docs/dist/**"
 
   # --- format violations: markdown that survived (or bypassed) the migration (§4) ---
-  - id: authored_markdown
+  - selector_id: planner.docs.authored-markdown
+    type: path_glob
     description: Markdown beneath docs/, which the authored-format rule rejects outside docs/dist/.
     include:
       - "docs/**/*.md"
+    exclude:
+      - "docs/dist/**"
 
   # --- canonical area indexes (§4) ---
-  - id: area_index
+  - selector_id: planner.docs.area-index
+    type: path_glob
     description: The index.adoc each authored area of the canonical tree must carry.
     include:
       - "docs/index.adoc"
@@ -38,18 +48,21 @@ selectors:
       - "docs/archive/index.adoc"
 
   # --- architecture decision records + their derived registry (§6) ---
-  - id: adr_files
+  - selector_id: planner.docs.adr-files
+    type: path_glob
     description: 'One decision per file, named adr-YYYYMMDD-NNN-<slug>.adoc, carrying the :decides: edge the registry is projected from.'
     include:
       - "docs/architecture/decisions/adr-*.adoc"
 
-  - id: decision_registry
+  - selector_id: planner.docs.decision-registry
+    type: path_glob
     description: 'The derived ADR registry. Compared against the projection of :decides: edges; never hand-maintained.'
     include:
       - "docs/architecture/decisions/index.adoc"
 
   # --- the archive: WHAT WAS, never promoted into current truth (§2) ---
-  - id: archive
+  - selector_id: planner.docs.archive
+    type: path_glob
     description: Historical, non-current documents. Archive destinations outside this prefix are rejected.
     include:
       - "docs/archive/**/*.adoc"

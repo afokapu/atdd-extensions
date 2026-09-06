@@ -1,4 +1,4 @@
-# `atdd.extension.docs.base`
+# `atdd.extension.planner.docs`
 
 The opinionated documentation model ATDD **recommends**, shipped as an extension so
 that it is **policy, not a lifecycle-core dependency**.
@@ -12,6 +12,18 @@ consumer that has not installed one.
 This package implements handoff spec **2 of 2**, *Standard documentation extension*.
 Its companion, *Documentation lifecycle contract*, is the core unit. Parent issue
 **#1782**.
+
+## Naming
+
+The id follows core's persona-aware grammar (#1343):
+`<publisher>.extension.<persona>.<name>`, persona ∈ {`planner`, `tester`, `coder`,
+`coach`}. Documentation is an **authored-surface** concern, so the persona is
+`planner` and every rule id shares that prefix — matching
+`atdd.extension.planner.controlled-language`, the closest sibling in the hub, which
+likewise governs authored artifacts rather than source or tests.
+
+`atdd validate package` refuses a four-segment id whose persona is not in that set,
+so the name is enforced rather than conventional.
 
 ## What this owns, and what core owns
 
@@ -113,12 +125,16 @@ found missing when the same lifecycle resolution turned up implemented seven tim
 ## Rollout is a measurement, not a phase
 
 All nine rules ship `disposition: advisory` with a concrete `escalate_when` **from
-birth**. Rollout is a measurement checkpoint that flips dispositions once the corpus
+birth**, recorded the way core records it — in a `disposition_rationale` term whose
+`values` carry the measurement under a **date-stamped key**
+(`measured_2026_09_06:`), following `coach.issue.feature-binding-must-resolve`, the
+one existing precedent and the node #1782 cites. The date in the key is the
+anti-staleness mechanism: it is what let #1782 notice a recorded `638 of 808`
+against a live `478 of 908`. Rollout is a measurement checkpoint that flips dispositions once the corpus
 is compatible — not a later build slice that forces every earlier slice to ship with
 no escalation story and then re-opens all of them.
 
-Every `escalate_when` here carries a measurement **taken on 2026-09-06**, not a
-recalled one. On `afokapu/atdd @ main`: **71** markdown beneath `docs/`, **18**
+Every one here carries a measurement **taken on 2026-09-06**, not a recalled one. On `afokapu/atdd @ main`: **71** markdown beneath `docs/`, **18**
 non-dotfile markdown at the repository root (**89** total, 90 counting
 `.atdd-launch-prompt.md`), and **0** `.adoc` anywhere. The corpus is 0% compatible,
 which is precisely why advisory is the only honest disposition today. Re-take the
@@ -130,7 +146,7 @@ additive landing.
 ## Layout
 
 ```
-atdd.extension.docs.base/
+atdd.extension.planner.docs/
 ├── atdd.extension.yaml
 ├── conventions/                 # the nine obligations (declarative)
 ├── scopes/docs-corpus.scope.yaml

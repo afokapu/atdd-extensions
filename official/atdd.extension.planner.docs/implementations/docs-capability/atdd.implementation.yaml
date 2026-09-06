@@ -4,7 +4,7 @@ kind: implementation
 # The python-pytest realization of the nine standard documentation obligations, and
 # the DocumentationCapability core discovers over the `atdd.documentation` entry
 # point (handoff spec 2 §3 / companion §5 — THE BINDING).
-implementation_id: planner.docs.base.impl
+implementation_id: planner.docs.impl
 targets_workspace: atdd.workspace.python-pytest
 contract_version: "1.1.0"
 

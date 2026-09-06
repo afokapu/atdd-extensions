@@ -1,6 +1,6 @@
 schema_version: "1.0.0"
 
-# Extension-LOCAL relationship graph for atdd.extension.docs.base.
+# Extension-LOCAL relationship graph for atdd.extension.planner.docs.
 #
 # IMPORTANT (boundary spec §6.2): core<->extension edges are NOT authored here. The
 # DocumentationCapability seam this package implements (companion §5) is an ENTRY
@@ -16,7 +16,7 @@ schema_version: "1.0.0"
 # not decorative: they are why the detector evaluates identity before uniqueness and
 # uniqueness before edge resolution. A resolver that ran first would have to invent
 # the id set it resolves against — the #1758 defect, arrived at by a different route.
-graph_id: atdd.extension.docs.base.relationships
+graph_id: atdd.extension.planner.docs.relationships
 
 nodes:
   - planner.docs.adr-registry-derived
