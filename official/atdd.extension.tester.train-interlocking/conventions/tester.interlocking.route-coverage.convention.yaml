@@ -9,7 +9,7 @@ statement: >-
   MUST have at least one end-to-end test that exercises it — a test that names the route so its resolution
   to the expected `train_id` is proven through the production InterlockingRunner -> TrainRunner path
   (core afokapu/atdd#1251), not asserted descriptively. This is the stack-bound tester obligation owned by
-  the train-interlocking-enforcement extension; its python-pytest realization (the
+  the atdd.extension.tester.train-interlocking extension; its python-pytest realization (the
   `tester.interlocking.route-coverage.impl` detector) scans the interlocking route space against the
   consumer's `e2e/**/*.py` tests and flags any declared route with no covering test. An admissible route
   with no e2e test is a SILENT-GREEN GAP: the branch of the interlocking that route represents is never

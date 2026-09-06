@@ -7,7 +7,7 @@ statement: >-
   A test that asserts on the runtime trace emitted by interlocking execution MUST bind that trace back to
   the source interlocking declaration — it must assert every required trace field so the executed route is
   traceable to the interlocking YAML it came from (core afokapu/atdd#1248 route space, #1251 runtime trace).
-  This is the stack-bound tester obligation owned by the train-interlocking-enforcement extension; its
+  This is the stack-bound tester obligation owned by the atdd.extension.tester.train-interlocking extension; its
   python-pytest realization (the `tester.interlocking.route-coverage.impl` detector) scans the consumer's
   `e2e/**/*.py` interlocking trace tests and flags any that reference the runtime `trace` but omit one or
   more required binding fields — the `test_interlocking_trace_binds_declared_route` check. A trace assertion

@@ -7,7 +7,7 @@ statement: >-
   A test that exercises an interlocking MUST drive the production runtime objects — `InterlockingRunner`
   (route resolution) and `TrainRunner` (linear train execution), the core afokapu/atdd#1251 call model —
   and MUST NOT substitute a mock, a patched runner, a monkeypatched runner method, or a hand-built route
-  resolver for them. This is the stack-bound tester obligation owned by the train-interlocking-enforcement
+  resolver for them. This is the stack-bound tester obligation owned by the atdd.extension.tester.train-interlocking
   extension; its python-pytest realization (the `tester.interlocking.route-coverage.impl` detector) scans
   the consumer's `e2e/**/*.py` interlocking tests and flags any that (a) fail to reference both production
   runner symbols, or (b) contain a forbidden mock/patch/monkeypatch/hand-resolver pattern around runner

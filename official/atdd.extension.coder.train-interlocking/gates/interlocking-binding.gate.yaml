@@ -6,7 +6,7 @@ schema_version: "1.0.0"
 # Station Master reachability, TrainRunner delegation, and trace (core afokapu/atdd#1248/#1251). A
 # broken binding direction is a silent declaration/runtime/station/trace drift — a hard defect — so this
 # gate is CI/strict.
-gate_id: atdd.extension.train-interlocking-enforcement.binding
+gate_id: atdd.extension.coder.train-interlocking.binding
 realizes_convention: coder.train.interlocking-bilateral-binding
 implementation: implementations/interlocking-binding
 scope: scopes/interlocking-targets.scope.yaml

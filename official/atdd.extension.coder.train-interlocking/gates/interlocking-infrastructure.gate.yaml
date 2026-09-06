@@ -6,7 +6,7 @@ schema_version: "1.0.0"
 # an InterlockingRunner route-control layer wired into the Station Master ->
 # TrainRunner path (core afokapu/atdd#1251). Missing/unwired runtime infrastructure
 # is a hard defect, so this gate is CI/strict.
-gate_id: atdd.extension.train-interlocking-enforcement.infrastructure
+gate_id: atdd.extension.coder.train-interlocking.infrastructure
 # The five granular coder.train.interlocking-* conventions authored by #25 all gate here (CI/strict).
 realizes_convention:
   - coder.train.interlocking-runner-exists

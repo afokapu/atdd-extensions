@@ -1,13 +1,15 @@
 schema_version: "1.0.0"
 
-# Consumer-repo target selectors for the train-interlocking-enforcement extension.
+# Consumer-repo target selectors for the atdd.extension.tester.train-interlocking
+# extension. Shared verbatim with the coder sibling
+# (atdd.extension.coder.train-interlocking) — the full selector set is a closure
+# over every interlocking surface, and both packages' validators draw from it.
 #
 # A scope binds a convention's enforcement to the consumer files it inspects. The
-# infrastructure validator (#25) reads the train runtime code + Station Master;
-# the coverage validator (#26) reads the interlocking route space + the e2e tests
-# that must cover it. Selector globs match the canonical homes locked by core
+# coverage validator reads the interlocking route space + the e2e tests that must
+# cover it. Selector globs match the canonical homes locked by core
 # afokapu/atdd#1248 (interlocking artifact) and afokapu/atdd#1251 (runtime).
-scope_id: atdd.extension.train-interlocking-enforcement.targets
+scope_id: atdd.extension.tester.train-interlocking.targets
 
 selectors:
   # --- interlocking route space (authoritative for guarded routes; #1248) ---

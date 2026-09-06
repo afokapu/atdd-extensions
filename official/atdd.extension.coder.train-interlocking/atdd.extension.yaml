@@ -1,15 +1,15 @@
 schema_version: "1.0.0"
 
-# Official ATDD train-interlocking-enforcement extension.
+# Official ATDD train-interlocking coder extension.
 #
-# SCAFFOLD (afokapu/atdd-extensions#24). This issue ships the PACKAGE + DISCOVERY
-# substrate only: the manifest, the convention home, relationships, scopes, gates,
-# and two implementation manifests with src/tests/fixtures skeletons. The actual
-# validator decision logic + convention node bodies are authored by sibling
-# workers:
-#   #25 -> coder runtime-infrastructure convention + interlocking-infrastructure validator
-#   #26 -> tester route-coverage convention      + interlocking-coverage validator
-#   #27 -> bilateral declaration<->runtime binding convention + checks
+# PERSONA SPLIT (afokapu/atdd#1531). This package is the coder-lane half of the
+# former `atdd.extension.train-interlocking-enforcement`, which declared
+# `role: coder` yet co-hosted four `tester.interlocking.*` conventions — a
+# persona-lie the four-segment grammar (afokapu/atdd#1343) exists to prevent.
+# The tester surface now lives in the sibling `atdd.extension.tester.train-interlocking`.
+# This package owns the SOURCE-surface (coder) rules: the InterlockingRunner
+# runtime-infrastructure conventions, the systemic bilateral-binding closure,
+# and the runtime-machinery definition anchors.
 #
 # Boundary model (CONTRIBUTING.md "The Four Layers" + boundary spec §6.2):
 #   - This EXTENSION owns the rules (conventions) + implementations (validators).
@@ -18,6 +18,10 @@ schema_version: "1.0.0"
 #   - Each implementation declares the provider it targets + a contract_version.
 #   - core<->extension references (the train-interlocking core design) are declared
 #     NARRATIVELY here + in README, never as relationship-graph edges (§6.2).
+#   - The one cross-persona edge to the tester package's
+#     `tester.interlocking.trace-binds-declared-route` is declared NARRATIVELY in
+#     README (bilateral-binding's trace_to_declaration direction), never as a
+#     graph edge — cross-extension edges are forbidden (§6.2).
 #
 # Core design this extension enforces (already merged to atdd core main):
 #   afokapu/atdd#1246 — parent: train interlocking route-control model
@@ -26,38 +30,26 @@ schema_version: "1.0.0"
 #   afokapu/atdd#1251 — runtime: InterlockingRunner called by Station Master,
 #                       delegates to TrainRunner
 #   afokapu/atdd-extensions#23 — extension enforcement parent
-extension_id: atdd.extension.train-interlocking-enforcement
+extension_id: atdd.extension.coder.train-interlocking
 version: "0.1.0"
 kind: extension
 
-# This extension's headline deliverable is proving the consumer-repo RUNTIME
+# This package's headline deliverable is proving the consumer-repo RUNTIME
 # infrastructure (InterlockingRunner) exists and is wired into the Station Master
-# -> TrainRunner path — a source-surface (coder) concern. It ALSO co-hosts the
-# tester route-coverage surface (#26). A package carries a single role; the
-# tester surface is co-hosted and documented in README. Revisit if #25/#26
-# decide the coverage half warrants a sibling package.
+# -> TrainRunner path — a source-surface (coder) concern. Every convention it
+# owns is a `coder.train.*` rule, so the persona segment is honest.
 role: coder
 flow_wagon: validate-source-surface
 feature: train-interlocking-enforcement
 
-# What this package owns. In this SCAFFOLD slice the convention bodies are NOT
-# yet authored (#25/#26 add them); `owns.conventions` is therefore empty and the
-# conventions/ directory ships a README placeholder describing what lands there.
-# The two implementation manifests ARE real, discoverable units (each a directory
-# with atdd.implementation.yaml + src/tests/fixtures skeletons) so #25/#26 have a
-# concrete home; their decision modules are NotImplementedError stubs.
 owns:
   conventions:
-    # union of #25 (coder) + #26 (tester) interlocking conventions
+    # Five granular runtime-infrastructure rules (#25).
     - conventions/coder.train.interlocking-runner-exists.convention.yaml
     - conventions/coder.train.interlocking-resolution-model-exists.convention.yaml
     - conventions/coder.train.station-master-interlocking-routing.convention.yaml
     - conventions/coder.train.interlocking-delegates-to-trainrunner.convention.yaml
     - conventions/coder.train.interlocking-does-not-carry-cargo.convention.yaml
-    - conventions/tester.interlocking.route-coverage.convention.yaml
-    - conventions/tester.interlocking.production-runner-used.convention.yaml
-    - conventions/tester.interlocking.smoke-coverage-for-station-master.convention.yaml
-    - conventions/tester.interlocking.trace-binds-declared-route.convention.yaml
     # #27 bilateral declaration<->runtime<->station<->trace binding (the systemic-closure convention)
     - conventions/coder.train.interlocking-bilateral-binding.convention.yaml
     # runtime-machinery definition anchors (kind: family, advisory) — coder-layer
@@ -71,12 +63,10 @@ owns:
     - relationships.yaml
   implementations:
     - implementations/interlocking-infrastructure
-    - implementations/interlocking-coverage
     - implementations/interlocking-binding
   schemas: []
   gates:
     - gates/interlocking-infrastructure.gate.yaml
-    - gates/interlocking-coverage.gate.yaml
     - gates/interlocking-binding.gate.yaml
   scopes:
     - scopes/interlocking-targets.scope.yaml
@@ -85,13 +75,14 @@ depends_on:
   # `core: []` — the five `atdd.core.*` ids previously listed here do not exist.
   # The 231 real core nodes are namespaced coder.* / tester.* / coach.*, and
   # admission never validates this field, so the declaration pointed at nothing.
-  # An empty list is what `atdd author extension init` scaffolds.
+  # An empty list is what `atdd author extension init` scaffolds. (Carried over
+  # from main's 9ccb9a3, which dropped these dead deps after this branch forked.)
   core: []
-  # The reusable runtime all three implementations target. The infrastructure
-  # validator (scans python/ runtime code), the coverage validator (scans e2e/
-  # production tests), and the bilateral-binding validator (#27; scans the
-  # declaration<->runtime<->station<->trace closure) all run inside the
-  # python-pytest provider. Referenced by id + contract range; never copied in.
+  # The reusable runtime both implementations target. The infrastructure
+  # validator (scans python/ runtime code) and the bilateral-binding validator
+  # (#27; scans the declaration<->runtime<->station<->trace closure) both run
+  # inside the python-pytest provider. Referenced by id + contract range; never
+  # copied in.
   workspaces:
     - id: atdd.workspace.python-pytest
       contract: "^1.0.0"

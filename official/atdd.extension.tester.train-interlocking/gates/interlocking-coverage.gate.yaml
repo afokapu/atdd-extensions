@@ -7,7 +7,7 @@ schema_version: "1.0.0"
 # and trace-binds-declared-route. Final severity is a property of each convention
 # node's metadata.disposition (all four land strict); this gate records the runtime
 # stage. Default is CI/strict.
-gate_id: atdd.extension.train-interlocking-enforcement.coverage
+gate_id: atdd.extension.tester.train-interlocking.coverage
 # Primary realized convention (the headline binding); the same gate run covers all
 # four conventions the implementation emits — enumerated below + edged in
 # relationships.yaml (convention -> gate, type: gated-by).

@@ -7,7 +7,7 @@ statement: >-
   Every exposed Station Master action of an interlocking (`entrypoint.exposed: true` with an `actions:`
   entry, core afokapu/atdd#1248) MUST have a smoke test that drives the action through the real
   entrypoint -> Station Master -> InterlockingRunner -> TrainRunner path (core afokapu/atdd#1251). This is
-  the stack-bound tester obligation owned by the train-interlocking-enforcement extension; its python-pytest
+  the stack-bound tester obligation owned by the atdd.extension.tester.train-interlocking extension; its python-pytest
   realization (the `tester.interlocking.route-coverage.impl` detector) scans the interlocking entrypoints
   and the consumer's `e2e/**/*.py` tests and flags any exposed action with no smoke test that reaches the
   Station Master and exercises the production runners. EXPLICIT POLICY: an exposed action is a critical,
