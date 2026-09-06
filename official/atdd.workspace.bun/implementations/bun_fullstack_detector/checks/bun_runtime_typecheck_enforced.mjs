@@ -41,7 +41,10 @@ const TYPECHECK_SCRIPT_NAME = /^(?:typecheck|type-check|check[:-]types|types)$/i
 function* walkFiles(dir, excludes, depth = 0) {
   if (depth > 6) return;
   let entries;
-  try { entries = readdirSync(dir); } catch { return; }
+  try { entries = readdirSync(dir).sort(); } catch { return; }
+  // SORTED. readdirSync order is filesystem-dependent, and an unsorted walk made
+  // this check non-deterministic: with several packages in one tree, WHICH one got
+  // checked varied by machine, so CI and a laptop could disagree about a clean repo.
   for (const name of entries) {
     if (excludes.some((e) => name === e)) continue;
     const full = join(dir, name);
@@ -56,10 +59,22 @@ const violations = [];
 const excludes = [...readExcludes(), "node_modules", "dist", "build", ".next", ".git"];
 
 for (const root of readRoots()) {
-  const files = [...walkFiles(root, excludes)];
-  const pkgPath = files.find((f) => f.endsWith(sep + "package.json") || f.endsWith("/package.json"));
-  if (!pkgPath) continue;                                   // not a package: no obligation
-  const hasTs = files.some((f) => /\.tsx?$/.test(f) && !f.endsWith(".d.ts"));
+  const files = [...walkFiles(root, excludes)].sort();
+  // EVERY package.json is a project root, not just the first one found. Checking
+  // only the first meant a monorepo — a common Bun shape — had one package audited
+  // and the rest silently ignored, and which one it was depended on readdir order.
+  const pkgPaths = files.filter((f) => f.endsWith(sep + "package.json") || f.endsWith("/package.json"));
+
+for (const pkgPath of pkgPaths) {
+  const projectDir = pkgPath.slice(0, pkgPath.length - "package.json".length - 1);
+  // Files belonging to THIS package: under its directory, and not under a nested
+  // package (which is its own project root and gets its own pass).
+  const nested = pkgPaths.filter((o) => o !== pkgPath && o.startsWith(projectDir + sep));
+  const nestedDirs = nested.map((o) => o.slice(0, o.length - "package.json".length - 1) + sep);
+  const owned = files.filter(
+    (f) => f.startsWith(projectDir + sep) && !nestedDirs.some((n) => f.startsWith(n)),
+  );
+  const hasTs = owned.some((f) => /\.tsx?$/.test(f) && !f.endsWith(".d.ts"));
   if (!hasTs) continue;                                     // JS-only Bun app: no obligation
 
   let pkg;
@@ -90,7 +105,7 @@ for (const root of readRoots()) {
     });
   }
 
-  const tsconfigPath = files.find((f) => /(?:^|[/\\])tsconfig\.json$/.test(f));
+  const tsconfigPath = owned.find((f) => /(?:^|[/\\])tsconfig\.json$/.test(f));
   if (!tsconfigPath) {
     violations.push({
       rule_id: RULE_ID, file: rel(pkgPath), line: 1, col: 1, source_line: '"typescript"',
@@ -111,6 +126,7 @@ for (const root of readRoots()) {
         : 'tsconfig enables no strict flag and extends no base, so the typecheck that does run accepts implicit any and unchecked null',
     });
   }
+}
 }
 
 process.stderr.write(`bun-detector[typecheck-enforced]: ${violations.length} violation(s)\n`);
