@@ -662,3 +662,55 @@ def test_the_corpus_is_read_once_per_check(monkeypatch) -> None:
         _FIXTURES / "clean",
     )
     assert len(calls) == 1, f"corpus read {len(calls)} times"
+
+
+# ── 5. an absent change set is not an empty one ───────────────────────────────
+
+
+def test_absent_change_set_is_could_not_check_not_pass(monkeypatch) -> None:
+    """`None` from core and `[]` from core are different facts.
+
+    `list(change_set or [])` collapsed them, so undeclared_change_violations found
+    nothing and the run reached PASS — the capability claiming "nothing undeclared"
+    while having been told nothing at all. That is the same fail-open shape this
+    extension exists to refuse, one line above the fix for it.
+    """
+    _clean_render(monkeypatch)
+    decl = {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]}
+    check = capability.StandardDocumentationCapability().check(decl, None, _FIXTURES / "clean")
+    assert check.verdict == verdict.COULD_NOT_CHECK
+    assert verdict.blocks(check.verdict) is True
+    assert any("no change set" in f.message for f in check.findings)
+
+
+def test_an_empty_change_set_remains_a_legitimate_pass(monkeypatch) -> None:
+    """[] is core saying "nothing changed", which this capability can act on.
+
+    Whether the DECLARED paths appear in an empty diff is core's check 4, not this
+    capability's — so an empty change set must stay distinct from an absent one and
+    must not be dragged down with it.
+    """
+    _clean_render(monkeypatch)
+    decl = {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]}
+    check = capability.StandardDocumentationCapability().check(decl, [], _FIXTURES / "clean")
+    assert check.verdict == verdict.PASS
+    assert verdict.blocks(check.verdict) is False
+
+
+def test_a_definite_violation_still_outranks_an_absent_change_set(monkeypatch) -> None:
+    """Precedence holds: FAIL is the more actionable answer, and both block."""
+    _clean_render(monkeypatch)
+    decl = {"impact": "change", "artifacts": [{"action": "create", "path": "docs/never-written.adoc"}]}
+    check = capability.StandardDocumentationCapability().check(decl, None, _FIXTURES / "clean")
+    assert check.verdict == verdict.FAIL
+    # The could-not-check reason still reaches the report rather than being swallowed.
+    assert any("no change set" in f.message for f in check.findings)
+
+
+def test_no_obligation_outranks_an_absent_change_set(monkeypatch) -> None:
+    """`impact: none` needs no diff, so not having one changes nothing."""
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "none", "reason": "no change to accepted truth"}, None, _FIXTURES / "clean"
+    )
+    assert check.verdict == verdict.NOT_APPLICABLE

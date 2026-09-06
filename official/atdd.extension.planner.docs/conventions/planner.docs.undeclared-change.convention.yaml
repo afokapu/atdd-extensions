@@ -63,6 +63,12 @@ content:
   - '`docs/dist/**` is generated output and is never required to be declared.'
   - A repository with no documentation declaration recorded at all is core's concern (companion §4,
     check 1), not this rule's. This rule fires when a declaration exists and does not cover the diff.
+  - >-
+    An ABSENT change set is not an empty one. If core supplies no change set at all, this rule
+    cannot be evaluated and the capability returns COULD_NOT_CHECK, which BLOCKS — it does not
+    report "nothing undeclared", because that is a claim it is in no position to make. An empty
+    change set is core saying nothing changed, which IS actionable and permits. The two must stay
+    distinct for the same reason NOT_APPLICABLE and COULD_NOT_CHECK must (spec 2 §3).
 metadata:
   aliases:
   - DOCS-DECLARATION-002

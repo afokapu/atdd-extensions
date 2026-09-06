@@ -135,6 +135,8 @@ class StandardDocumentationCapability:
       1. The capability's own crash or timeout            -> FAIL   (blocks)
       2. Definite violations found                        -> FAIL   (blocks)
       3. Something could not be examined                  -> COULD_NOT_CHECK (blocks)
+         (an absent renderer, OR an absent change set — `None` from core, which is
+         not the same fact as an empty diff `[]`)
       4. Genuinely nothing to check                       -> NOT_APPLICABLE (permits)
       5. Declared artifacts actually examined, all clean  -> PASS   (permits)
 
@@ -156,7 +158,11 @@ class StandardDocumentationCapability:
         repo_root: Path | str,
     ) -> DocumentationCheck:
         try:
-            return self._check(declaration, list(change_set or []), Path(repo_root))
+            # `change_set` is passed through UNCHANGED. Collapsing None into [] here
+            # is a fail-open: `undeclared_change_violations` then finds nothing and
+            # the run reaches PASS. None means "core did not tell me what changed";
+            # [] means "core told me, and nothing changed". They are different facts.
+            return self._check(declaration, change_set, Path(repo_root))
         except Exception as exc:  # noqa: BLE001 — a raising capability is a FAIL, never a pass
             return DocumentationCheck(
                 verdict=verdict.FAIL,
@@ -172,7 +178,7 @@ class StandardDocumentationCapability:
             )
 
     def _check(
-        self, declaration: dict | None, change_set: list[str], repo_root: Path
+        self, declaration: dict | None, change_set: list[str] | None, repo_root: Path
     ) -> DocumentationCheck:
         # (4) Nothing to check. Core enforces that `impact: none` carries a reason
         # (companion §4); core does not judge the reason's quality, and neither do we.
@@ -190,13 +196,31 @@ class StandardDocumentationCapability:
         violations = corpus_violations(repo_root, documents)
         violations += declaration_rules.impact_violations(declaration)
         violations += declaration_rules.artifact_path_violations(declaration)
-        violations += declaration_rules.undeclared_change_violations(declaration, change_set)
+        # An ABSENT change set cannot be evaluated for undeclared changes. Running the
+        # check against [] would report "nothing undeclared", which is a claim this
+        # capability is in no position to make.
+        unknown_change_set = change_set is None
+        if not unknown_change_set:
+            violations += declaration_rules.undeclared_change_violations(declaration, change_set)
         violations += declared_artifact_violations(declaration, repo_root)
 
         checked = [d.path for d in documents]
         checked.append("<declaration>")
 
         findings = [_finding(v) for v in violations]
+        if unknown_change_set:
+            findings.append(
+                Finding(
+                    rule_id="planner.docs.undeclared-change",
+                    where="<change_set>",
+                    message=(
+                        "core supplied no change set, so whether this diff touches docs/ "
+                        "without declaring it could not be established. This is "
+                        "COULD_NOT_CHECK and it BLOCKS; an empty change set ([]) is a "
+                        "different fact and permits."
+                    ),
+                )
+            )
 
         outcome = render.render(repo_root)
         if outcome.could_not_check:
@@ -215,7 +239,7 @@ class StandardDocumentationCapability:
         # (2) then (3): definite failure outranks an unexamined surface; both block.
         if violations:
             return DocumentationCheck(verdict=verdict.FAIL, findings=findings, checked=checked)
-        if outcome.could_not_check:
+        if outcome.could_not_check or unknown_change_set:
             return DocumentationCheck(
                 verdict=verdict.COULD_NOT_CHECK, findings=findings, checked=checked
             )
