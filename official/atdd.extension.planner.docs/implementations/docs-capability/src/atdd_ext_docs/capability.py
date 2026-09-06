@@ -148,6 +148,7 @@ class StandardDocumentationCapability:
             )
 
         violations = corpus_violations(repo_root)
+        violations += declaration_rules.impact_violations(declaration)
         violations += declaration_rules.artifact_path_violations(declaration)
         violations += declaration_rules.undeclared_change_violations(declaration, change_set)
 

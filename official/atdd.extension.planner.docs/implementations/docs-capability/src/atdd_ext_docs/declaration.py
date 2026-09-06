@@ -25,6 +25,9 @@ DOCS_PREFIX = DOCS_DIR + "/"
 ADOC_SUFFIX = ".adoc"
 ARCHIVE_ACTION = "archive"
 
+#: The two TOTAL forms of the declaration (companion §3). Anything else is malformed.
+KNOWN_IMPACTS = frozenset({"change", "none"})
+
 
 def _artifacts(declaration: dict | None) -> list[dict]:
     if not isinstance(declaration, dict):
@@ -38,15 +41,49 @@ def declares_change(declaration: dict | None) -> bool:
     return isinstance(declaration, dict) and declaration.get("impact") == "change"
 
 
+def impact_violations(declaration: dict | None) -> list[dict]:
+    """A declaration whose `impact` is neither of the two total forms.
+
+    The declaration has exactly two forms and both are total (companion §3). A
+    missing or misspelled `impact` is therefore malformed, and — this is the point —
+    it must NOT be read as "nothing to check". Treating an unrecognised value as a
+    quiet skip is how a typo switches off the archive-destination check, which is the
+    one this module calls load-bearing.
+    """
+    if declaration is None:
+        return []
+    impact = declaration.get("impact")
+    if impact in KNOWN_IMPACTS:
+        return []
+    return [
+        {
+            "rule_id": RULE_ARTIFACT_PATH_SHAPE,
+            "file": "<declaration>",
+            "line": 1,
+            "col": 1,
+            "evidence": (
+                f"declaration carries impact={impact!r}; the two total forms are "
+                f"{sorted(KNOWN_IMPACTS)}. A malformed declaration is reported, never "
+                f"treated as nothing-to-check."
+            ),
+            "source_line": "",
+        }
+    ]
+
+
 def artifact_path_violations(declaration: dict | None) -> list[dict]:
     """A declared artifact whose path is not shaped like documentation.
 
-    `impact: none` declares no artifacts and is not checked here. Core enforces that
-    a reason is present; core does not judge the reason's quality, and neither does
-    this extension.
+    Artifacts are path-checked WHENEVER THEY ARE PRESENT, and deliberately not gated
+    on `impact == "change"`. Gating on it meant a missing or misspelled `impact`
+    silently disabled every path check — including the archive-destination rule that
+    stops history being promoted into current truth. The declaration's own
+    malformedness is reported separately by `impact_violations`.
+
+    A well-formed `impact: none` declares no artifacts, so this returns nothing for
+    it anyway. Core enforces that a reason is present; core does not judge the
+    reason's quality, and neither does this extension.
     """
-    if not declares_change(declaration):
-        return []
     out: list[dict] = []
     for index, artifact in enumerate(_artifacts(declaration)):
         action = str(artifact.get("action", ""))

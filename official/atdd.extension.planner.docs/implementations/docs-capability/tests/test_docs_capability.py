@@ -489,3 +489,62 @@ def test_emit_raw_documentation_report() -> None:
 
     # Run-health only: deliberately NOT gated on emptiness (disposition is the gate's).
     assert isinstance(violations, list)
+
+
+# ── 3. REGRESSIONS from the code review of 511a107..d8963c0 ───────────────────
+
+
+def test_dirty_missing_index_fixture_is_tracked_not_an_empty_directory() -> None:
+    """The fixture's defect must survive a fresh clone.
+
+    Expressing "the area exists but has no index" as an EMPTY directory made the
+    defect invisible to git: the fixture arrived empty on clone, the rule never
+    fired, and `area-index-required` was the one rule with no live proof in CI. A
+    fixture that only works on the machine that authored it proves nothing.
+    """
+    delivery = _FIXTURES / "dirty_missing_index" / "docs" / "delivery"
+    tracked = [p for p in delivery.iterdir() if p.is_file()]
+    assert tracked, "fixture directory must hold a tracked file, not be empty"
+    assert not (delivery / "index.adoc").exists(), "the missing index IS the defect"
+
+
+def test_unrecognised_impact_never_switches_off_the_path_checks() -> None:
+    """A typo in `impact` must not disable the archive-destination rule.
+
+    Gating the path checks on `impact == "change"` meant a missing or misspelled
+    impact returned [] before inspecting a single path — so a malformed declaration
+    turned off the one check this module calls load-bearing, instead of tripping it.
+    """
+    escaping_archive = {
+        "impact": "changes",  # typo
+        "artifacts": [{"action": "archive", "path": "docs/architecture/x.adoc"}],
+    }
+    paths = declaration.artifact_path_violations(escaping_archive)
+    assert _rule_ids(paths) == {pkg.RULE_ARTIFACT_PATH_SHAPE}
+    assert any("archive destination" in v["evidence"] for v in paths)
+
+    no_impact_key = {"artifacts": [{"action": "create", "path": "/etc/passwd"}]}
+    assert declaration.artifact_path_violations(no_impact_key), "path outside docs/ must be reported"
+
+    # And the malformedness itself is reported, never read as nothing-to-check.
+    assert declaration.impact_violations(escaping_archive)
+    assert declaration.impact_violations(no_impact_key)
+
+
+def test_a_well_formed_declaration_reports_no_impact_violation() -> None:
+    assert declaration.impact_violations({"impact": "none", "reason": "already accepted"}) == []
+    assert declaration.impact_violations(
+        {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]}
+    ) == []
+    assert declaration.impact_violations(None) == []
+
+
+def test_malformed_impact_reaches_the_verdict(monkeypatch) -> None:
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "changes", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]},
+        ["docs/index.adoc"],
+        _FIXTURES / "clean",
+    )
+    assert check.verdict == verdict.FAIL
+    assert any("total forms" in f.message for f in check.findings)
