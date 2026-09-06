@@ -1,0 +1,36 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.planner.docs
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.planner.docs
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+
+categories:
+  - planner
+  - documentation
+  - asciidoc
+  - adr
+  - authored-surface
+  - official
+
+description: >-
+  Official ATDD standard documentation extension — the opinionated documentation model shipped as
+  POLICY rather than a core dependency, so a consumer without it gets the lifecycle obligation and no
+  opinion about AsciiDoc, ADRs or taxonomy. 9 convention nodes covering the canonical tree, the
+  authored format, document identity, the derived relationship graph, ADRs, declaration shape, the
+  undeclared-change inverse and reference integrity. Implements the DocumentationCapability core
+  discovers over the `atdd.documentation` entry point. All rules ship advisory with live
+  escalate_when measurements.

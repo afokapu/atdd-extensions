@@ -1,0 +1,75 @@
+schema_version: "1.0.0"
+
+# Gate: WHEN the standard documentation checks run.
+#
+# The docs-capability implementation runs once and emits NINE rule_ids over the
+# v1.1 multi-rule output channel. Final severity is a property of each convention
+# node's metadata.disposition — all nine land `advisory` at 0.1.0, each carrying a
+# live measurement in its `disposition_rationale` term. This gate records the
+# runtime stage.
+#
+# TWO SURFACES, ONE DETECTOR. This gate is the hub's report channel. It is NOT the
+# core seam: core reaches the same code through the `atdd.documentation` entry point
+# (companion §5) and reads back a DocumentationCheck verdict at COMPLETE. The gate
+# path and the capability path share the detector so the two can never disagree, and
+# neither depends on #1623 — only the operator verbs (`atdd docs build|check`,
+# spec 2 §7) do.
+gate_id: atdd.extension.planner.docs.capability
+kind: gate
+status: active
+
+trigger:
+  type: ci
+  name: ci
+  description: >-
+    Documentation is authored in the implementation worktree and VERIFIED at
+    COMPLETE (companion §3). CI is the stage where the whole corpus is present, and
+    the corpus is what several of these rules need — see selection below.
+
+selection:
+  strategy: full
+  description: >-
+    FULL, not blast_radius, and the reason is a correctness constraint rather than a
+    preference. `planner.docs.doc-id-unique` is a GLOBAL property: a collision
+    between a changed document and an unchanged one is invisible to any subset that
+    contains only the changed file. `planner.docs.graph-target-resolves` has the same
+    shape — the declared-id set it resolves against must be the whole corpus, or an
+    edge to an untouched document would report as unresolved. A blast-radius subset
+    would make both rules quietly wrong rather than merely narrower.
+
+on_violation:
+  action: warn
+  description: >-
+    ADVISORY IS DELIBERATE AND TEMPORARY. The consuming corpus is 0% compatible
+    today — 89 markdown documents, 0 .adoc, measured 2026-09-06 — so blocking would
+    stop every commit touching documentation. Each node carries the concrete
+    condition for its own escalation; escalation is a MEASUREMENT CHECKPOINT, not a
+    later build slice (companion §7), and flipping these to `block` is a MAJOR change
+    class released separately (spec 2 §12).
+
+    NOTE the one thing this does NOT soften: the capability's verdict contract.
+    COULD_NOT_CHECK blocks at the CORE seam regardless of what this gate does,
+    because "I could not see whether the obligation was met" is not a pass
+    (spec 2 §3). This action governs the hub's report channel, not core's verdict.
+
+exit:
+  success_code: 0
+  failure_code: 1
+
+# Primary realized convention (the headline binding); the same gate run covers all
+# nine conventions the implementation emits — enumerated below + edged in
+# relationships.yaml (convention -> gate, type: gated-by).
+realizes_convention: planner.docs.graph-target-resolves
+realizes_conventions:
+  - planner.docs.adr-registry-derived
+  - planner.docs.area-index-required
+  - planner.docs.artifact-path-shape
+  - planner.docs.asciidoc-only
+  - planner.docs.doc-id-unique
+  - planner.docs.graph-target-resolves
+  - planner.docs.identity-required
+  - planner.docs.reference-integrity
+  - planner.docs.undeclared-change
+
+implementation: implementations/docs-capability
+scope: scopes/docs-corpus.scope.yaml

@@ -1,0 +1,62 @@
+schema_version: "1.1.0"
+kind: implementation
+
+# The python-pytest realization of the nine standard documentation obligations, and
+# the DocumentationCapability core discovers over the `atdd.documentation` entry
+# point (handoff spec 2 §3 / companion §5 — THE BINDING).
+implementation_id: planner.docs.impl
+targets_workspace: atdd.workspace.python-pytest
+contract_version: "1.1.0"
+
+# The obligations this implementation OWNS — all nine, since no other implementation
+# realizes them and each has a convention node in ../../conventions/. Ownership is
+# what the core composer binds; emits_rule_ids below is co-emission and does not
+# create a binding.
+realizes_convention:
+  - planner.docs.asciidoc-only
+  - planner.docs.identity-required
+  - planner.docs.doc-id-unique
+  - planner.docs.graph-target-resolves
+  - planner.docs.area-index-required
+  - planner.docs.adr-registry-derived
+  - planner.docs.artifact-path-shape
+  - planner.docs.undeclared-change
+  - planner.docs.reference-integrity
+
+# One run surfaces NINE rule_ids over the v1.1 multi-rule output channel. All nine
+# land `advisory` at 0.1.0, each carrying a live escalate_when measurement in its
+# convention node (spec 2 §8, companion §7).
+emits_rule_ids:
+  - planner.docs.asciidoc-only          # disposition: advisory (authored .md under docs/)
+  - planner.docs.identity-required      # disposition: advisory (no :doc-id: / :status:)
+  - planner.docs.doc-id-unique          # disposition: advisory (duplicate doc-id)
+  - planner.docs.graph-target-resolves  # disposition: advisory (edge names an undeclared id)
+  - planner.docs.area-index-required    # disposition: advisory (area exists, no index.adoc)
+  - planner.docs.adr-registry-derived   # disposition: advisory (registry drifted from :decides:)
+  - planner.docs.artifact-path-shape    # disposition: advisory (malformed declared path)
+  - planner.docs.undeclared-change      # disposition: advisory (docs/** change not declared)
+  - planner.docs.reference-integrity    # disposition: advisory (render / xref failure)
+
+# TWO SURFACES, ONE DETECTOR.
+#
+#   entrypoint  the CAPABILITY seam. Core calls
+#               StandardDocumentationCapability.check(declaration, change_set,
+#               repo_root) and reads back a verdict + findings. Discovered over the
+#               entry point declared in pyproject.toml, NOT by this path — the path
+#               is recorded here so a reader can find the code.
+#   report      the runnable v1.1 report-emitting pytest the provider CLI collects:
+#               scans ATDD_SCAN_ROOTS and writes the RAW report to
+#               ATDD_VIOLATIONS_REPORT. Corpus rules only; the declaration rules
+#               need a declaration and a change set, which exist at the seam.
+#
+# Neither surface depends on #1623. Only the operator verbs (`atdd docs build`,
+# `atdd docs check`, spec 2 §7) do, and they are deliberately not shipped here.
+entrypoint: src/atdd_ext_docs/capability.py
+report: tests/test_docs_capability.py
+
+# The Ruby dependency of spec 2 §9 Decision 4. Its ABSENCE is a specified,
+# reportable state (COULD_NOT_CHECK, which blocks) and never a silent pass.
+external_toolchain:
+  - name: asciidoctor
+    required_for: planner.docs.reference-integrity
+    absent_verdict: COULD_NOT_CHECK

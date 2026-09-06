@@ -1,0 +1,252 @@
+schema_version: "1.0.0"
+
+# Extension-LOCAL relationship graph for atdd.extension.planner.docs.
+#
+# IMPORTANT (boundary spec §6.2): core<->extension edges are NOT authored here. The
+# DocumentationCapability seam this package implements (companion §5) is an ENTRY
+# POINT, declared narratively in the README and in each node's body — never as a
+# graph edge. Only extension-internal edges live here.
+#
+# EDGE VOCABULARY is core's relationship.schema.json enum (spec 6), validated by
+# tools/validate_graphs.py. NODE -> ARTIFACT links use the realized-by / scoped-by /
+# gated-by verbs core's scheduling enum does not model, following
+# atdd.extension.train-interlocking-enforcement.
+#
+# The node-to-node edges below are the DEPENDENCY ORDER of the checks, and they are
+# not decorative: they are why the detector evaluates identity before uniqueness and
+# uniqueness before edge resolution. A resolver that ran first would have to invent
+# the id set it resolves against — the #1758 defect, arrived at by a different route.
+graph_id: atdd.extension.planner.docs.relationships
+
+nodes:
+  - planner.docs.adr-registry-derived
+  - planner.docs.area-index-required
+  - planner.docs.artifact-path-shape
+  - planner.docs.asciidoc-only
+  - planner.docs.doc-id-unique
+  - planner.docs.graph-target-resolves
+  - planner.docs.identity-required
+  - planner.docs.reference-integrity
+  - planner.docs.undeclared-change
+
+edges:
+  # ── check dependency order ──────────────────────────────────────────────────
+  - source_ref: planner.docs.identity-required
+    target_ref: planner.docs.asciidoc-only
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'A doc-id lives in an AsciiDoc attribute. A markdown document has nowhere to declare one, so format uniformity is the precondition for identity.'
+
+  - source_ref: planner.docs.doc-id-unique
+    target_ref: planner.docs.identity-required
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Uniqueness compares ids that were actually declared; a document with no doc-id is reported by identity-required and never counted as a collision here.'
+
+  - source_ref: planner.docs.graph-target-resolves
+    target_ref: planner.docs.doc-id-unique
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Resolution needs exactly one target per id. Under a duplicate, :supersedes: cannot say which document it means, so uniqueness must hold before an edge can be said to resolve.'
+
+  - source_ref: planner.docs.graph-target-resolves
+    target_ref: planner.docs.identity-required
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'The declared-id set is built from :doc-id: attributes BEFORE any edge is resolved. This edge is the no-fabrication discipline expressed as an ordering: without the set first, the resolver would have to invent what it resolves against.'
+
+  - source_ref: planner.docs.adr-registry-derived
+    target_ref: planner.docs.graph-target-resolves
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The registry is a projection of :decides: edges, so it is only as trustworthy as edge resolution. An ADR deciding an undeclared node is reported by the resolver, never listed in the registry.'
+
+  - source_ref: planner.docs.reference-integrity
+    target_ref: planner.docs.asciidoc-only
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'asciidoctor renders the authored corpus. A markdown file under docs/ is not an input the renderer can resolve references through, so the format rule bounds what reference-integrity can even see.'
+
+  - source_ref: planner.docs.undeclared-change
+    target_ref: planner.docs.artifact-path-shape
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'The two halves of the declaration check: one asks whether a declared path is SHAPED like documentation, the other whether a documentation change was declared at all. Together they close the loop core opens; neither alone does.'
+
+  - source_ref: planner.docs.area-index-required
+    target_ref: planner.docs.asciidoc-only
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both are canonical-tree shape rules read from the same scan of docs/: one governs what an area contains, the other what format its files are in.'
+
+  # ── node -> artifact: what realizes, scopes and gates each obligation ──────
+  # One detector emits all nine rule_ids, one scope selects the corpus they read,
+  # one gate records when they run. The links are explicit so a reader of the graph
+  # can get from an obligation to its enforcement without opening the manifest.
+
+  - source_ref: planner.docs.adr-registry-derived
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.adr-registry-derived
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.adr-registry-derived
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.area-index-required
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.area-index-required
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.area-index-required
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.artifact-path-shape
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.artifact-path-shape
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.artifact-path-shape
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.asciidoc-only
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.asciidoc-only
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.asciidoc-only
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.doc-id-unique
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.doc-id-unique
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.doc-id-unique
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.graph-target-resolves
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.graph-target-resolves
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.graph-target-resolves
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.identity-required
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.identity-required
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.identity-required
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.reference-integrity
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.reference-integrity
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.reference-integrity
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'
+
+  - source_ref: planner.docs.undeclared-change
+    target_ref: implementations/docs-capability
+    type: realized-by
+    reason: 'The docs-capability detector emits this rule_id over the v1.1 multi-rule channel and answers for it at the DocumentationCapability seam.'
+
+  - source_ref: planner.docs.undeclared-change
+    target_ref: scopes/docs-corpus.scope.yaml
+    type: scoped-by
+    reason: 'The canonical-tree selectors are the consumer files this obligation is evaluated over.'
+
+  - source_ref: planner.docs.undeclared-change
+    target_ref: gates/docs-capability.gate.yaml
+    type: gated-by
+    reason: 'One gate run covers all nine documentation obligations; this node lands advisory at 0.1.0 with its own escalate_when measurement.'

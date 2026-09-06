@@ -1,0 +1,64 @@
+schema_version: "1.0.0"
+
+# Official ATDD standard documentation extension (handoff spec 2 of 2).
+#
+# The opinionated documentation model ATDD RECOMMENDS, shipped as an extension so
+# that it is POLICY, not a lifecycle-core dependency. A consumer that installs core
+# without this extension gets the lifecycle obligation and no opinion about
+# AsciiDoc, ADRs or taxonomy — companion §5's absent-capability rule: no capability
+# installed -> NOT_APPLICABLE -> permits.
+#
+# This package owns everything core is forbidden to name: the canonical tree, the
+# authored format, document identity, the relationship graph, ADRs, rendering and
+# reference integrity. Companion §8's anti-theatre test greps core for `asciidoc`,
+# `adoc`, `adr`, `doc-id`, `purpose/`, `architecture/`, `delivery/`, `archive/` and
+# requires zero hits; every one of those tokens lives here instead.
+#
+# Boundary model (CONTRIBUTING.md "The Four Layers"):
+#   - This EXTENSION owns the rules (conventions) + the implementation (the
+#     DocumentationCapability and the detectors behind it).
+#   - The WORKSPACE PROVIDER (atdd.workspace.python-pytest) owns the reusable
+#     runtime; referenced by id + contract range, never bundled here.
+#   - core<->extension references are NARRATIVE (README + node bodies), never graph
+#     edges (boundary spec §6.2).
+extension_id: atdd.extension.planner.docs
+version: "0.1.0"
+kind: extension
+role: planner
+flow_wagon: validate-authored-surface
+feature: standard-documentation-conventions
+
+owns:
+  conventions:
+    - conventions/planner.docs.adr-registry-derived.convention.yaml
+    - conventions/planner.docs.area-index-required.convention.yaml
+    - conventions/planner.docs.artifact-path-shape.convention.yaml
+    - conventions/planner.docs.asciidoc-only.convention.yaml
+    - conventions/planner.docs.doc-id-unique.convention.yaml
+    - conventions/planner.docs.graph-target-resolves.convention.yaml
+    - conventions/planner.docs.identity-required.convention.yaml
+    - conventions/planner.docs.reference-integrity.convention.yaml
+    - conventions/planner.docs.undeclared-change.convention.yaml
+  relationships:
+    - relationships.yaml
+  implementations:
+    - implementations/docs-capability
+  schemas: []
+  gates:
+    - gates/docs-capability.gate.yaml
+  scopes:
+    - scopes/docs-corpus.scope.yaml
+
+depends_on:
+  # `core: []` — matching every other package in this hub. The `atdd.core.*` ids
+  # once written here do not exist; admission never validates this field, and an
+  # empty list is what `atdd author extension init` scaffolds. The core contract
+  # this extension binds to is the DocumentationCapability seam (companion §5),
+  # which is an ENTRY POINT, not a node dependency.
+  core: []
+  workspaces:
+    - id: atdd.workspace.python-pytest
+      contract: "^1.0.0"
+
+removal_policy:
+  allowed_if_no_external_dependents: true
