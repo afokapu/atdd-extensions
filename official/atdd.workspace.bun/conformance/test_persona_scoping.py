@@ -36,7 +36,10 @@ _IMPLS = {p.name: p for p in (_WS / "implementations").iterdir()
 _TESTER = "bun_tester_discipline_detector"
 # Two tester families: the Bun suite rules and the htmx ones. Both are
 # tester-persona and neither may produce findings on a source-only tree.
-_TESTER_FAMILIES = {_TESTER, "htmx_tester_detector"}
+_TESTER_FAMILIES = {_TESTER, "htmx_tester_detector", "bun_interlocking_coverage"}
+# bun_interlocking_coverage is tester-persona: it reads the declared route space and the
+# consumer's TEST files to prove every admissible route, exposed action and trace binding
+# is exercised. The coder side of interlocking is bun_interlocking_infrastructure.
 _CODER = sorted(n for n in _IMPLS if n not in _TESTER_FAMILIES)
 
 

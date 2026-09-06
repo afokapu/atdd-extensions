@@ -24,9 +24,10 @@ graph_id: atdd.extension.tester.bun.relationships
 nodes:
   - tester.bun.acceptance-binding-declared
   - tester.bun.acceptance-covers-tag-well-formed
-  - tester.bun.test-imports-bun-test
-  - tester.bun.test-no-self-skip
-  - tester.bun.test-phase-declared
+  - tester.bun.interlocking-production-runner-used
+  - tester.bun.interlocking-route-coverage
+  - tester.bun.interlocking-smoke-coverage-for-station-master
+  - tester.bun.interlocking-trace-binds-declared-route
   - tester.bun.red-behavioral-assertion
   - tester.bun.red-fails-first
   - tester.bun.routing-runtime-family
@@ -36,7 +37,10 @@ nodes:
   - tester.bun.smoke-observable-assertion
   - tester.bun.telemetry-emit
   - tester.bun.test-carries-urn-identity
+  - tester.bun.test-imports-bun-test
   - tester.bun.test-isolation-no-live-state
+  - tester.bun.test-no-self-skip
+  - tester.bun.test-phase-declared
 
 edges:
   - source_ref: tester.bun.acceptance-binding-declared
@@ -165,3 +169,41 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'One shape, three kinds: a test whose URN declares its kind must carry the assertion that kind implies, or it is a silent green gap.'
+
+  # ── interlocking: four ways a green suite can be a lie (Bun mirror) ──
+  - source_ref: tester.bun.interlocking-production-runner-used
+    target_ref: tester.bun.interlocking-route-coverage
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Coverage counts a route as proven only if the covering test drove the real runners. A route covered by a test that mocks the route-control path is a DESCRIPTIVE green, so production-runner-used is what makes route-coverage mean anything.'
+  - source_ref: tester.bun.interlocking-smoke-coverage-for-station-master
+    target_ref: tester.bun.interlocking-route-coverage
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Two coverage obligations over the same declaration: one per admissible ROUTE, one per exposed Station Master ACTION. The criticality signal for the second is the core entrypoint.exposed field, never a heuristic.'
+  - source_ref: tester.bun.interlocking-trace-binds-declared-route
+    target_ref: tester.bun.interlocking-route-coverage
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'A covering test proves a route ran; only the bound trace proves WHICH route ran. Without the binding fields the run could resolve the wrong route, category or guard and the coverage test would still pass.'
+  - source_ref: tester.bun.interlocking-route-coverage
+    target_ref: tester.bun.acceptance-binding-declared
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both bind the suite back to a planner declaration: one to the acceptance criterion a test covers, the other to the guarded route it exercises.'

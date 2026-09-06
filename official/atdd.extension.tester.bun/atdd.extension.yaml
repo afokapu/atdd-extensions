@@ -21,9 +21,10 @@ owns:
   conventions:
     - conventions/tester.bun.acceptance-binding-declared.convention.yaml
     - conventions/tester.bun.acceptance-covers-tag-well-formed.convention.yaml
-    - conventions/tester.bun.test-imports-bun-test.convention.yaml
-    - conventions/tester.bun.test-no-self-skip.convention.yaml
-    - conventions/tester.bun.test-phase-declared.convention.yaml
+    - conventions/tester.bun.interlocking-production-runner-used.convention.yaml
+    - conventions/tester.bun.interlocking-route-coverage.convention.yaml
+    - conventions/tester.bun.interlocking-smoke-coverage-for-station-master.convention.yaml
+    - conventions/tester.bun.interlocking-trace-binds-declared-route.convention.yaml
     - conventions/tester.bun.red-behavioral-assertion.convention.yaml
     - conventions/tester.bun.red-fails-first.convention.yaml
     - conventions/tester.bun.routing-runtime-family.convention.yaml
@@ -33,7 +34,10 @@ owns:
     - conventions/tester.bun.smoke-observable-assertion.convention.yaml
     - conventions/tester.bun.telemetry-emit.convention.yaml
     - conventions/tester.bun.test-carries-urn-identity.convention.yaml
+    - conventions/tester.bun.test-imports-bun-test.convention.yaml
     - conventions/tester.bun.test-isolation-no-live-state.convention.yaml
+    - conventions/tester.bun.test-no-self-skip.convention.yaml
+    - conventions/tester.bun.test-phase-declared.convention.yaml
   relationships:
     - relationships.yaml
   implementations: []

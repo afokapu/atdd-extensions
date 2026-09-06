@@ -27,8 +27,11 @@ categories:
   - official
 
 description: >-
-  Official ATDD tester-role extension for a bun test suite — 15 convention nodes covering test
+  Official ATDD tester-role extension for a bun test suite — 19 convention nodes covering test
   identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers
   tags) and phase discipline (RED fail-markers and behavioural assertions, SMOKE observability and
   no collaborator substitution, no self-skip, no shared live state, security/input/telemetry
-  assertion). Mirrors convex.extension.tester.base rule for rule.
+  assertion), plus interlocking coverage — every admissible route exercised, the production
+  InterlockingRunner/TrainRunner driven rather than mocked, every exposed Station Master action
+  smoke-covered, and every trace assertion bound back to its declared route. Mirrors
+  convex.extension.tester.base rule for rule.
