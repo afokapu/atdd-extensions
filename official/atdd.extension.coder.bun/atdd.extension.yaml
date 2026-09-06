@@ -60,6 +60,7 @@ owns:
     - conventions/coder.bun.quality-mi.convention.yaml
     - conventions/coder.bun.runtime-server-is-bun-serve.convention.yaml
     - conventions/coder.bun.runtime-single-lockfile.convention.yaml
+    - conventions/coder.bun.runtime-typecheck-enforced.convention.yaml
     - conventions/coder.bun.security-hardcoded-secret.convention.yaml
     - conventions/coder.bun.security-missing-auth.convention.yaml
     - conventions/coder.bun.security-sql-injection.convention.yaml
