@@ -320,10 +320,18 @@ def test_an_archive_from_path_is_covered_without_being_adoc() -> None:
 # ── 1g. THE VERDICT CONTRACT (spec 2 §3) ──────────────────────────────────────
 
 
-def test_absent_declaration_is_not_applicable_and_permits() -> None:
+def test_absent_declaration_blocks(monkeypatch) -> None:
+    """This test previously asserted NOT_APPLICABLE, encoding the defect as intent.
+
+    An absent declaration is not `impact: none`. The corrected expectation lives in
+    full in test_absent_declaration_is_could_not_check_not_not_applicable below; this
+    one is kept, pointed the right way, because a test that once locked in a
+    fail-open is worth leaving visible rather than deleting.
+    """
+    _clean_render(monkeypatch)
     check = capability.StandardDocumentationCapability().check(None, [], _FIXTURES / "clean")
-    assert check.verdict == verdict.NOT_APPLICABLE
-    assert verdict.blocks(check.verdict) is False
+    assert check.verdict == verdict.COULD_NOT_CHECK
+    assert verdict.blocks(check.verdict) is True
 
 
 def test_impact_none_is_not_applicable_and_permits() -> None:
@@ -714,3 +722,124 @@ def test_no_obligation_outranks_an_absent_change_set(monkeypatch) -> None:
         {"impact": "none", "reason": "no change to accepted truth"}, None, _FIXTURES / "clean"
     )
     assert check.verdict == verdict.NOT_APPLICABLE
+
+
+# ── 6. an absent declaration is not `impact: none` ────────────────────────────
+
+
+def test_absent_declaration_is_could_not_check_not_not_applicable(monkeypatch) -> None:
+    """The symmetric defect to the absent change set, one argument over.
+
+    `impact: none` is core CONSIDERING the question and declaring no change.
+    `None` is core having told this capability nothing. Both permitted, and the
+    branch returned before reading the corpus at all.
+    """
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(None, ["docs/index.adoc"], _FIXTURES / "clean")
+    assert check.verdict == verdict.COULD_NOT_CHECK
+    assert verdict.blocks(check.verdict) is True
+    assert any("no documentation declaration" in f.message for f in check.findings)
+
+
+def test_impact_none_remains_not_applicable_and_permits(monkeypatch) -> None:
+    """No over-correction: the positive declaration still permits."""
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "none", "reason": "no change to accepted truth"}, ["docs/index.adoc"], _FIXTURES / "clean"
+    )
+    assert check.verdict == verdict.NOT_APPLICABLE
+    assert verdict.blocks(check.verdict) is False
+
+
+def test_an_absent_declaration_still_examines_the_corpus(monkeypatch) -> None:
+    """"Genuinely nothing to check" was false twice over.
+
+    There WAS a corpus to check, and the old branch returned zero findings over zero
+    documents against a tree with a known unresolved relationship target.
+    """
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        None, [], _FIXTURES / "dirty_unresolved_edge"
+    )
+    assert check.checked, "the corpus was never examined"
+    assert any(f.rule_id == pkg.RULE_GRAPH_TARGET_RESOLVES for f in check.findings)
+    # A definite corpus violation outranks the could-not-check, and both block.
+    assert check.verdict == verdict.FAIL
+    assert any("no documentation declaration" in f.message for f in check.findings)
+
+
+def test_absent_declaration_does_not_run_declaration_rules_against_nothing(monkeypatch) -> None:
+    """Skipped, not run against a fabricated empty declaration."""
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(None, ["docs/surprise.adoc"], _FIXTURES / "clean")
+    # `docs/surprise.adoc` is undeclared, but with no declaration that is not a
+    # claim this capability can make — it must not report undeclared-change.
+    assert not any(f.rule_id == pkg.RULE_UNDECLARED_CHANGE for f in check.findings)
+
+
+def test_checked_never_claims_a_declaration_that_was_not_supplied(monkeypatch) -> None:
+    """`checked` is the account of what was actually examined, and PASS rests on it."""
+    _clean_render(monkeypatch)
+    absent = capability.StandardDocumentationCapability().check(None, [], _FIXTURES / "clean")
+    assert "<declaration>" not in absent.checked
+    assert absent.checked, "the corpus was still examined and must still be listed"
+
+    present = capability.StandardDocumentationCapability().check(
+        {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]},
+        ["docs/index.adoc"], _FIXTURES / "clean",
+    )
+    assert "<declaration>" in present.checked
+
+
+def test_seam_findings_are_not_filed_under_a_content_rule(monkeypatch) -> None:
+    """"Core told me nothing" is not a violation of any convention node.
+
+    Filing it under `planner.docs.undeclared-change` or `artifact-path-shape` tells a
+    consumer filtering by rule_id that a content rule was violated when it was not.
+    """
+    _clean_render(monkeypatch)
+    for declaration, change_set in [(None, []), ({"impact": "change", "artifacts": []}, None)]:
+        check = capability.StandardDocumentationCapability().check(
+            declaration, change_set, _FIXTURES / "clean"
+        )
+        seam = [f for f in check.findings if f.where in ("<declaration>", "<change_set>")]
+        assert seam, "expected a seam finding"
+        for f in seam:
+            # No rule id at all: not a content rule, and not an invented one either.
+            # An undeclared id bound to no convention node, absent from ALL_RULE_IDS
+            # and from the implementation's emits_rule_ids, is not an improvement on
+            # misattribution — it is the same problem, quieter.
+            assert f.rule_id is None
+            assert f.is_seam is True
+
+
+def test_every_rule_id_a_finding_carries_is_a_declared_convention(monkeypatch) -> None:
+    """Nothing undeclared may escape the capability.
+
+    Every non-None rule_id must be a node this package owns AND a rule the
+    implementation manifest says it emits. Seam facts carry no id at all.
+    """
+    import yaml
+
+    manifest = yaml.safe_load(
+        (_HERE.parent / "atdd.implementation.yaml").read_text()
+    )
+    emits = set(manifest["emits_rule_ids"])
+    assert emits == set(pkg.ALL_RULE_IDS), "manifest and code disagree about what is emitted"
+
+    _clean_render(monkeypatch)
+    seen: set[str] = set()
+    for declaration, change_set, tree in [
+        (None, [], "clean"),
+        ({"impact": "change", "artifacts": []}, None, "clean"),
+        ({"impact": "change", "artifacts": [{"action": "create", "path": "docs/nope.adoc"}]},
+         ["docs/nope.adoc"], "dirty_unresolved_edge"),
+    ]:
+        check = capability.StandardDocumentationCapability().check(
+            declaration, change_set, _FIXTURES / tree
+        )
+        for f in check.findings:
+            if f.rule_id is not None:
+                seen.add(f.rule_id)
+    undeclared = seen - emits
+    assert not undeclared, f"findings carried rule_ids no manifest declares: {sorted(undeclared)}"

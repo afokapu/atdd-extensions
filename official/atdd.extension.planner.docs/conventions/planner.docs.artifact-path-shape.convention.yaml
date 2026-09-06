@@ -63,6 +63,12 @@ content:
   - >-
     `impact: none` declares no artifacts and is not checked by this rule. Core enforces that a
     reason is present; core does not judge the reason's quality, and neither does this extension.
+  - >-
+    An ABSENT declaration is not `impact: none`. `impact: none` is core considering the question
+    and declaring no documentation change — a positive statement, which permits. A missing
+    declaration is core having said nothing, so no declaration-dependent rule can be evaluated and
+    the capability returns COULD_NOT_CHECK, which BLOCKS. The corpus rules are still evaluated and
+    still reported: "genuinely nothing to check" is false whenever there is a corpus to read.
   - The `from` path of an archive artifact is NOT required to end `.adoc` — it names the legacy
     document being retired, which is exactly the markdown the migration is converting.
 metadata:
