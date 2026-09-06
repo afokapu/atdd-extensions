@@ -6,7 +6,7 @@ name: Interlocking tests exercise the production runners, not mocks (Bun)
 statement: >-
   A test that exercises an interlocking MUST drive the production runtime objects — `InterlockingRunner`
   (route resolution) and `TrainRunner` (linear train execution), the core afokapu/atdd#1251 call model —
-  and MUST NOT substitute a mock, a `vi.mock`/`vi.spyOn` (or jest equivalent) patched runner, or a
+  and MUST NOT substitute a mock, a substituted runner, or a
   hand-built route resolver for them. This is the Bun-stack realization of the agnostic core
   obligation `tester.interlocking.production-runner-used`; its JS detector (a member of the
   `bun_interlocking_coverage` FAMILY) scans the consumer's `e2e/**/*.ts` interlocking tests and flags
@@ -32,7 +32,10 @@ content:
 
     FORBIDDEN substitution patterns (any one is a violation):
       - MockInterlockingRunner / MockTrainRunner
-      - vi.mock(...) / jest.mock(...) around a runner module
+      - mock.module(...) replacing a runner module — bun:test's own idiom, and the one that
+        matters most here: it swaps the ENTIRE route-control module
+      - spyOn(...) / mock(...) / mock.restore(...) aimed at a runner (bun:test)
+      - vi.mock(...) / jest.mock(...) around a runner module, for a suite migrating in
       - vi.spyOn(...) / jest.spyOn(...) replacing runner behavior (resolveTrain / execute)
       - a hand-built route resolver replacing InterlockingRunner (a locally defined `resolveTrain`
         function or a `*Resolver` class standing in for the production runner)
@@ -43,7 +46,8 @@ content:
     Rewrite the flagged interlocking test to drive the real runners: import and call
     `new InterlockingRunner(interlockingYamlPath).resolveTrain(action, inputs)` to get the selected
     trainId, then `new TrainRunner(selectedTrainId).execute(...)`. Delete any `MockInterlockingRunner` /
-    `MockTrainRunner`, any `vi.mock` / `vi.spyOn` aimed at the runners or their `resolveTrain` / `execute`
+    `MockTrainRunner`, any `mock.module` / `spyOn` / `mock` / `mock.restore` (bun:test) or
+    `vi.mock` / `vi.spyOn` / jest equivalent aimed at the runners or their `resolveTrain` / `execute`
     methods, and any locally hand-built route resolver. This rule is `strict`: an interlocking test that
     mocks the route-control path is a descriptive green proving nothing about production and blocks.
   exceptions:
@@ -67,5 +71,6 @@ terms:
   - term_id: forbidden_substitution
     text: >-
       a test double that replaces a production runner: `MockInterlockingRunner`/`MockTrainRunner`, a
-      `vi.mock`/`vi.spyOn` (or jest) aimed at a runner or its `resolveTrain`/`execute`, or a hand-built
+      `mock.module`/`spyOn`/`mock` (bun:test) or `vi.mock`/`vi.spyOn` (or jest) aimed at a runner
+      or its `resolveTrain`/`execute`, or a hand-built
       route resolver standing in for InterlockingRunner.

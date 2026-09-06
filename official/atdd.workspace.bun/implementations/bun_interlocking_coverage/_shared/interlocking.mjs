@@ -32,13 +32,41 @@ export const REQUIRED_TRACE_FIELDS = [
 export const FORBIDDEN_PATTERNS = [
   ["MockInterlockingRunner", /\bMockInterlockingRunner\b/],
   ["MockTrainRunner", /\bMockTrainRunner\b/],
+  // BUN'S OWN SUBSTITUTION SURFACE, and the reason it is listed FIRST.
+  //
+  // This list arrived from the Convex mirror carrying only `vi.`/`jest.`-prefixed
+  // idioms. On Bun that under-fires on exactly the stack the rule governs: `bun:test`
+  // exposes bare `mock()` and `spyOn()`, plus `mock.module()` — the most powerful of
+  // the three and the one a Bun developer actually reaches for. A test that swapped the
+  // whole InterlockingRunner module through `mock.module()` while still importing both
+  // production symbols reported CLEAN, which is precisely the descriptive green this
+  // rule exists to catch. The vocabulary below is the same one
+  // `tester.bun.smoke-no-collaborator-substitution` already pins
+  // (bun_tester_discipline_detector/checks/t_smoke_no_substitution.mjs), so the two
+  // tester rules now agree about what substitution means on this stack.
+  [
+    "mock.module() replacing a runner module",
+    /\bmock\s*\.\s*module\s*\(/,
+  ],
+  [
+    "spyOn() replacing runner behavior",
+    /\bspyOn\s*\(\s*[^)]*(?:InterlockingRunner|TrainRunner|[Rr]unner|resolveTrain|execute)/,
+  ],
+  [
+    "mock() standing in for a runner",
+    /\b(?:const|let|var)\s+\w*(?:[Rr]unner|[Ii]nterlocking|[Tt]rain)\w*\s*=\s*mock\s*\(/,
+  ],
+  [
+    "mock.restore() around runner execution",
+    /\bmock\s*\.\s*restore\s*\(/,
+  ],
   [
     "vi.mock()/jest.mock() around a runner module",
-    /\b(?:vi|jest)\.mock\s*\(\s*[^)]*(?:interlocking|InterlockingRunner|TrainRunner|runner)/,
+    /\b(?:vi|jest)\s*\.\s*mock\s*\(\s*[^)]*(?:interlocking|InterlockingRunner|TrainRunner|runner)/,
   ],
   [
     "vi.spyOn()/jest.spyOn() replacing runner behavior",
-    /\b(?:vi|jest)\.spyOn\s*\(\s*[^)]*(?:InterlockingRunner|TrainRunner|resolveTrain|execute)/,
+    /\b(?:vi|jest)\s*\.\s*spyOn\s*\(\s*[^)]*(?:InterlockingRunner|TrainRunner|resolveTrain|execute)/,
   ],
   [
     "hand-built route resolver replacing InterlockingRunner",

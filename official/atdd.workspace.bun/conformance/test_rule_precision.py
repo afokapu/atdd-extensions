@@ -111,7 +111,10 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     "coder.bun.interlocking-bilateral-binding":        ("interlocking.ts", ("runtime_to_declaration", "phantom-hidden-route"), None),
     # ── tester.bun · interlocking (four ways a green suite can lie) ─────────
     "tester.bun.interlocking-route-coverage":                    ("match-resolution.yaml", ("alternate-timeout",), None),
-    "tester.bun.interlocking-production-runner-used":            ("routes.test.ts", ("MockInterlockingRunner",), None),
+    # Pins BOTH substitution vocabularies. "mock.module" is the regression guard: the
+    # pattern list arrived from the Convex mirror with only vi./jest. idioms, so a test
+    # could swap the whole route-control module through bun:test and report clean.
+    "tester.bun.interlocking-production-runner-used":            ("routes.test.ts", ("MockInterlockingRunner", "mock.module"), None),
     "tester.bun.interlocking-smoke-coverage-for-station-master": ("match-resolution.yaml", ("resolve_match",), None),
     "tester.bun.interlocking-trace-binds-declared-route":        ("trace.test.ts", ("guardId",), None),
     # ── coder.htmx ──────────────────────────────────────────────────────────
