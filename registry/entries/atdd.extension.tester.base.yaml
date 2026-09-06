@@ -20,8 +20,6 @@ compatible_atdd_core:
 requires_workspaces:
   - id: atdd.workspace.python-pytest
     contract: "^1.0.0"
-  - id: atdd.workspace.typescript
-    contract: "^1.0.0"
   - id: atdd.workspace.supabase
     contract: "^1.0.0"
   - id: atdd.workspace.fastapi
