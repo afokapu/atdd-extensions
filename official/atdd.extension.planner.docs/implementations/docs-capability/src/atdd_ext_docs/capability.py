@@ -47,6 +47,16 @@ class DocumentationCheck:
     checked: list[str] = field(default_factory=list)
 
 
+#: Findings that are ABOUT THE SEAM, not about the corpus — "core told me nothing",
+#: "the capability raised". They are deliberately NOT one of ALL_RULE_IDS: no
+#: convention node states them, and filing them under a content rule (as the absent
+#: change set was, under `planner.docs.undeclared-change`) misattributes a seam fact
+#: to a rule whose statement says nothing about it. A consumer filtering by rule_id
+#: would have been told the artifact-path-shape convention was violated when it was
+#: not. The crash path already used this id; the other two now agree with it.
+SEAM_RULE_ID = "planner.docs.capability"
+
+
 def _finding(violation: dict) -> Finding:
     return Finding(
         rule_id=violation["rule_id"],
@@ -168,7 +178,7 @@ class StandardDocumentationCapability:
                 verdict=verdict.FAIL,
                 findings=[
                     Finding(
-                        rule_id="planner.docs.capability",
+                        rule_id=SEAM_RULE_ID,
                         where=str(repo_root),
                         message=f"the documentation capability raised {type(exc).__name__}: {exc}. "
                                 f"A capability that crashes has not discharged the obligation.",
@@ -222,13 +232,17 @@ class StandardDocumentationCapability:
             violations += declared_artifact_violations(declaration, repo_root)
 
         checked = [d.path for d in documents]
-        checked.append("<declaration>")
+        # `checked` is the account of what was ACTUALLY examined, and PASS depends on
+        # it. Listing "<declaration>" when core supplied none would be a small lie in
+        # exactly the register this extension polices.
+        if not unknown_declaration:
+            checked.append("<declaration>")
 
         findings = [_finding(v) for v in violations]
         if unknown_declaration:
             findings.append(
                 Finding(
-                    rule_id="planner.docs.artifact-path-shape",
+                    rule_id=SEAM_RULE_ID,
                     where="<declaration>",
                     message=(
                         "core supplied no documentation declaration, so no declaration-dependent "
@@ -241,7 +255,7 @@ class StandardDocumentationCapability:
         if unknown_change_set and not unknown_declaration:
             findings.append(
                 Finding(
-                    rule_id="planner.docs.undeclared-change",
+                    rule_id=SEAM_RULE_ID,
                     where="<change_set>",
                     message=(
                         "core supplied no change set, so whether this diff touches docs/ "

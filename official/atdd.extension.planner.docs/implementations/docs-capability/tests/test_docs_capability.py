@@ -775,3 +775,35 @@ def test_absent_declaration_does_not_run_declaration_rules_against_nothing(monke
     # `docs/surprise.adoc` is undeclared, but with no declaration that is not a
     # claim this capability can make — it must not report undeclared-change.
     assert not any(f.rule_id == pkg.RULE_UNDECLARED_CHANGE for f in check.findings)
+
+
+def test_checked_never_claims_a_declaration_that_was_not_supplied(monkeypatch) -> None:
+    """`checked` is the account of what was actually examined, and PASS rests on it."""
+    _clean_render(monkeypatch)
+    absent = capability.StandardDocumentationCapability().check(None, [], _FIXTURES / "clean")
+    assert "<declaration>" not in absent.checked
+    assert absent.checked, "the corpus was still examined and must still be listed"
+
+    present = capability.StandardDocumentationCapability().check(
+        {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]},
+        ["docs/index.adoc"], _FIXTURES / "clean",
+    )
+    assert "<declaration>" in present.checked
+
+
+def test_seam_findings_are_not_filed_under_a_content_rule(monkeypatch) -> None:
+    """"Core told me nothing" is not a violation of any convention node.
+
+    Filing it under `planner.docs.undeclared-change` or `artifact-path-shape` tells a
+    consumer filtering by rule_id that a content rule was violated when it was not.
+    """
+    _clean_render(monkeypatch)
+    for declaration, change_set in [(None, []), ({"impact": "change", "artifacts": []}, None)]:
+        check = capability.StandardDocumentationCapability().check(
+            declaration, change_set, _FIXTURES / "clean"
+        )
+        seam = [f for f in check.findings if f.where in ("<declaration>", "<change_set>")]
+        assert seam, "expected a seam finding"
+        for f in seam:
+            assert f.rule_id == capability.SEAM_RULE_ID
+            assert f.rule_id not in pkg.ALL_RULE_IDS, "a seam fact must not claim a convention node"
