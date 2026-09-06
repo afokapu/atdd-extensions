@@ -1,0 +1,56 @@
+schema_version: "1.0.0"
+
+# Gate: WHEN the standard documentation checks run.
+#
+# The docs-capability implementation runs once and emits NINE rule_ids over the
+# v1.1 multi-rule output channel. Final severity is a property of each convention
+# node's metadata.disposition — all nine land `advisory` at 0.1.0, each carrying a
+# live `escalate_when` measurement (spec 2 §8, companion §7). This gate records the
+# runtime stage.
+#
+# TWO SURFACES, ONE DETECTOR. This gate is the hub's report channel. It is NOT the
+# core seam: core reaches the same code through the `atdd.documentation` entry point
+# (companion §5) and reads back a DocumentationCheck verdict at COMPLETE. The gate
+# path and the capability path share the detector so the two can never disagree, and
+# neither depends on #1623 — only the operator verbs (`atdd docs build|check`,
+# spec 2 §7) do.
+gate_id: atdd.extension.docs.base.capability
+
+# Primary realized convention (the headline binding); the same gate run covers all
+# nine conventions the implementation emits — enumerated below + edged in
+# relationships.yaml (convention -> gate, type: gated-by).
+realizes_convention: planner.docs.graph-target-resolves
+realizes_conventions:
+  - planner.docs.adr-registry-derived
+  - planner.docs.area-index-required
+  - planner.docs.artifact-path-shape
+  - planner.docs.asciidoc-only
+  - planner.docs.doc-id-unique
+  - planner.docs.graph-target-resolves
+  - planner.docs.identity-required
+  - planner.docs.reference-integrity
+  - planner.docs.undeclared-change
+
+implementation: implementations/docs-capability
+scope: scopes/docs-corpus.scope.yaml
+
+stages:
+  - id: ci
+    mode: advisory
+    description: >-
+      Report on CI when a documentation check fails: authored markdown beneath docs/,
+      a document with no doc-id or status, a duplicate doc-id, a relationship naming
+      an undeclared doc-id, a canonical area with no index, an ADR registry that has
+      drifted from its :decides: edges, a malformed declared artifact path, a docs/**
+      change no artifact declares, or an unresolvable internal reference.
+
+      ADVISORY IS DELIBERATE AND TEMPORARY. The consuming corpus is 0% compatible
+      today — 89 markdown documents, 0 .adoc, measured 2026-09-06 — so strict would
+      block every commit touching documentation. Each node carries the concrete
+      condition for its own escalation; escalation is a MEASUREMENT CHECKPOINT, not
+      a later build slice (companion §7), and flipping these to strict is a MAJOR
+      change class released separately (spec 2 §12).
+
+      NOTE the one thing advisory does NOT soften: the capability's verdict contract.
+      COULD_NOT_CHECK blocks at the core seam regardless of disposition, because
+      "I could not see whether the obligation was met" is not a pass (spec 2 §3).

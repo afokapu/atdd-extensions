@@ -15,3 +15,10 @@ build/
 .atdd/runtime/
 registry/index.local.yaml
 .pytest_cache/
+
+# The docs extension's fixtures ship a `docs/dist/` tree ON PURPOSE: markdown there
+# must be proven NOT to trip the authored-format rule, and an exclusion you only
+# assert is an exclusion you have not tested. This is fixture data, not build
+# output, so the blanket `dist/` rule above must not swallow it.
+!official/atdd.extension.docs.base/implementations/docs-capability/fixtures/**/dist/
+!official/atdd.extension.docs.base/implementations/docs-capability/fixtures/**/dist/**

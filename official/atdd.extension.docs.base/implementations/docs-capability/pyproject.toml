@@ -1,0 +1,29 @@
+# Packaging for the standard documentation capability.
+#
+# This is the ONLY package in the hub that ships a pyproject, and the reason is the
+# entry point below: handoff spec 2 §3 / companion §5 specify that core discovers at
+# most one installed documentation capability over an entry-point GROUP and never
+# names a concrete extension. An entry point requires an installable distribution.
+#
+# Precedent for the mechanism is `[project.entry-points.pytest11]`, already used in
+# the core repository and cited in #1623. This is NOT the CLI-subcommand seam and
+# does NOT depend on #1623.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atdd-ext-docs"
+version = "0.1.0"
+description = "Standard documentation capability for ATDD — canonical tree, AsciiDoc, document identity, derived relationship graph, ADRs and reference integrity."
+requires-python = ">=3.11"
+dependencies = []
+
+# The runtime dependency is asciidoctor (Ruby), which pip cannot install and which
+# is deliberately NOT vendored. Its absence is COULD_NOT_CHECK, not a failed import.
+
+[project.entry-points."atdd.documentation"]
+standard = "atdd_ext_docs.capability:StandardDocumentationCapability"
+
+[tool.setuptools.packages.find]
+where = ["src"]
