@@ -95,6 +95,10 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     # ── coder.bun · runtime ─────────────────────────────────────────────────
     "coder.bun.runtime-server-is-bun-serve": ("server.ts", ("express", "Bun.serve"), None),
     "coder.bun.runtime-single-lockfile":     ("package-lock.json", ("npm", "package-lock.json"), None),
+    # Advisory and deliberately permissive, so the row pins the two facts the detector
+    # had to READ out of the project rather than any blessed incantation: that
+    # typescript is absent from the dependency map, and that tsconfig turns strict off.
+    "coder.bun.runtime-typecheck-enforced": ("package.json", ("typescript is not a dependency",), None),
     # ── coder.bun · interlocking (route control) ────────────────────────────
     # Each row pins the failure mode the detector had to CLASSIFY from the tree —
     # which of a check's several branches fired — plus, where the check computes
