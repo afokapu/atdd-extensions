@@ -390,7 +390,7 @@ def test_unresolvable_reference_is_attributable_and_fails(monkeypatch) -> None:
 
 
 def test_a_raising_capability_is_fail_never_pass(monkeypatch) -> None:
-    def boom(repo_root):
+    def boom(repo_root, documents=None):
         raise RuntimeError("resolver exploded")
 
     monkeypatch.setattr(capability, "corpus_violations", boom)
@@ -489,3 +489,228 @@ def test_emit_raw_documentation_report() -> None:
 
     # Run-health only: deliberately NOT gated on emptiness (disposition is the gate's).
     assert isinstance(violations, list)
+
+
+# ── 3. REGRESSIONS from the code review of 511a107..d8963c0 ───────────────────
+
+
+def test_dirty_missing_index_fixture_is_tracked_not_an_empty_directory() -> None:
+    """The fixture's defect must survive a fresh clone.
+
+    Expressing "the area exists but has no index" as an EMPTY directory made the
+    defect invisible to git: the fixture arrived empty on clone, the rule never
+    fired, and `area-index-required` was the one rule with no live proof in CI. A
+    fixture that only works on the machine that authored it proves nothing.
+    """
+    delivery = _FIXTURES / "dirty_missing_index" / "docs" / "delivery"
+    tracked = [p for p in delivery.iterdir() if p.is_file()]
+    assert tracked, "fixture directory must hold a tracked file, not be empty"
+    assert not (delivery / "index.adoc").exists(), "the missing index IS the defect"
+
+
+def test_unrecognised_impact_never_switches_off_the_path_checks() -> None:
+    """A typo in `impact` must not disable the archive-destination rule.
+
+    Gating the path checks on `impact == "change"` meant a missing or misspelled
+    impact returned [] before inspecting a single path — so a malformed declaration
+    turned off the one check this module calls load-bearing, instead of tripping it.
+    """
+    escaping_archive = {
+        "impact": "changes",  # typo
+        "artifacts": [{"action": "archive", "path": "docs/architecture/x.adoc"}],
+    }
+    paths = declaration.artifact_path_violations(escaping_archive)
+    assert _rule_ids(paths) == {pkg.RULE_ARTIFACT_PATH_SHAPE}
+    assert any("archive destination" in v["evidence"] for v in paths)
+
+    no_impact_key = {"artifacts": [{"action": "create", "path": "/etc/passwd"}]}
+    assert declaration.artifact_path_violations(no_impact_key), "path outside docs/ must be reported"
+
+    # And the malformedness itself is reported, never read as nothing-to-check.
+    assert declaration.impact_violations(escaping_archive)
+    assert declaration.impact_violations(no_impact_key)
+
+
+def test_a_well_formed_declaration_reports_no_impact_violation() -> None:
+    assert declaration.impact_violations({"impact": "none", "reason": "already accepted"}) == []
+    assert declaration.impact_violations(
+        {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]}
+    ) == []
+    assert declaration.impact_violations(None) == []
+
+
+def test_malformed_impact_reaches_the_verdict(monkeypatch) -> None:
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "changes", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]},
+        ["docs/index.adoc"],
+        _FIXTURES / "clean",
+    )
+    assert check.verdict == verdict.FAIL
+    assert any("total forms" in f.message for f in check.findings)
+
+
+# ── 4. the nine remaining findings from the same review ───────────────────────
+
+
+def test_body_text_before_any_attribute_ends_the_header() -> None:
+    """A doc-id quoted in a code sample must never become the document's identity.
+
+    The guard only fired once an attribute had been seen, so a document with prose
+    first adopted an id from a later code block — inventing a duplicate against the
+    real owner and suppressing its own identity-required finding.
+    """
+    text = "= Title\n\nSome prose first.\n\n----\n:doc-id: purpose.worktrees\n:status: current\n----\n"
+    attributes, _ = corpus.parse_attributes(text)
+    assert attributes.get("doc-id") in (None, ""), attributes
+
+
+def test_renderer_diagnostics_are_attributed_by_path_not_basename() -> None:
+    """Six files are called index.adoc; a glob sent authors to the wrong one."""
+    clean = _FIXTURES / "clean"
+    target = clean / "docs/purpose/index.adoc"
+    stderr = f"asciidoctor: WARNING: {target}: line 3: invalid reference: x"
+    findings, _ = render.parse_diagnostics(stderr, clean)
+    assert [f["file"] for f in findings] == ["docs/purpose/index.adoc"]
+
+
+def test_a_located_warning_without_a_line_number_is_still_attributable() -> None:
+    stderr = "asciidoctor: WARNING: shared-control-root.adoc: section title out of sequence"
+    findings, noise = render.parse_diagnostics(stderr, _FIXTURES / "clean")
+    assert noise == []
+    assert len(findings) == 1
+    assert findings[0]["file"].endswith("shared-control-root.adoc")
+    assert findings[0]["line"] == 1
+
+
+def test_unattributable_output_survives_alongside_a_located_finding() -> None:
+    """A load failure means most of the corpus was never validated.
+
+    It used to be discarded the moment one located warning existed, so the verdict
+    was FAIL on the warning and the far worse fact never reached the report.
+    """
+    clean = _FIXTURES / "clean"
+    stderr = (
+        "asciidoctor: FAILED: cannot load such file -- asciidoctor/converter\n"
+        f"asciidoctor: WARNING: {clean / 'docs/index.adoc'}: line 2: invalid reference: y"
+    )
+    findings, noise = render.parse_diagnostics(stderr, clean)
+    assert findings and noise, "both must survive"
+    assert any("cannot load such file" in n for n in noise)
+
+
+def test_an_adr_with_no_adr_id_is_reported_not_invisible() -> None:
+    documents = corpus.read_corpus(_FIXTURES / "clean")
+    orphan = corpus.Document(
+        path=f"{adr.DECISIONS_DIR}/adr-20260906-004-state-store.adoc",
+        text="= ADR\n:doc-id: architecture.decisions.adr-004\n:status: current\n:decides: architecture.state-store\n",
+        attributes={"doc-id": "architecture.decisions.adr-004", "status": "current",
+                    "decides": "architecture.state-store"},
+        attribute_lines={},
+    )
+    findings = adr.registry_violations([*documents, orphan])
+    assert any("declares no :adr-id:" in f["evidence"] for f in findings)
+
+
+def test_registry_own_adr_id_never_erases_a_real_entry() -> None:
+    documents = corpus.read_corpus(_FIXTURES / "clean")
+    registry = next(d for d in documents if d.path == adr.REGISTRY_PATH)
+    # The registry declares the SAME id as a genuine ADR.
+    colliding = corpus.Document(
+        path=registry.path, text=registry.text,
+        attributes={**registry.attributes, "adr-id": "ADR-20260906-001"},
+        attribute_lines=registry.attribute_lines,
+    )
+    others = [d for d in documents if d.path != adr.REGISTRY_PATH]
+    findings = adr.registry_violations([*others, colliding])
+    assert not any("missing from the registry" in f["evidence"] for f in findings), (
+        "a listed ADR was reported missing; editing the registry would not have helped"
+    )
+
+
+def test_a_declared_artifact_that_was_never_written_blocks(monkeypatch) -> None:
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "change", "artifacts": [
+            {"action": "create", "path": "docs/purpose/never-written.adoc"},
+        ]},
+        ["docs/purpose/never-written.adoc"],
+        _FIXTURES / "clean",
+    )
+    assert check.verdict == verdict.FAIL
+    assert any("never written" in f.message for f in check.findings)
+
+
+def test_render_does_not_write_into_the_tree_it_validates() -> None:
+    """A validation call must leave the worktree clean."""
+    clean = _FIXTURES / "clean"
+    before = {p.relative_to(clean).as_posix() for p in clean.rglob("*") if p.is_file()}
+    render.render(clean)  # asciidoctor may be absent; either way it must not write
+    after = {p.relative_to(clean).as_posix() for p in clean.rglob("*") if p.is_file()}
+    assert before == after, f"render wrote into the corpus: {sorted(after - before)}"
+
+
+def test_the_corpus_is_read_once_per_check(monkeypatch) -> None:
+    """`checked` and `findings` must describe the same tree."""
+    _clean_render(monkeypatch)
+    calls = []
+    real = corpus.read_corpus
+    monkeypatch.setattr(corpus, "read_corpus", lambda root: (calls.append(root), real(root))[1])
+    capability.StandardDocumentationCapability().check(
+        {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]},
+        ["docs/index.adoc"],
+        _FIXTURES / "clean",
+    )
+    assert len(calls) == 1, f"corpus read {len(calls)} times"
+
+
+# ── 5. an absent change set is not an empty one ───────────────────────────────
+
+
+def test_absent_change_set_is_could_not_check_not_pass(monkeypatch) -> None:
+    """`None` from core and `[]` from core are different facts.
+
+    `list(change_set or [])` collapsed them, so undeclared_change_violations found
+    nothing and the run reached PASS — the capability claiming "nothing undeclared"
+    while having been told nothing at all. That is the same fail-open shape this
+    extension exists to refuse, one line above the fix for it.
+    """
+    _clean_render(monkeypatch)
+    decl = {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]}
+    check = capability.StandardDocumentationCapability().check(decl, None, _FIXTURES / "clean")
+    assert check.verdict == verdict.COULD_NOT_CHECK
+    assert verdict.blocks(check.verdict) is True
+    assert any("no change set" in f.message for f in check.findings)
+
+
+def test_an_empty_change_set_remains_a_legitimate_pass(monkeypatch) -> None:
+    """[] is core saying "nothing changed", which this capability can act on.
+
+    Whether the DECLARED paths appear in an empty diff is core's check 4, not this
+    capability's — so an empty change set must stay distinct from an absent one and
+    must not be dragged down with it.
+    """
+    _clean_render(monkeypatch)
+    decl = {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]}
+    check = capability.StandardDocumentationCapability().check(decl, [], _FIXTURES / "clean")
+    assert check.verdict == verdict.PASS
+    assert verdict.blocks(check.verdict) is False
+
+
+def test_a_definite_violation_still_outranks_an_absent_change_set(monkeypatch) -> None:
+    """Precedence holds: FAIL is the more actionable answer, and both block."""
+    _clean_render(monkeypatch)
+    decl = {"impact": "change", "artifacts": [{"action": "create", "path": "docs/never-written.adoc"}]}
+    check = capability.StandardDocumentationCapability().check(decl, None, _FIXTURES / "clean")
+    assert check.verdict == verdict.FAIL
+    # The could-not-check reason still reaches the report rather than being swallowed.
+    assert any("no change set" in f.message for f in check.findings)
+
+
+def test_no_obligation_outranks_an_absent_change_set(monkeypatch) -> None:
+    """`impact: none` needs no diff, so not having one changes nothing."""
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "none", "reason": "no change to accepted truth"}, None, _FIXTURES / "clean"
+    )
+    assert check.verdict == verdict.NOT_APPLICABLE

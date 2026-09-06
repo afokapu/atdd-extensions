@@ -101,8 +101,12 @@ def parse_attributes(text: str) -> tuple[dict[str, str], dict[str, int]]:
             continue
         if line.startswith("="):
             continue  # the document title sits inside the header
-        if seen_attribute:
-            break  # body text has started
+        # Body text has started. This breaks whether or not an attribute was seen
+        # yet: before the fix it only broke AFTER one, so a document with prose
+        # first and a `:doc-id:` quoted later inside a code sample adopted that id
+        # as its own identity — inventing a duplicate against the real owner and
+        # suppressing its own identity-required finding.
+        break
     return attributes, lines
 
 

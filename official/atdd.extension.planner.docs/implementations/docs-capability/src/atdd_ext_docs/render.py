@@ -19,6 +19,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -36,9 +37,13 @@ DIST_SUBDIR = "dist"
 RENDER_TIMEOUT_SECONDS = 120
 
 #: `asciidoctor: WARNING: shared-control-root.adoc: line 12: invalid reference: foo`
+#: The `line N` segment is OPTIONAL. asciidoctor emits plenty of fully attributable
+#: warnings without one ("notes.adoc: section title out of sequence"); requiring it
+#: pushed those into the unattributable bucket, where they became a COULD_NOT_CHECK
+#: with no file pointer or were dropped entirely.
 _DIAGNOSTIC_RE = re.compile(
     r"^asciidoctor:\s*(?P<level>WARNING|ERROR|FAILED):\s*"
-    r"(?P<path>[^:]+?):\s*line\s*(?P<line>\d+):\s*(?P<message>.*)$"
+    r"(?P<path>[^:]+?):\s*(?:line\s*(?P<line>\d+):\s*)?(?P<message>.*)$"
 )
 
 
@@ -90,13 +95,42 @@ def parse_diagnostics(stderr: str, repo_root: Path) -> tuple[list[dict], list[st
             unattributable.append(line)
             continue
         name = match.group("path").strip()
-        candidates = sorted((repo_root / DOCS_DIR).rglob(Path(name).name))
-        if candidates:
-            rel = candidates[0].relative_to(repo_root).as_posix()
-        else:
-            rel = name
-        findings.append(_finding(rel, int(match.group("line")), match.group("message")))
+        rel, ambiguous = _attribute(name, repo_root)
+        message = match.group("message")
+        if ambiguous:
+            message += (
+                f" [reported as {name!r}; {ambiguous} files in the corpus share that name, "
+                f"so the location is the renderer's, not this detector's]"
+            )
+        line = int(match.group("line") or 1)
+        findings.append(_finding(rel, line, message))
     return findings, unattributable
+
+
+def _attribute(name: str, repo_root: Path) -> tuple[str, int]:
+    """Resolve a renderer-reported path to a repo-relative one.
+
+    `render()` passes ABSOLUTE source paths to asciidoctor, so the diagnostic already
+    names the exact file — the previous code threw that away and globbed the basename
+    under docs/, taking candidates[0]. A canonical tree holds six files called
+    `index.adoc`, so a warning about docs/purpose/index.adoc was reported against
+    docs/architecture/decisions/index.adoc, sending the author to a file with no such
+    problem. Only a bare basename falls back to a glob, and an ambiguous one says so.
+    """
+    candidate = Path(name)
+    if candidate.is_absolute():
+        try:
+            return candidate.resolve().relative_to(repo_root.resolve()).as_posix(), 0
+        except ValueError:
+            return candidate.as_posix(), 0
+    if (repo_root / candidate).exists():
+        return candidate.as_posix(), 0
+    matches = sorted((repo_root / DOCS_DIR).rglob(candidate.name))
+    if len(matches) == 1:
+        return matches[0].relative_to(repo_root).as_posix(), 0
+    if len(matches) > 1:
+        return matches[0].relative_to(repo_root).as_posix(), len(matches)
+    return name, 0
 
 
 def render(repo_root: Path) -> RenderOutcome:
@@ -124,30 +158,47 @@ def render(repo_root: Path) -> RenderOutcome:
     if not sources:
         return RenderOutcome()  # nothing authored to render; not an error
 
-    command = [
-        TOOLCHAIN,
-        "--failure-level", "WARN",
-        "--base-dir", str(docs_root),
-        "--destination-dir", str(docs_root / DIST_SUBDIR),
-        *[str(p) for p in sources],
-    ]
-    try:
-        completed = subprocess.run(  # noqa: S603 — fixed argv, no shell
-            command, capture_output=True, text=True, timeout=RENDER_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired:
-        return RenderOutcome(
-            unattributable=f"{TOOLCHAIN} exceeded {RENDER_TIMEOUT_SECONDS}s and was abandoned; "
-                           f"the corpus was not rendered"
-        )
-    except OSError as exc:
-        return RenderOutcome(unattributable=f"{TOOLCHAIN} could not be executed: {exc}")
+    # Render into a TEMP directory, never docs/dist. A validation call that writes
+    # generated HTML into the tree it is validating leaves the worktree dirty, which
+    # can trip a clean-worktree check elsewhere in the lifecycle. The reference-
+    # integrity signal is identical either way.
+    with tempfile.TemporaryDirectory(prefix="atdd-docs-render-") as out_dir:
+        command = [
+            TOOLCHAIN,
+            "--failure-level", "WARN",
+            "--base-dir", str(docs_root),
+            "--destination-dir", out_dir,
+            *[str(p) for p in sources],
+        ]
+        try:
+            completed = subprocess.run(  # noqa: S603 — fixed argv, no shell
+                command, capture_output=True, text=True, timeout=RENDER_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return RenderOutcome(
+                unattributable=f"{TOOLCHAIN} exceeded {RENDER_TIMEOUT_SECONDS}s and was abandoned; "
+                               f"the corpus was not rendered"
+            )
+        except OSError as exc:
+            return RenderOutcome(unattributable=f"{TOOLCHAIN} could not be executed: {exc}")
 
-    findings, noise = parse_diagnostics(completed.stderr, repo_root)
-    if completed.returncode != 0 and not findings:
-        # It failed and would not say where. Exactly the unattributable case.
-        detail = "; ".join(noise) or f"exit status {completed.returncode}"
-        return RenderOutcome(
-            unattributable=f"{TOOLCHAIN} failed without attributing the failure to a document: {detail}"
-        )
-    return RenderOutcome(findings=findings)
+        findings, noise = parse_diagnostics(completed.stderr, repo_root)
+        # Noise reaches the caller whenever there is any, NOT only when there are no
+        # located findings. Previously a load failure ("cannot load such file --
+        # asciidoctor/converter", meaning most of the corpus was never validated) was
+        # discarded the moment one located warning existed, so the verdict was FAIL on
+        # the warning and the far worse fact never reached the report.
+        if noise:
+            detail = "; ".join(noise)
+            return RenderOutcome(
+                findings=findings,
+                unattributable=(
+                    f"{TOOLCHAIN} emitted output it could not attribute to a document, so part of "
+                    f"the corpus was not validated: {detail}"
+                ),
+            )
+        if completed.returncode != 0 and not findings:
+            return RenderOutcome(
+                unattributable=f"{TOOLCHAIN} failed without saying where: exit status {completed.returncode}"
+            )
+        return RenderOutcome(findings=findings)

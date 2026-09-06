@@ -53,6 +53,34 @@ def read_adrs(documents: list[Document]) -> list[AdrRecord]:
     return sorted(records, key=lambda r: (r.adr_id, r.path))
 
 
+def unidentified_adr_violations(documents: list[Document]) -> list[dict]:
+    """An ADR-shaped file that declares no `:adr-id:`.
+
+    `derive_registry` filters on a truthy adr_id and `identity-required` only demands
+    `:doc-id:`/`:status:`, so such a file was invisible to EVERY rule: an unregistered
+    decision sat in the tree and the corpus reported clean. The convention says an ADR
+    present in the tree and absent from the registry is a violation, and this is
+    exactly that case.
+    """
+    out: list[dict] = []
+    for record in read_adrs(documents):
+        if record.adr_id:
+            continue
+        out.append({
+            "rule_id": RULE_ADR_REGISTRY_DERIVED,
+            "file": record.path,
+            "line": 1,
+            "col": 1,
+            "evidence": (
+                f"{record.path} is named as an ADR but declares no :adr-id:, so it cannot be "
+                f"projected into the registry and no rule can see it. Declare :adr-id: "
+                f"matching its filename."
+            ),
+            "source_line": "",
+        })
+    return out
+
+
 def derive_registry(documents: list[Document]) -> tuple[str, ...]:
     """The projection: the set of adr-ids the corpus declares.
 
@@ -63,6 +91,11 @@ def derive_registry(documents: list[Document]) -> tuple[str, ...]:
 
 
 def registry_violations(documents: list[Document]) -> list[dict]:
+    """Registry drift, plus ADRs that cannot be projected at all."""
+    return unidentified_adr_violations(documents) + _registry_drift_violations(documents)
+
+
+def _registry_drift_violations(documents: list[Document]) -> list[dict]:
     """Compare the registry against the projection, in BOTH directions.
 
     A missing entry is the obvious drift. A STALE entry — an ADR listed after its
@@ -89,8 +122,14 @@ def registry_violations(documents: list[Document]) -> list[dict]:
         ]
 
     listed = set(ADR_ID_RE.findall(registry.text))
-    # The registry's own :adr-id:, if it declares one, is not an entry about itself.
-    listed.discard(registry.attributes.get("adr-id", ""))
+    # The registry's own :adr-id: is not an entry about itself — but ONLY discard it
+    # when no real ADR claims that id. Discarding unconditionally meant a registry
+    # whose adr-id collided with a genuine ADR erased that ADR from `listed`, which
+    # was then reported as "missing from the registry" while plainly being listed:
+    # a finding whose obvious remedy has no effect.
+    own = registry.attributes.get("adr-id", "")
+    if own and own not in derived:
+        listed.discard(own)
 
     missing = sorted(derived - listed)
     stale = sorted(listed - derived)
