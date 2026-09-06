@@ -46,8 +46,6 @@ entries:
   workspaces:
   - id: atdd.workspace.python-pytest
     contract: ^1.0.0
-  - id: atdd.workspace.typescript
-    contract: ^1.0.0
   - id: atdd.workspace.dart-flutter
     contract: ^1.0.0
   - id: atdd.workspace.supabase
@@ -172,8 +170,6 @@ entries:
   - official
   workspaces:
   - id: atdd.workspace.python-pytest
-    contract: ^1.0.0
-  - id: atdd.workspace.typescript
     contract: ^1.0.0
   - id: atdd.workspace.supabase
     contract: ^1.0.0
@@ -350,24 +346,6 @@ entries:
   - supabase
   - deno
   - postgres
-  - runtime
-  - workspace-provider
-  - official
-- id: atdd.workspace.typescript
-  kind: workspace
-  latest_version: 0.1.0
-  versions:
-  - 0.1.0
-  aliases:
-  - typescript
-  publisher: atdd
-  trust: official
-  source: official/atdd.workspace.typescript
-  summary: "Official ATDD TypeScript/React/Preact workspace provider (reusable runtime). Skeleton in this\
-    \ slice \u2014 adapter is a NotImplementedError stub."
-  tags:
-  - typescript
-  - vitest
   - runtime
   - workspace-provider
   - official

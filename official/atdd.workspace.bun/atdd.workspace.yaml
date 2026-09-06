@@ -15,9 +15,12 @@ schema_version: "1.0.0"
 # its detectors under `bun` instead of `node`/`pytest`.
 #
 # Forked from frontend.workspace.runtime (the first real JS provider) rather than
-# from the atdd.workspace.typescript skeleton: that skeleton is NotImplementedError
-# stubs wired to vitest/pnpm assumptions, whereas the frontend runtime is a working
-# v1.1 adapter. The delta is the run command and the detector corpus.
+# from the former atdd.workspace.typescript skeleton: that skeleton was
+# NotImplementedError stubs wired to vitest/pnpm assumptions, whereas the frontend
+# runtime is a working v1.1 adapter. The delta is the run command and the detector
+# corpus. (The skeleton was retired once it was shown to own no implementation and
+# to be depended on by nothing: the `*-typescript` rules it appeared to serve are
+# all realized by detectors targeting atdd.workspace.python-pytest.)
 workspace_id: atdd.workspace.bun
 kind: workspace
 version: "0.1.0"
