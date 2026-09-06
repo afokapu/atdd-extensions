@@ -28,14 +28,36 @@ from . import adr, corpus, declaration as declaration_rules, graph as graph_rule
 
 @dataclass(frozen=True)
 class Finding:
-    """Human-readable, and it always names a path or a doc id (spec 2 §3)."""
+    """Human-readable, and it always names a path or a doc id (spec 2 §3).
 
-    rule_id: str
+    `rule_id` is OPTIONAL, and `None` is meaningful: it marks a SEAM fact — "core
+    told me nothing", "the capability raised" — rather than a rule violation.
+
+    An earlier cut filed those under a content rule (`artifact-path-shape`,
+    `undeclared-change`), which told a consumer filtering by rule_id that a
+    convention was violated when it was not. The next cut invented a synthetic
+    `planner.docs.capability`, which was worse in a quieter way: an undeclared id
+    escaping the capability, bound to no convention node, absent from ALL_RULE_IDS,
+    from the implementation's `emits_rule_ids`, and from the gate's realized set —
+    so nothing could resolve it and no manifest admitted it existed.
+
+    The resolution follows from the thing itself: a seam fact is not a rule
+    violation, so it carries no rule id. A convention node is an obligation on the
+    CONSUMER, and "the capability could not answer" is not something a consumer can
+    comply with — inventing a node for it would be a category error, not a fix.
+    """
+
+    rule_id: str | None
     where: str
     message: str
 
+    @property
+    def is_seam(self) -> bool:
+        """True for a fact about the seam rather than about the corpus."""
+        return self.rule_id is None
+
     def __str__(self) -> str:  # what reaches a report line
-        return f"{self.where}: {self.message} [{self.rule_id}]"
+        return f"{self.where}: {self.message} [{self.rule_id or 'capability'}]"
 
 
 @dataclass(frozen=True)
@@ -45,16 +67,6 @@ class DocumentationCheck:
     verdict: str
     findings: list[Finding] = field(default_factory=list)
     checked: list[str] = field(default_factory=list)
-
-
-#: Findings that are ABOUT THE SEAM, not about the corpus — "core told me nothing",
-#: "the capability raised". They are deliberately NOT one of ALL_RULE_IDS: no
-#: convention node states them, and filing them under a content rule (as the absent
-#: change set was, under `planner.docs.undeclared-change`) misattributes a seam fact
-#: to a rule whose statement says nothing about it. A consumer filtering by rule_id
-#: would have been told the artifact-path-shape convention was violated when it was
-#: not. The crash path already used this id; the other two now agree with it.
-SEAM_RULE_ID = "planner.docs.capability"
 
 
 def _finding(violation: dict) -> Finding:
@@ -178,7 +190,7 @@ class StandardDocumentationCapability:
                 verdict=verdict.FAIL,
                 findings=[
                     Finding(
-                        rule_id=SEAM_RULE_ID,
+                        rule_id=None,   # seam fact, not a rule violation
                         where=str(repo_root),
                         message=f"the documentation capability raised {type(exc).__name__}: {exc}. "
                                 f"A capability that crashes has not discharged the obligation.",
@@ -242,7 +254,7 @@ class StandardDocumentationCapability:
         if unknown_declaration:
             findings.append(
                 Finding(
-                    rule_id=SEAM_RULE_ID,
+                    rule_id=None,   # seam fact, not a rule violation
                     where="<declaration>",
                     message=(
                         "core supplied no documentation declaration, so no declaration-dependent "
@@ -255,7 +267,7 @@ class StandardDocumentationCapability:
         if unknown_change_set and not unknown_declaration:
             findings.append(
                 Finding(
-                    rule_id=SEAM_RULE_ID,
+                    rule_id=None,   # seam fact, not a rule violation
                     where="<change_set>",
                     message=(
                         "core supplied no change set, so whether this diff touches docs/ "

@@ -805,5 +805,41 @@ def test_seam_findings_are_not_filed_under_a_content_rule(monkeypatch) -> None:
         seam = [f for f in check.findings if f.where in ("<declaration>", "<change_set>")]
         assert seam, "expected a seam finding"
         for f in seam:
-            assert f.rule_id == capability.SEAM_RULE_ID
-            assert f.rule_id not in pkg.ALL_RULE_IDS, "a seam fact must not claim a convention node"
+            # No rule id at all: not a content rule, and not an invented one either.
+            # An undeclared id bound to no convention node, absent from ALL_RULE_IDS
+            # and from the implementation's emits_rule_ids, is not an improvement on
+            # misattribution — it is the same problem, quieter.
+            assert f.rule_id is None
+            assert f.is_seam is True
+
+
+def test_every_rule_id_a_finding_carries_is_a_declared_convention(monkeypatch) -> None:
+    """Nothing undeclared may escape the capability.
+
+    Every non-None rule_id must be a node this package owns AND a rule the
+    implementation manifest says it emits. Seam facts carry no id at all.
+    """
+    import yaml
+
+    manifest = yaml.safe_load(
+        (_HERE.parent / "atdd.implementation.yaml").read_text()
+    )
+    emits = set(manifest["emits_rule_ids"])
+    assert emits == set(pkg.ALL_RULE_IDS), "manifest and code disagree about what is emitted"
+
+    _clean_render(monkeypatch)
+    seen: set[str] = set()
+    for declaration, change_set, tree in [
+        (None, [], "clean"),
+        ({"impact": "change", "artifacts": []}, None, "clean"),
+        ({"impact": "change", "artifacts": [{"action": "create", "path": "docs/nope.adoc"}]},
+         ["docs/nope.adoc"], "dirty_unresolved_edge"),
+    ]:
+        check = capability.StandardDocumentationCapability().check(
+            declaration, change_set, _FIXTURES / tree
+        )
+        for f in check.findings:
+            if f.rule_id is not None:
+                seen.add(f.rule_id)
+    undeclared = seen - emits
+    assert not undeclared, f"findings carried rule_ids no manifest declares: {sorted(undeclared)}"
