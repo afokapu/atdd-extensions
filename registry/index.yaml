@@ -62,11 +62,12 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.bun
-  summary: "Official ATDD coder-role extension for the Bun / TypeScript runtime \u2014 44 convention nodes\
+  summary: "Official ATDD coder-role extension for the Bun / TypeScript runtime \u2014 45 convention nodes\
     \ across six families: GREEN/URN traceability (extended to .html templates), TypeScript metrics ported\
     \ natively from python-pytest, security / logging / error-response hygiene, clean architecture (layering,\
-    \ composition, DTOs, boundaries, naming), the Bun runtime decisions themselves, and train INTERLOCKING\
-    \ route control \u2014 the InterlockingRunner exists, resolves a structured InterlockingResolution,\
+    \ composition, DTOs, boundaries, naming), the Bun runtime decisions themselves (including the advisory\
+    \ typecheck rule that closes Bun's own gap \u2014 it strips types rather than checking them), and\
+    \ train INTERLOCKING route control \u2014 the InterlockingRunner exists, resolves a structured InterlockingResolution,\
     \ delegates to TrainRunner, never touches Cargo, is reached from the server.ts Station Master, and\
     \ closes bilaterally against the declared route space. Pair it with atdd.extension.tester.bun; add\
     \ atdd.extension.coder.htmx only if the app serves hypermedia."

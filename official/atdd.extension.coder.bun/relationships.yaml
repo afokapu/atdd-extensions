@@ -62,6 +62,7 @@ nodes:
   - coder.bun.quality-mi
   - coder.bun.runtime-server-is-bun-serve
   - coder.bun.runtime-single-lockfile
+  - coder.bun.runtime-typecheck-enforced
   - coder.bun.security-hardcoded-secret
   - coder.bun.security-missing-auth
   - coder.bun.security-sql-injection
@@ -421,3 +422,23 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both govern server.ts as the composition root: one that collaborators are only instantiated there, the other that the JOURNEY_MAP it holds agrees with the declared route space.'
+
+  # ── typechecking: the gap Bun itself leaves ─────────────────────────────────
+  - source_ref: coder.bun.runtime-typecheck-enforced
+    target_ref: coder.bun.interlocking-resolution-model-exists
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Complementary halves of one guarantee about the resolution model. The shape rule proves an InterlockingResolution declaring the eight fields EXISTS; only a typechecker proves what resolveTrain actually returns conforms to it, and Bun runs .ts without checking.'
+  - source_ref: coder.bun.runtime-typecheck-enforced
+    target_ref: coder.bun.runtime-single-lockfile
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both are Bun runtime decisions read from package.json and its neighbours: one that a single resolver owns the dependency graph, the other that the types in it are actually checked.'
