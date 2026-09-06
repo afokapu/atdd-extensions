@@ -55,14 +55,50 @@ def _finding(violation: dict) -> Finding:
     )
 
 
-def corpus_violations(repo_root: Path) -> list[dict]:
+def declared_artifact_violations(declaration: dict | None, repo_root: Path) -> list[dict]:
+    """A declared `create`/`modify` artifact that is not in the tree.
+
+    PASS means "the declared artifacts were examined" (spec 2 §3). Without this an
+    author could declare a document at RATIFY, never write it, and have COMPLETE
+    permit — which is the obligation this capability exists to enforce.
+    """
+    if not declaration_rules.declares_change(declaration):
+        return []
+    out: list[dict] = []
+    for artifact in declaration.get("artifacts") or []:
+        if not isinstance(artifact, dict):
+            continue
+        if artifact.get("action") not in ("create", "modify"):
+            continue  # an archive names a destination the migration writes
+        path = artifact.get("path")
+        if not isinstance(path, str) or not path:
+            continue  # shape is artifact_path_violations' business
+        if (repo_root / path).is_file():
+            continue
+        out.append({
+            "rule_id": "planner.docs.artifact-path-shape",
+            "file": path,
+            "line": 1,
+            "col": 1,
+            "evidence": (
+                f"declared artifact {path!r} (action: {artifact.get('action')}) is not in the "
+                f"tree, so it was never examined; a declared document that was never written "
+                f"has not discharged the obligation."
+            ),
+            "source_line": "",
+        })
+    return out
+
+
+def corpus_violations(repo_root: Path, documents: list[corpus.Document] | None = None) -> list[dict]:
     """Every corpus rule, in dependency order (relationships.yaml records why).
 
     Identity before uniqueness before edge resolution: a resolver that ran first
     would have to invent the id set it resolves against, which is #1758 arrived at
     by a different route.
     """
-    documents = corpus.read_corpus(repo_root)
+    if documents is None:
+        documents = corpus.read_corpus(repo_root)
     documentation_graph = graph_rules.resolve(documents)
     return [
         *corpus.asciidoc_only_violations(repo_root),
@@ -147,12 +183,16 @@ class StandardDocumentationCapability:
                 checked=[],
             )
 
-        violations = corpus_violations(repo_root)
+        # Read the corpus ONCE. Reading it again for `checked` meant the two could
+        # describe different trees, so findings and the list of what was examined
+        # could disagree.
+        documents = corpus.read_corpus(repo_root)
+        violations = corpus_violations(repo_root, documents)
         violations += declaration_rules.impact_violations(declaration)
         violations += declaration_rules.artifact_path_violations(declaration)
         violations += declaration_rules.undeclared_change_violations(declaration, change_set)
+        violations += declared_artifact_violations(declaration, repo_root)
 
-        documents = corpus.read_corpus(repo_root)
         checked = [d.path for d in documents]
         checked.append("<declaration>")
 

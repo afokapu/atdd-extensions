@@ -390,7 +390,7 @@ def test_unresolvable_reference_is_attributable_and_fails(monkeypatch) -> None:
 
 
 def test_a_raising_capability_is_fail_never_pass(monkeypatch) -> None:
-    def boom(repo_root):
+    def boom(repo_root, documents=None):
         raise RuntimeError("resolver exploded")
 
     monkeypatch.setattr(capability, "corpus_violations", boom)
@@ -548,3 +548,117 @@ def test_malformed_impact_reaches_the_verdict(monkeypatch) -> None:
     )
     assert check.verdict == verdict.FAIL
     assert any("total forms" in f.message for f in check.findings)
+
+
+# ── 4. the nine remaining findings from the same review ───────────────────────
+
+
+def test_body_text_before_any_attribute_ends_the_header() -> None:
+    """A doc-id quoted in a code sample must never become the document's identity.
+
+    The guard only fired once an attribute had been seen, so a document with prose
+    first adopted an id from a later code block — inventing a duplicate against the
+    real owner and suppressing its own identity-required finding.
+    """
+    text = "= Title\n\nSome prose first.\n\n----\n:doc-id: purpose.worktrees\n:status: current\n----\n"
+    attributes, _ = corpus.parse_attributes(text)
+    assert attributes.get("doc-id") in (None, ""), attributes
+
+
+def test_renderer_diagnostics_are_attributed_by_path_not_basename() -> None:
+    """Six files are called index.adoc; a glob sent authors to the wrong one."""
+    clean = _FIXTURES / "clean"
+    target = clean / "docs/purpose/index.adoc"
+    stderr = f"asciidoctor: WARNING: {target}: line 3: invalid reference: x"
+    findings, _ = render.parse_diagnostics(stderr, clean)
+    assert [f["file"] for f in findings] == ["docs/purpose/index.adoc"]
+
+
+def test_a_located_warning_without_a_line_number_is_still_attributable() -> None:
+    stderr = "asciidoctor: WARNING: shared-control-root.adoc: section title out of sequence"
+    findings, noise = render.parse_diagnostics(stderr, _FIXTURES / "clean")
+    assert noise == []
+    assert len(findings) == 1
+    assert findings[0]["file"].endswith("shared-control-root.adoc")
+    assert findings[0]["line"] == 1
+
+
+def test_unattributable_output_survives_alongside_a_located_finding() -> None:
+    """A load failure means most of the corpus was never validated.
+
+    It used to be discarded the moment one located warning existed, so the verdict
+    was FAIL on the warning and the far worse fact never reached the report.
+    """
+    clean = _FIXTURES / "clean"
+    stderr = (
+        "asciidoctor: FAILED: cannot load such file -- asciidoctor/converter\n"
+        f"asciidoctor: WARNING: {clean / 'docs/index.adoc'}: line 2: invalid reference: y"
+    )
+    findings, noise = render.parse_diagnostics(stderr, clean)
+    assert findings and noise, "both must survive"
+    assert any("cannot load such file" in n for n in noise)
+
+
+def test_an_adr_with_no_adr_id_is_reported_not_invisible() -> None:
+    documents = corpus.read_corpus(_FIXTURES / "clean")
+    orphan = corpus.Document(
+        path=f"{adr.DECISIONS_DIR}/adr-20260906-004-state-store.adoc",
+        text="= ADR\n:doc-id: architecture.decisions.adr-004\n:status: current\n:decides: architecture.state-store\n",
+        attributes={"doc-id": "architecture.decisions.adr-004", "status": "current",
+                    "decides": "architecture.state-store"},
+        attribute_lines={},
+    )
+    findings = adr.registry_violations([*documents, orphan])
+    assert any("declares no :adr-id:" in f["evidence"] for f in findings)
+
+
+def test_registry_own_adr_id_never_erases_a_real_entry() -> None:
+    documents = corpus.read_corpus(_FIXTURES / "clean")
+    registry = next(d for d in documents if d.path == adr.REGISTRY_PATH)
+    # The registry declares the SAME id as a genuine ADR.
+    colliding = corpus.Document(
+        path=registry.path, text=registry.text,
+        attributes={**registry.attributes, "adr-id": "ADR-20260906-001"},
+        attribute_lines=registry.attribute_lines,
+    )
+    others = [d for d in documents if d.path != adr.REGISTRY_PATH]
+    findings = adr.registry_violations([*others, colliding])
+    assert not any("missing from the registry" in f["evidence"] for f in findings), (
+        "a listed ADR was reported missing; editing the registry would not have helped"
+    )
+
+
+def test_a_declared_artifact_that_was_never_written_blocks(monkeypatch) -> None:
+    _clean_render(monkeypatch)
+    check = capability.StandardDocumentationCapability().check(
+        {"impact": "change", "artifacts": [
+            {"action": "create", "path": "docs/purpose/never-written.adoc"},
+        ]},
+        ["docs/purpose/never-written.adoc"],
+        _FIXTURES / "clean",
+    )
+    assert check.verdict == verdict.FAIL
+    assert any("never written" in f.message for f in check.findings)
+
+
+def test_render_does_not_write_into_the_tree_it_validates() -> None:
+    """A validation call must leave the worktree clean."""
+    clean = _FIXTURES / "clean"
+    before = {p.relative_to(clean).as_posix() for p in clean.rglob("*") if p.is_file()}
+    render.render(clean)  # asciidoctor may be absent; either way it must not write
+    after = {p.relative_to(clean).as_posix() for p in clean.rglob("*") if p.is_file()}
+    assert before == after, f"render wrote into the corpus: {sorted(after - before)}"
+
+
+def test_the_corpus_is_read_once_per_check(monkeypatch) -> None:
+    """`checked` and `findings` must describe the same tree."""
+    _clean_render(monkeypatch)
+    calls = []
+    real = corpus.read_corpus
+    monkeypatch.setattr(corpus, "read_corpus", lambda root: (calls.append(root), real(root))[1])
+    capability.StandardDocumentationCapability().check(
+        {"impact": "change", "artifacts": [{"action": "modify", "path": "docs/index.adoc"}]},
+        ["docs/index.adoc"],
+        _FIXTURES / "clean",
+    )
+    assert len(calls) == 1, f"corpus read {len(calls)} times"
