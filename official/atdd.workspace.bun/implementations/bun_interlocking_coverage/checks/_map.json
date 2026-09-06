@@ -1,0 +1,6 @@
+{
+  "interlocking_route_coverage": "tester.bun.interlocking-route-coverage",
+  "interlocking_production_runner": "tester.bun.interlocking-production-runner-used",
+  "interlocking_smoke_coverage": "tester.bun.interlocking-smoke-coverage-for-station-master",
+  "interlocking_trace_binds": "tester.bun.interlocking-trace-binds-declared-route"
+}

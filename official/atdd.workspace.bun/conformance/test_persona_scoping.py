@@ -36,7 +36,10 @@ _IMPLS = {p.name: p for p in (_WS / "implementations").iterdir()
 _TESTER = "bun_tester_discipline_detector"
 # Two tester families: the Bun suite rules and the htmx ones. Both are
 # tester-persona and neither may produce findings on a source-only tree.
-_TESTER_FAMILIES = {_TESTER, "htmx_tester_detector"}
+_TESTER_FAMILIES = {_TESTER, "htmx_tester_detector", "bun_interlocking_coverage"}
+# bun_interlocking_coverage is tester-persona: it reads the declared route space and the
+# consumer's TEST files to prove every admissible route, exposed action and trace binding
+# is exercised. The coder side of interlocking is bun_interlocking_infrastructure.
 _CODER = sorted(n for n in _IMPLS if n not in _TESTER_FAMILIES)
 
 
@@ -144,3 +147,38 @@ def test_the_two_personas_declare_disjoint_rule_namespaces() -> None:
             assert persona == expected, f"{name} emits {rid}, which is a {persona} rule"
     assert ns["coder"] and ns["tester"]
     assert not (ns["coder"] & ns["tester"])
+
+
+@requires_bun
+@pytest.mark.parametrize("impl_name", _CODER)
+def test_coder_families_never_report_on_a_test_file_in_a_mixed_tree(impl_name: str) -> None:
+    """The guard above uses a test-ONLY tree, and that is not enough.
+
+    A detector can be silent on a tree of nothing but tests — because it finds no
+    consumer root, no package.json, no route space — and still report on a test file
+    the moment it is given a REALISTIC tree with source, plan data and tests
+    together. That is exactly what happened: bun_interlocking_binding's
+    `trace_to_declaration` direction reads e2e trace tests to check the declared
+    route space is closed, and it anchored its finding on the .test.ts it had read.
+    A consumer adopting atdd.extension.coder.bun without the tester extension would
+    have seen a coder rule_id land on a test file — the cross-contamination that
+    stops the two extensions being adopted and ratcheted independently.
+
+    Reading a test file is fine. REPORTING on one is not. This runs every coder
+    family over every fixture tree in the provider — the mixed ones included — and
+    fails on any finding anchored at a test file.
+    """
+    offenders: list[tuple[str, str]] = []
+    for tree in sorted((_IMPLS[impl_name] / "fixtures").rglob("*")):
+        if not tree.is_dir():
+            continue
+        # a fixture ROOT is a dir holding a consumer surface, not an interior dir
+        if not any((tree / d).is_dir() for d in ("src", "plan", "e2e")):
+            continue
+        for v in _emitted(impl_name, tree):
+            name = Path(v["file"]).name
+            if ".test." in name or ".spec." in name:
+                offenders.append((v["rule_id"], v["file"]))
+    assert not offenders, (
+        f"{impl_name} anchored a coder finding on a test file: {sorted(set(offenders))}"
+    )

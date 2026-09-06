@@ -50,16 +50,22 @@ nodes:
   - coder.bun.green-urn-pattern
   - coder.bun.green-urn-side
   - coder.bun.green-urn-wagon-feature
+  - coder.bun.interlocking-bilateral-binding
+  - coder.bun.interlocking-delegates-to-trainrunner
+  - coder.bun.interlocking-does-not-carry-cargo
+  - coder.bun.interlocking-resolution-model-exists
+  - coder.bun.interlocking-runner-exists
   - coder.bun.layer-naming
   - coder.bun.logging-console
   - coder.bun.logging-structured
   - coder.bun.quality-comments
   - coder.bun.quality-mi
+  - coder.bun.runtime-server-is-bun-serve
+  - coder.bun.runtime-single-lockfile
   - coder.bun.security-hardcoded-secret
   - coder.bun.security-missing-auth
   - coder.bun.security-sql-injection
-  - coder.bun.runtime-server-is-bun-serve
-  - coder.bun.runtime-single-lockfile
+  - coder.bun.station-master-interlocking-routing
 
 edges:
   - source_ref: coder.bun.green-urn-pattern
@@ -359,3 +365,59 @@ edges:
     strength: important
     confidence: 1.0
     reason: 'The canonical order this rule enforces is URN -> Tested-By -> Runtime -> Purpose; Runtime and Purpose are the second half of the very sequence it governs, so they were never a separate concern.'
+
+  # ── interlocking: the route-control family (Bun mirror of coder.convex.*) ──
+  - source_ref: coder.bun.interlocking-resolution-model-exists
+    target_ref: coder.bun.interlocking-runner-exists
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'A structured resolution is what resolveTrain RETURNS, so there is nothing to structure until the route-control layer exists. Runner first, then the shape of its verdict.'
+  - source_ref: coder.bun.interlocking-delegates-to-trainrunner
+    target_ref: coder.bun.interlocking-runner-exists
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Delegation is a property OF the runner; a tree with no InterlockingRunner has nothing that could fail to delegate.'
+  - source_ref: coder.bun.interlocking-does-not-carry-cargo
+    target_ref: coder.bun.interlocking-delegates-to-trainrunner
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'The two halves of one idea: route control must not become execution. One forbids running the wagons, the other forbids touching the data plane they carry.'
+  - source_ref: coder.bun.station-master-interlocking-routing
+    target_ref: coder.bun.interlocking-runner-exists
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'server.ts can only route THROUGH an InterlockingRunner that exists; the Station Master obligation presupposes the runtime one.'
+  - source_ref: coder.bun.interlocking-bilateral-binding
+    target_ref: coder.bun.station-master-interlocking-routing
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Bilateral binding closes declaration, runtime, station and trace against each other. Two of its five directions are Station Master directions, so the station wiring must hold before closure can be asserted.'
+  - source_ref: coder.bun.interlocking-bilateral-binding
+    target_ref: coder.bun.composition-root
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: minor
+    confidence: 1.0
+    reason: 'Both govern server.ts as the composition root: one that collaborators are only instantiated there, the other that the JOURNEY_MAP it holds agrees with the declared route space.'

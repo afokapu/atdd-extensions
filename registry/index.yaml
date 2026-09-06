@@ -62,11 +62,14 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.bun
-  summary: "Official ATDD coder-role extension for the Bun / TypeScript runtime \u2014 38 convention nodes\
-    \ across five families: GREEN/URN traceability (extended to .html templates), TypeScript metrics ported\
+  summary: "Official ATDD coder-role extension for the Bun / TypeScript runtime \u2014 44 convention nodes\
+    \ across six families: GREEN/URN traceability (extended to .html templates), TypeScript metrics ported\
     \ natively from python-pytest, security / logging / error-response hygiene, clean architecture (layering,\
-    \ composition, DTOs, boundaries, naming), and the Bun runtime decisions themselves. Pair it with atdd.extension.tester.bun;\
-    \ add atdd.extension.coder.htmx only if the app serves hypermedia."
+    \ composition, DTOs, boundaries, naming), the Bun runtime decisions themselves, and train INTERLOCKING\
+    \ route control \u2014 the InterlockingRunner exists, resolves a structured InterlockingResolution,\
+    \ delegates to TrainRunner, never touches Cargo, is reached from the server.ts Station Master, and\
+    \ closes bilaterally against the declared route space. Pair it with atdd.extension.tester.bun; add\
+    \ atdd.extension.coder.htmx only if the app serves hypermedia."
   tags:
   - coder
   - bun
@@ -185,11 +188,13 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.bun
-  summary: "Official ATDD tester-role extension for a bun test suite \u2014 15 convention nodes covering\
+  summary: "Official ATDD tester-role extension for a bun test suite \u2014 19 convention nodes covering\
     \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
     \ tags) and phase discipline (RED fail-markers and behavioural assertions, SMOKE observability and\
-    \ no collaborator substitution, no self-skip, no shared live state, security/input/telemetry assertion).\
-    \ Mirrors convex.extension.tester.base rule for rule."
+    \ no collaborator substitution, no self-skip, no shared live state, security/input/telemetry assertion),\
+    \ plus interlocking coverage \u2014 every admissible route exercised, the production InterlockingRunner/TrainRunner\
+    \ driven rather than mocked, every exposed Station Master action smoke-covered, and every trace assertion\
+    \ bound back to its declared route. Mirrors convex.extension.tester.base rule for rule."
   tags:
   - tester
   - bun

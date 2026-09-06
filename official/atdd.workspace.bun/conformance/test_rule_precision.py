@@ -95,6 +95,28 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     # ── coder.bun · runtime ─────────────────────────────────────────────────
     "coder.bun.runtime-server-is-bun-serve": ("server.ts", ("express", "Bun.serve"), None),
     "coder.bun.runtime-single-lockfile":     ("package-lock.json", ("npm", "package-lock.json"), None),
+    # ── coder.bun · interlocking (route control) ────────────────────────────
+    # Each row pins the failure mode the detector had to CLASSIFY from the tree —
+    # which of a check's several branches fired — plus, where the check computes
+    # one, the concrete value it extracted (the missing resolution field, the
+    # artifact literal that bled into the route-control layer).
+    "coder.bun.interlocking-runner-exists":            ("interlocking.ts", ("missing-resolve-train", "resolveTrain"), None),
+    "coder.bun.interlocking-resolution-model-exists":  ("interlocking.ts", ("bare-train-id-resolution", "interlockingId"), None),
+    "coder.bun.station-master-interlocking-routing":   ("server.ts", ("no-trainrunner-delegation", "TrainRunner"), None),
+    "coder.bun.interlocking-delegates-to-trainrunner": ("interlocking.ts", ("direct-wagon-execution", "runTrain"), None),
+    "coder.bun.interlocking-does-not-carry-cargo":     ("interlocking.ts", ("cargo-mutation", "artifact_urn"), None),
+    # The systemic one. Pins the DIRECTION the detector classified plus the route id
+    # it extracted from the runtime and failed to find in the declared route space —
+    # a hidden route is the interlocking analogue of a fabricated graph node.
+    "coder.bun.interlocking-bilateral-binding":        ("interlocking.ts", ("runtime_to_declaration", "phantom-hidden-route"), None),
+    # ── tester.bun · interlocking (four ways a green suite can lie) ─────────
+    "tester.bun.interlocking-route-coverage":                    ("match-resolution.yaml", ("alternate-timeout",), None),
+    # Pins BOTH substitution vocabularies. "mock.module" is the regression guard: the
+    # pattern list arrived from the Convex mirror with only vi./jest. idioms, so a test
+    # could swap the whole route-control module through bun:test and report clean.
+    "tester.bun.interlocking-production-runner-used":            ("routes.test.ts", ("MockInterlockingRunner", "mock.module"), None),
+    "tester.bun.interlocking-smoke-coverage-for-station-master": ("match-resolution.yaml", ("resolve_match",), None),
+    "tester.bun.interlocking-trace-binds-declared-route":        ("trace.test.ts", ("guardId",), None),
     # ── coder.htmx ──────────────────────────────────────────────────────────
     "coder.htmx.verb-endpoint-same-origin":     ("panel.html", ("hx-get", "same-origin"), None),
     "coder.htmx.verb-destructive-confirms":     ("delete.html", ("hx-delete", "hx-confirm"), None),
