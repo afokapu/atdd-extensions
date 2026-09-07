@@ -98,7 +98,21 @@ _FORBIDDEN_PATTERNS: list[tuple[str, re.Pattern]] = [
 
 # A bare `trace` identifier (the captured trace object) — NOT `capture_trace`
 # (the `_` before `trace` is a word char, so `\btrace\b` does not match it).
-_TRACE_OBJECT = re.compile(r"\btrace\b")
+# A test makes a BINDING CLAIM when it reads a trace field that identifies the route.
+#
+# This was `\btrace\b` alone, which pulled in any test that merely used the word. A
+# sequence test asserting `trace["steps"] == declared` makes no claim about WHICH route
+# ran, yet was required to assert all eight binding fields — and the natural fix,
+# renaming the local variable, would have papered over the detector rather than fixing
+# it. Found by running this package against a purpose-built consumer.
+#
+# Reading ONE binding field still trips the rule, which is the intent: a test that
+# asserts route_id and nothing else is exactly the partial binding this rule refuses.
+_TRACE_OBJECT = re.compile(
+    r"\btrace\b[^\n]*\b(?:interlocking_id|route_id|selected_train_id|route_category"
+    r"|route_category_digit|guard_id|resolution_strategy|resolution_reason)\b"
+    r"|\b(?:interlocking_id|route_id|selected_train_id)\b[^\n]*\btrace\b"
+)
 # REACHING THE STATION MASTER, detected STRUCTURALLY rather than by naming.
 #
 # This was `\b(?:StationMaster|station_master)\b` alone, which required a consumer's
