@@ -293,3 +293,41 @@ def test_station_master_is_still_detected_by_the_class_name() -> None:
     assert detector._STATION_MASTER.search("import app")
     assert detector._STATION_MASTER.search("assert 'x' in app.JOURNEY_MAP")
     assert not detector._STATION_MASTER.search("a wholly unrelated sentence")
+
+
+# ── trace fields must be ASSERTED, not merely mentioned ───────────────────────
+
+
+def test_mentioning_every_field_without_asserting_them_is_reported() -> None:
+    """The defect: a strict, severity-1, gate-blocking rule satisfied by a mention.
+
+    The check searched the whole source for each field NAME, so a field in a dict
+    literal counted as asserted. Found by running this package against a consumer
+    repo it did not ship.
+    """
+    v = detector.scan_root(_FIXTURES / "dirty_trace_unasserted")
+    assert _rule_ids(v) == {detector.RULE_TRACE}
+    assert any("guard_id" in x["evidence"] for x in v)
+
+
+def test_a_whole_mapping_assertion_is_accepted() -> None:
+    """`assert trace == expected` asserts every field at once.
+
+    Narrowing to per-field asserts without this escape would trade a real defect for
+    a false positive against a legitimate test.
+    """
+    assert detector.unasserted_trace_fields(
+        '    assert trace == expected\n'
+    ) == []
+    # ...but a per-field assert must NOT be read as a whole-mapping one. The first
+    # cut allowed anything between the name and `==`, so every per-field assertion
+    # switched the whole check off — a fix that disabled the rule it was fixing.
+    partial = '    assert trace["route_id"] == "nominal-all-voted"\n'
+    assert "guard_id" in detector.unasserted_trace_fields(partial)
+
+
+def test_field_detection_stays_separable_from_assert_scoping() -> None:
+    """Two concerns, two functions — conflating them broke a unit test of neither."""
+    assert "route_category" in detector.missing_trace_fields('trace["route_category_digit"]')
+    assert "route_category_digit" not in detector.missing_trace_fields('trace["route_category_digit"]')
+    assert detector.asserted_text("x = 1\nassert y == 2\nz = 3") == "assert y == 2"

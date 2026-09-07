@@ -459,9 +459,54 @@ def _smoke_violations(
 # ---------------------------------------------------------------------------
 
 
+#: An assert comparing the trace to a whole mapping — `assert trace == expected`.
+#: That form asserts every field at once, so the per-field search must not reject it.
+#: `assert trace == expected` — the trace compared AS A WHOLE, with nothing between
+#: the name and the operator. The first cut allowed anything in between, so
+#: `assert trace["route_id"] == "..."` matched and every per-field assertion silently
+#: switched the whole check off — a fix that disabled the rule it was fixing. Caught
+#: by the package's own dirty fixture, which asserts six of eight fields.
+_WHOLE_TRACE_ASSERT = re.compile(r"^\s*assert\s+[\w.]*\btrace\b\s*==(?![=])", re.MULTILINE)
+
+
+def asserted_text(text: str) -> str:
+    """Only the parts of a source that ASSERT something.
+
+    The rule's own statement is that a test "must assert every required trace
+    field". The check searched the WHOLE file for each field NAME, so a field
+    mentioned anywhere — in a dict literal, a comment, an unrelated list — counted
+    as asserted. A smoke test whose only assertion was `assert trace` passed a
+    severity-1 strict rule that the gate blocks on, while binding nothing.
+    """
+    return "\n".join(line for line in text.split("\n") if "assert" in line)
+
+
 def missing_trace_fields(text: str) -> list[str]:
-    """Required trace fields absent from a trace-asserting source (order-preserving)."""
+    """Required trace fields ABSENT from the given text (order-preserving).
+
+    Pure field detection, with no opinion about where it looked. Kept separate from
+    the assert-scoping below so each can be tested on its own: conflating them made
+    a unit test of field distinction fail for reasons that had nothing to do with
+    field distinction.
+    """
     return [label for label, pat in _REQUIRED_TRACE_FIELDS if not pat.search(text)]
+
+
+def unasserted_trace_fields(text: str) -> list[str]:
+    """Required trace fields the source never ASSERTS.
+
+    The rule's own statement is that a test "must assert every required trace
+    field". The check searched the WHOLE source for each field NAME, so a field
+    mentioned anywhere — a dict literal, a comment, an unrelated list — counted as
+    asserted.
+
+    A whole-mapping assertion (`assert trace == expected`) covers every field at
+    once and is accepted as such; narrowing to per-field asserts without that
+    escape would trade a real defect for a false positive against a legitimate test.
+    """
+    if _WHOLE_TRACE_ASSERT.search(text):
+        return []
+    return missing_trace_fields(asserted_text(text))
 
 
 def _trace_violations(
@@ -474,7 +519,7 @@ def _trace_violations(
         m = _TRACE_OBJECT.search(text)
         if not m:
             continue  # not a trace-binding test.
-        missing = missing_trace_fields(text)
+        missing = unasserted_trace_fields(text)
         if not missing:
             continue
         rel = _rel(path, root)
