@@ -44,10 +44,11 @@ feature: train-interlocking-enforcement
 
 owns:
   conventions:
-    - conventions/tester.interlocking.route-coverage.convention.yaml
     - conventions/tester.interlocking.production-runner-used.convention.yaml
+    - conventions/tester.interlocking.route-coverage.convention.yaml
     - conventions/tester.interlocking.smoke-coverage-for-station-master.convention.yaml
     - conventions/tester.interlocking.trace-binds-declared-route.convention.yaml
+    - conventions/tester.interlocking.train-sequence-is-exercised.convention.yaml
   relationships:
     - relationships.yaml
   implementations:

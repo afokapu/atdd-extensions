@@ -194,3 +194,37 @@ def test_emit_raw_interlocking_report() -> None:
 
     # Run-health only: deliberately NOT gated on emptiness (disposition is the gate's).
     assert isinstance(violations, list)
+
+
+# ── STAGED: train-sequence-is-exercised ───────────────────────────────────────
+
+
+def test_asserts_a_sequence_requires_a_COMPARISON_not_a_mention() -> None:
+    """The first cut counted a bare truthiness check as coverage.
+
+    `assert trace["steps"]` mentions the word and proves nothing about the order —
+    the same over-broad trigger that makes a bare `\\btrace\\b` drag unrelated tests
+    into trace-binding. Caught by running the check against a real consumer.
+    """
+    assert detector.asserts_a_sequence('    assert trace["steps"] == declared') is True
+    assert detector.asserts_a_sequence('    assert result.sequence == ["a", "b"]') is True
+    assert detector.asserts_a_sequence('    assert trace["steps"]') is False
+    assert detector.asserts_a_sequence('    steps = run()') is False
+
+
+def test_trains_reachable_from_routes_follows_the_route_space() -> None:
+    records = [{"routes": [{"train_id": "3007-x"}, {"train_id": "3207-y"}, {"train_id": None}]}]
+    assert detector.trains_reachable_from_routes(records) == {"3007-x", "3207-y"}
+
+
+def test_a_declared_train_with_no_sequence_assertion_is_reported() -> None:
+    found = detector.scan_execution(_FIXTURES / "clean")
+    assert found, "no fixture asserts an executed wagon order yet"
+    assert all(v["rule_id"] == detector.RULE_SEQUENCE for v in found)
+    assert any("wagon SEQUENCE" in v["evidence"] for v in found)
+
+
+def test_the_staged_check_is_not_wired_into_the_gated_scan() -> None:
+    """Enabling it must be a gate decision, not a side effect of this commit."""
+    assert detector.RULE_SEQUENCE not in detector.ALL_RULE_IDS
+    assert detector.scan_root(_FIXTURES / "clean") == []

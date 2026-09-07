@@ -28,6 +28,7 @@ emits_rule_ids:
   - tester.interlocking.production-runner-used         # disposition: strict (mocked/patched/hand-built runner)
   - tester.interlocking.smoke-coverage-for-station-master  # disposition: strict (exposed action w/o smoke test)
   - tester.interlocking.trace-binds-declared-route     # disposition: strict (trace omits binding fields)
+  - tester.interlocking.train-sequence-is-exercised   # disposition: advisory, STAGED — emitted by scan_execution(), not by scan_root()
 
 # The pure detector module. Realizes all four tester interlocking obligations:
 # route coverage (core afokapu/atdd#1248 route space), production-runner usage,

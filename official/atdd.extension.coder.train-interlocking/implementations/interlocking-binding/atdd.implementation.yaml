@@ -18,6 +18,7 @@ realizes_convention: coder.train.interlocking-bilateral-binding
 # (stable token prefix) so the verdict layer / tests classify without parsing free text.
 emits_rule_ids:
   - coder.train.interlocking-bilateral-binding   # disposition: strict (any broken binding direction)
+  - coder.train.runtime-executes-the-declaration   # disposition: advisory, STAGED — emitted by scan_execution(), not by scan_root()
 
 # The pure detector module. CONSUMES core afokapu/atdd#1248's entrypoint.exposed/actions field for the
 # declaration_to_station reachability check — it defines NO parallel reachability field and rejects any

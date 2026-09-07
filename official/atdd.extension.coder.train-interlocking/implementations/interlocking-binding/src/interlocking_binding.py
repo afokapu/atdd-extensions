@@ -698,6 +698,25 @@ def runtime_loads_declaration(runtime_files: list[tuple[Path, str]]) -> bool:
     return any(_LOADS_DECLARATION.search(text) for _path, text in runtime_files)
 
 
+def _resolving_modules(
+    records: dict[Path, dict], runtime_files: list[tuple[Path, str]]
+) -> list[tuple[Path, str]]:
+    """Runtime modules that resolve routes, IF the executes-rule applies at all.
+
+    Empty when there is no declared route space (no obligation), or when the runtime
+    already loads its declaration (the rule is satisfied, and a data-driven runtime
+    must not then be judged on absent literals). Both entry points share this guard
+    rather than restating it, which is what let the two checks disagree about when
+    they applied.
+    """
+    if not records or runtime_loads_declaration(runtime_files):
+        return []
+    return [
+        (path, text) for path, text in runtime_files
+        if "InterlockingResolution" in text or "resolve_train" in text
+    ]
+
+
 def _runtime_ignores_declaration_violations(
     records: dict[Path, dict], runtime_files: list[tuple[Path, str]], root: Path
 ) -> list[dict]:
@@ -711,13 +730,8 @@ def _runtime_ignores_declaration_violations(
     it. "The train YAML is the source of truth" was true of the TEXT and false of
     the RUNTIME.
     """
-    if not records:
-        return []
-    resolving = [
-        (path, text) for path, text in runtime_files
-        if "InterlockingResolution" in text or "resolve_train" in text
-    ]
-    if not resolving or runtime_loads_declaration(runtime_files):
+    resolving = _resolving_modules(records, runtime_files)
+    if not resolving:
         return []
     path, text = resolving[0]
     line = _line_of(text, re.compile(r"\bclass\s+InterlockingRunner\b"), 1)[0]
@@ -743,11 +757,9 @@ def _declaration_unreachable_violations(
     as literals — flagging it for the absent literal would punish the correct
     implementation for being correct.
     """
-    if not records or runtime_loads_declaration(runtime_files):
+    if not _resolving_modules(records, runtime_files):
         return []
     blob = "\n".join(text for _p, text in runtime_files)
-    if "InterlockingResolution" not in blob and "resolve_train" not in blob:
-        return []
     out: list[dict] = []
     for il_file, rec in records.items():
         rel = _rel(il_file, root)
@@ -1071,15 +1083,25 @@ def scan_root(root: Path) -> list[dict]:
     return _scan_anchored(anchor_scan_root(root, layout), layout)
 
 
-def _scan_anchored(root: Path, layout: dict[str, list[str]]) -> list[dict]:
-    """Run every binding direction over an ALREADY-ANCHORED repo root with a resolved layout."""
+def _read_declarations(root: Path, layout: dict[str, list[str]]) -> dict[Path, dict]:
+    """The declared route space of a consumer tree, keyed by the file it came from."""
     records: dict[Path, dict] = {}
     for il_file in find_interlocking_files(root, layout[SEL_INTERLOCKING]):
         rec = parse_interlocking(_read(il_file))
         if rec is not None:
             records[il_file] = rec
+    return records
 
-    runtime_files = [(p, _read(p)) for p in find_runtime_files(root, layout[SEL_RUNTIME])]
+
+def _read_runtime(root: Path, layout: dict[str, list[str]]) -> list[tuple[Path, str]]:
+    """The consumer's runtime modules, paired with their source."""
+    return [(p, _read(p)) for p in find_runtime_files(root, layout[SEL_RUNTIME])]
+
+
+def _scan_anchored(root: Path, layout: dict[str, list[str]]) -> list[dict]:
+    """Run every binding direction over an ALREADY-ANCHORED repo root with a resolved layout."""
+    records = _read_declarations(root, layout)
+    runtime_files = _read_runtime(root, layout)
     app = _app_file(root, layout[SEL_STATION])
     journey = parse_journey_map(_read(app)) if app is not None else {}
     e2e_files = [(p, _read(p)) for p in find_e2e_files(root, layout[SEL_E2E])]
@@ -1124,16 +1146,15 @@ def scan_execution(root: Path) -> list[dict]:
     all ten rules — and deleting the entire plan/ directory left it still dispatching.
     """
     root = Path(root)
+    if not root.exists():
+        return []
     layout = _resolve_layout(root)
-    records: dict[Path, dict] = {}
-    for il_file in find_interlocking_files(root, layout[SEL_INTERLOCKING]):
-        rec = parse_interlocking(_read(il_file))
-        if rec:
-            records[il_file] = rec
-    runtime_files = [(p, _read(p)) for p in find_runtime_files(root, layout[SEL_RUNTIME])]
+    anchored = anchor_scan_root(root, layout)
+    records = _read_declarations(anchored, layout)
+    runtime_files = _read_runtime(anchored, layout)
     return (
-        _runtime_ignores_declaration_violations(records, runtime_files, root)
-        + _declaration_unreachable_violations(records, runtime_files, root)
+        _runtime_ignores_declaration_violations(records, runtime_files, anchored)
+        + _declaration_unreachable_violations(records, runtime_files, anchored)
     )
 
 
