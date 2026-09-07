@@ -270,3 +270,26 @@ def test_the_staged_node_is_bound_and_honestly_marked() -> None:
     # Status deliberately not pinned — see the coder sibling. The status/gate
     # relationship is owned by the invariant test, which survives enablement.
     assert node["status"] in {"draft", "active", "deprecated"}
+# ── the Station Master is STRUCTURE, not a name ───────────────────────────────
+
+
+def test_a_module_style_station_master_is_silent() -> None:
+    """Found by running the extension against a real consumer, not a fixture.
+
+    The smoke check required a symbol literally named StationMaster. Nothing asks for
+    that: coder.train.station-master-interlocking-routing defines the Station Master
+    as python/app.py carrying a JOURNEY_MAP, and the CODER detector matches it that
+    way. A consumer whose entrypoint was a module-level dispatch() passed the coder
+    rule and failed this one, with no documented way to satisfy both — and the old
+    pattern matched only because this package's own fixture exports a class with that
+    name.
+    """
+    assert detector.scan_root(_FIXTURES / "clean_module_station_master") == []
+
+
+def test_station_master_is_still_detected_by_the_class_name() -> None:
+    """Widening the match must not have dropped the original form."""
+    assert detector._STATION_MASTER.search("station_master = StationMaster()")
+    assert detector._STATION_MASTER.search("import app")
+    assert detector._STATION_MASTER.search("assert 'x' in app.JOURNEY_MAP")
+    assert not detector._STATION_MASTER.search("a wholly unrelated sentence")
