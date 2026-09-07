@@ -28,6 +28,7 @@ nodes:
   - tester.bun.interlocking-route-coverage
   - tester.bun.interlocking-smoke-coverage-for-station-master
   - tester.bun.interlocking-trace-binds-declared-route
+  - tester.bun.interlocking-train-sequence-is-exercised
   - tester.bun.red-behavioral-assertion
   - tester.bun.red-fails-first
   - tester.bun.routing-runtime-family
@@ -207,3 +208,12 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both bind the suite back to a planner declaration: one to the acceptance criterion a test covers, the other to the guarded route it exercises.'
+  - source_ref: tester.bun.interlocking-train-sequence-is-exercised
+    target_ref: tester.bun.interlocking-route-coverage
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Route coverage proves WHICH train a route selects; this proves WHAT it ran. A train whose wagon sequence is wrong is selected correctly and executes the wrong thing, so selection coverage must hold before execution coverage means anything.'
