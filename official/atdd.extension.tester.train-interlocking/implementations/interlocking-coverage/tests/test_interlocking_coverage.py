@@ -224,10 +224,33 @@ def test_a_declared_train_with_no_sequence_assertion_is_reported() -> None:
     assert any("wagon SEQUENCE" in v["evidence"] for v in found)
 
 
-def test_the_staged_check_is_not_wired_into_the_gated_scan() -> None:
-    """Enabling it must be a gate decision, not a side effect of this commit."""
-    assert detector.RULE_SEQUENCE not in detector.ALL_RULE_IDS
-    assert detector.scan_root(_FIXTURES / "clean") == []
+def test_node_status_agrees_with_what_the_gated_scan_emits() -> None:
+    """The invariant that survives being enabled — see the coder sibling.
+
+    Asserting the check STAYS unwired becomes the wrong test the moment someone
+    wires it. This pins the relationship instead, so it needs no edit on the day
+    the decision is made: draft must not be gated, active must be.
+    """
+    import yaml
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_SEQUENCE}.convention.yaml").read_text()
+    )
+    tree = _FIXTURES / "clean"          # trips the rule: no test asserts an executed order
+    staged = {v["rule_id"] for v in detector.scan_execution(tree)}
+    gated = {v["rule_id"] for v in detector.scan_root(tree)}
+
+    assert detector.RULE_SEQUENCE in staged, (
+        "the validator must detect the violation regardless of whether it is gated"
+    )
+    if node["status"] == "active":
+        assert detector.RULE_SEQUENCE in gated, (
+            "an ACTIVE node claims live enforcement, so the gated scan must emit it"
+        )
+    else:
+        assert detector.RULE_SEQUENCE not in gated, (
+            f"node is {node['status']!r} but the gated scan emits it"
+        )
 
 
 def test_the_staged_node_is_bound_and_honestly_marked() -> None:
@@ -243,5 +266,7 @@ def test_the_staged_node_is_bound_and_honestly_marked() -> None:
     node = yaml.safe_load(
         (_HERE.parents[2] / "conventions" / f"{detector.RULE_SEQUENCE}.convention.yaml").read_text()
     )
-    assert node["status"] == "draft"
     assert node["metadata"]["disposition"] == "advisory"
+    # Status deliberately not pinned — see the coder sibling. The status/gate
+    # relationship is owned by the invariant test, which survives enablement.
+    assert node["status"] in {"draft", "active", "deprecated"}
