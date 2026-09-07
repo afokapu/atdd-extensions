@@ -9,7 +9,7 @@ export class InterlockingRunner {
     this.path = interlockingYamlPath;
   }
 
-  // BUG: returns a bare trainId string — loses routeId, guardId, category, categoryDigit, reason, ...
+  // BUG: returns a bare trainId string — loses routeId, guardId, category, resolutionStrategy, reason, ...
   resolveTrain(action: string, inputs: Record<string, unknown>): string {
     return "3001-solo-match-complete";
   }
