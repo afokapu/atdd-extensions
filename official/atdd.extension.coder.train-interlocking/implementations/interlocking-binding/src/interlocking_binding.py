@@ -65,6 +65,27 @@ DIR_DECL_STATION = "declaration_to_station"
 DIR_TRACE_DECL = "trace_to_declaration"
 DIR_PARALLEL_FIELD = "parallel_reachability_field"
 DIR_LAYOUT_UNRESOLVED = "layout_unresolved"
+# The declaration is meant to be EXECUTABLE. These two directions are what make that
+# claim checkable; without them a runtime can be shape-perfect and plan-blind.
+RULE_EXECUTES = "coder.train.runtime-executes-the-declaration"
+DIR_RUNTIME_IGNORES = "runtime_ignores_declaration"
+DIR_DECL_UNREACHABLE = "declaration_unreachable"
+
+#: Directions of the SEPARATE executes-the-declaration rule. They are not bilateral
+#: directions: bilateral-binding is `strict` and closes a text-level correspondence,
+#: while this rule is `advisory` and asks a harder question no consumer answers yet.
+#: Folding an advisory concern into a strict rule would have escalated it silently.
+EXECUTES_DIRECTIONS = (DIR_RUNTIME_IGNORES, DIR_DECL_UNREACHABLE)
+
+#: Evidence a runtime actually LOADS the declaration it was handed, rather than
+#: merely being constructed with its path. A data-driven runtime reads the route
+#: space; a hardcoded one stores the path and returns literals.
+_LOADS_DECLARATION = re.compile(
+    r"\byaml\s*\.\s*(?:safe_load|load|full_load)\b"
+    r"|\bjson\s*\.\s*load\b"
+    r"|\.read_text\s*\("
+    r"|\bopen\s*\("
+)
 
 ALL_DIRECTIONS = (
     DIR_DECL_RUNTIME,
@@ -654,6 +675,99 @@ def _declaration_to_runtime_violations(
 
 
 # ---------------------------------------------------------------------------
+# Directions 7 & 8 — the declaration must actually be EXECUTED
+# ---------------------------------------------------------------------------
+
+
+def _token_in(token: str, text: str) -> bool:
+    """Identifier-bounded containment, so a longer slug is not a match.
+
+    `nominal-all-voted` must not be satisfied by `nominal-all-voted-extra`; the
+    coverage sibling uses the same boundary rule.
+    """
+    return re.search(rf"(?<![\w-]){re.escape(token)}(?![\w-])", text) is not None
+
+
+def runtime_loads_declaration(runtime_files: list[tuple[Path, str]]) -> bool:
+    """True if ANY runtime module reads a file.
+
+    Checked across the whole runtime surface rather than per-module, because a
+    correct implementation may delegate loading to a sibling loader. Conservative
+    on purpose: the finding fires only when NOTHING in the runtime reads anything.
+    """
+    return any(_LOADS_DECLARATION.search(text) for _path, text in runtime_files)
+
+
+def _runtime_ignores_declaration_violations(
+    records: dict[Path, dict], runtime_files: list[tuple[Path, str]], root: Path
+) -> list[dict]:
+    """The runtime was handed a declaration path and never opened it.
+
+    This is the gap an end-to-end experiment exposed: a consumer whose
+    InterlockingRunner stored `interlocking_yaml_path` and returned a hardcoded
+    InterlockingResolution, and whose TrainRunner kept a literal train_id -> wagons
+    map, satisfied every other rule in this package. Deleting the entire plan/
+    directory left the application still dispatching, because nothing had ever read
+    it. "The train YAML is the source of truth" was true of the TEXT and false of
+    the RUNTIME.
+    """
+    if not records:
+        return []
+    resolving = [
+        (path, text) for path, text in runtime_files
+        if "InterlockingResolution" in text or "resolve_train" in text
+    ]
+    if not resolving or runtime_loads_declaration(runtime_files):
+        return []
+    path, text = resolving[0]
+    line = _line_of(text, re.compile(r"\bclass\s+InterlockingRunner\b"), 1)[0]
+    return [
+        _violation(
+            RULE_EXECUTES, _rel(path, root), line, 0, DIR_RUNTIME_IGNORES,
+            "the InterlockingRunner runtime never reads the interlocking declaration it is "
+            "given (no yaml/json load, open() or read_text() anywhere under the runtime "
+            "selector), so the route space is not executed — it is transcribed. Delete the "
+            "plan and this runtime keeps answering.",
+            _line_at(text, line),
+        )
+    ]
+
+
+def _declaration_unreachable_violations(
+    records: dict[Path, dict], runtime_files: list[tuple[Path, str]], root: Path
+) -> list[dict]:
+    """A declared route a HARDCODED runtime cannot produce.
+
+    Only applies when the runtime does not load the declaration. A data-driven
+    runtime serves every declared route by construction and mentions none of them
+    as literals — flagging it for the absent literal would punish the correct
+    implementation for being correct.
+    """
+    if not records or runtime_loads_declaration(runtime_files):
+        return []
+    blob = "\n".join(text for _p, text in runtime_files)
+    if "InterlockingResolution" not in blob and "resolve_train" not in blob:
+        return []
+    out: list[dict] = []
+    for il_file, rec in records.items():
+        rel = _rel(il_file, root)
+        for route in rec["routes"]:
+            rid = route.get("route_id")
+            if not rid or _token_in(rid, blob):
+                continue
+            out.append(
+                _violation(
+                    RULE_EXECUTES, rel, route.get("line", 1), 0, DIR_DECL_UNREACHABLE,
+                    f"declared route {rid!r} of interlocking {rec['interlocking_id']!r} appears "
+                    f"nowhere in a runtime that does not read the declaration, so nothing can "
+                    f"resolve it. Either load the route space, or the route is unreachable.",
+                    route.get("source_line", ""),
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Direction 2 — runtime_to_declaration (no hidden routes)
 # ---------------------------------------------------------------------------
 
@@ -993,6 +1107,36 @@ def _scan_anchored(root: Path, layout: dict[str, list[str]]) -> list[dict]:
     return violations
 
 
+def scan_execution(root: Path) -> list[dict]:
+    """The executes-the-declaration check — DESIGNED, TESTED, NOT YET GATED.
+
+    Deliberately not called from ``scan_root``: it emits its own advisory rule_id
+    (``coder.train.runtime-executes-the-declaration``) and no consumer satisfies it
+    yet, so wiring it into the strict bilateral gate would escalate an advisory
+    concern silently. It is exposed and tested so the obligation is real code rather
+    than a paragraph, and so enabling it later is a gate change, not a build.
+
+    WHY IT EXISTS. Running this package against a purpose-built consumer showed that
+    every other rule here closes a TEXT-level correspondence: literals in the runtime
+    also appear in the plan. None asks whether the runtime ever READS the plan. A
+    consumer whose InterlockingRunner stored the yaml path and returned a hardcoded
+    resolution, and whose TrainRunner kept a literal train_id -> wagons map, passed
+    all ten rules — and deleting the entire plan/ directory left it still dispatching.
+    """
+    root = Path(root)
+    layout = _resolve_layout(root)
+    records: dict[Path, dict] = {}
+    for il_file in find_interlocking_files(root, layout[SEL_INTERLOCKING]):
+        rec = parse_interlocking(_read(il_file))
+        if rec:
+            records[il_file] = rec
+    runtime_files = [(p, _read(p)) for p in find_runtime_files(root, layout[SEL_RUNTIME])]
+    return (
+        _runtime_ignores_declaration_violations(records, runtime_files, root)
+        + _declaration_unreachable_violations(records, runtime_files, root)
+    )
+
+
 def scan_roots(roots: list[Path]) -> list[dict]:
     """Scan every root, ANCHORED and DEDUPED.
 
@@ -1028,6 +1172,10 @@ __all__ = [
     "RULE_BILATERAL",
     "ALL_RULE_IDS",
     "ALL_DIRECTIONS",
+    "EXECUTES_DIRECTIONS",
+    "RULE_EXECUTES",
+    "scan_execution",
+    "runtime_loads_declaration",
     "parse_interlocking",
     "parse_journey_map",
     "runtime_resolution_literals",

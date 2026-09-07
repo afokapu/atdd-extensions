@@ -587,3 +587,45 @@ def test_the_shipped_scope_file_matches_cores_schema() -> None:
     doc = _yaml.safe_load(detector._SCOPE_FILE.read_text())
     errs = list(jsonschema.Draft7Validator(json.loads(schema_path.read_text())).iter_errors(doc))
     assert not errs, f"scope invalid: {[e.message for e in errs][:3]}"
+
+
+# ── executes-the-declaration: designed, tested, not yet gated ─────────────────
+
+
+def test_the_clean_fixture_now_executes_the_declaration() -> None:
+    """It used to transcribe it. Rewriting it proves the obligation is achievable.
+
+    Every field of the resolution was a literal that matched the YAML by coincidence
+    of authorship. It satisfied bilateral binding, because that rule closes a
+    TEXT-level correspondence.
+    """
+    assert detector.scan_execution(_PASS) == []
+    runtime = (_PASS / "python" / "trains" / "runtime.py").read_text()
+    assert "yaml.safe_load" in runtime and "read_text" in runtime
+    assert "def route_by_id" in runtime, "resolution must trace to the loaded route space"
+
+
+def test_a_plan_blind_runtime_is_caught() -> None:
+    """The consumer shape that passed all ten rules while ignoring the plan."""
+    import tempfile, shutil, pathlib as _pl
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tree = _pl.Path(tmp) / "consumer"
+        shutil.copytree(_PASS, tree)
+        rt = tree / "python" / "trains" / "runtime.py"
+        text = rt.read_text().replace("import yaml", "").replace(
+            "yaml.safe_load(Path(self._path).read_text(encoding=\"utf-8\")) or {}",
+            "{'interlocking_id': 'interlocking:match-resolution', 'routes': []}",
+        )
+        rt.write_text(text)
+        found = detector.scan_execution(tree)
+        assert found, "a runtime that never reads the declaration must be reported"
+        assert all(v["rule_id"] == detector.RULE_EXECUTES for v in found)
+        assert any("never reads the interlocking declaration" in v["evidence"] for v in found)
+
+
+def test_the_staged_check_is_not_wired_into_the_gated_scan() -> None:
+    """Enabling it must be a gate decision, not a side effect of this commit."""
+    assert detector.scan_root(_PASS) == []
+    assert detector.RULE_EXECUTES not in detector.ALL_DIRECTIONS
+    assert detector.RULE_EXECUTES == "coder.train.runtime-executes-the-declaration"
