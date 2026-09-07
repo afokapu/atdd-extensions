@@ -58,6 +58,7 @@ owns:
     - conventions/coder.bun.logging-structured.convention.yaml
     - conventions/coder.bun.quality-comments.convention.yaml
     - conventions/coder.bun.quality-mi.convention.yaml
+    - conventions/coder.bun.runtime-executes-the-declaration.convention.yaml
     - conventions/coder.bun.runtime-server-is-bun-serve.convention.yaml
     - conventions/coder.bun.runtime-single-lockfile.convention.yaml
     - conventions/coder.bun.runtime-typecheck-enforced.convention.yaml

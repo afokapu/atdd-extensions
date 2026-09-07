@@ -18,6 +18,7 @@ owns:
     - conventions/tester.convex.interlocking-route-coverage.convention.yaml
     - conventions/tester.convex.interlocking-smoke-coverage-for-station-master.convention.yaml
     - conventions/tester.convex.interlocking-trace-binds-declared-route.convention.yaml
+    - conventions/tester.convex.interlocking-train-sequence-is-exercised.convention.yaml
     - conventions/tester.convex.live-smoke-no-self-skip.convention.yaml
     - conventions/tester.convex.migration-naming.convention.yaml
     - conventions/tester.convex.red-fails-first.convention.yaml

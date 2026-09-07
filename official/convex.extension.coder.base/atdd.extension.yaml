@@ -66,6 +66,7 @@ owns:
     - conventions/coder.convex.quality-file-length.convention.yaml
     - conventions/coder.convex.quality-mi.convention.yaml
     - conventions/coder.convex.quality-naming.convention.yaml
+    - conventions/coder.convex.runtime-executes-the-declaration.convention.yaml
     - conventions/coder.convex.schema-at-root.convention.yaml
     - conventions/coder.convex.security-hardcoded-secret.convention.yaml
     - conventions/coder.convex.security-missing-auth.convention.yaml

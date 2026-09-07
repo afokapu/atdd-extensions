@@ -25,6 +25,7 @@ owns:
     - conventions/tester.bun.interlocking-route-coverage.convention.yaml
     - conventions/tester.bun.interlocking-smoke-coverage-for-station-master.convention.yaml
     - conventions/tester.bun.interlocking-trace-binds-declared-route.convention.yaml
+    - conventions/tester.bun.interlocking-train-sequence-is-exercised.convention.yaml
     - conventions/tester.bun.red-behavioral-assertion.convention.yaml
     - conventions/tester.bun.red-fails-first.convention.yaml
     - conventions/tester.bun.routing-runtime-family.convention.yaml

@@ -9,3 +9,17 @@ emits_rule_ids:
 - coder.convex.interlocking-bilateral-binding
 entrypoint: detect.mjs
 report: detect.mjs
+
+# STAGED rule ids — declared, but NOT emitted by this implementation's gated detector.
+#
+# A coder rule belongs in the CODER family. It was first written into the coverage
+# implementation, which this provider registers as tester-persona — a coder rule
+# emitted from a tester family is exactly the cross-contamination
+# conformance/test_persona_scoping.py exists to stop.
+#
+# conformance/test_staged_rules.py holds the word to account: each entry needs a
+# convention node marked draft, must be absent from the gated output, and must be
+# produced by a scan_execution* entry point on some fixture.
+staged_rule_ids:
+  - coder.convex.runtime-executes-the-declaration
+

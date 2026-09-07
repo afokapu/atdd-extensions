@@ -1,0 +1,11 @@
+# CLEAN fixture — the SAME route space, at the BACKEND path.
+#
+# plan/_trains/_interlockings/** is where python, convex and bun read this
+# stack-neutral declaration. Only plan/_interlocking* was read here, so with
+# the file in the backend location these rules were VACUOUSLY silent: a
+# consumer with a backend and a frontend had its frontend interlocking rules
+# quietly doing nothing. This tree must behave exactly like its sibling.
+# frontend interlocking registry
+routes:
+  - route_id: host-match
+  - route_id: play-match

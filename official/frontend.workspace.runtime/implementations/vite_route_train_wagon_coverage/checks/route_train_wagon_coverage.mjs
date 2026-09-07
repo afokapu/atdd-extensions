@@ -133,6 +133,20 @@ function loadRegisteredTrains(trainsFile) {
       continue;
     }
     if (currentTid) {
+      // FLOW STYLE TOO: `wagons: [a, b]`. The plan files are ordinary YAML and a flow
+      // sequence is ordinary YAML; only block style was read, so a train's wagons
+      // parsed as EMPTY and the rule passed by having nothing to check. This is the
+      // fifth copy of the same defect across this hub's hand-rolled YAML scanners —
+      // the recurrence, not any one instance, is the argument for a shared parser.
+      const wagonsFlow = line.match(/^(\s*)wagons:\s*\[([^\]]*)\]\s*$/);
+      if (wagonsFlow) {
+        for (const raw of wagonsFlow[2].split(",")) {
+          const w = raw.trim().replace(/^["']|["']$/g, "");
+          if (w && currentTid) out[currentTid].push(w);
+        }
+        inWagons = false;
+        continue;
+      }
       const wagonsHeader = line.match(/^(\s*)wagons:\s*$/);
       if (wagonsHeader) { inWagons = true; wagonsIndent = wagonsHeader[1].length; continue; }
       if (inWagons) {

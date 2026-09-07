@@ -229,6 +229,23 @@ function parseInterlocking(text) {
       const l = lines[i];
       if (/^\S/.test(l)) break; // dedent ends the entrypoint block
       if (/^\s*exposed:\s*true\b/.test(l)) exposed = true;
+      // FLOW STYLE TOO: `actions: [resolve_match, other]`.
+      //
+      // The interlocking YAML is stack-neutral planner data and flow sequences are
+      // ordinary YAML. Python reads it with a real parser and accepts both; this
+      // hand-rolled line scanner accepted only block style, so the SAME plan file
+      // was judged differently depending on which stack read it — and the verdict
+      // was "exposed interlocking is not Station-Master-reachable", a strict
+      // blocking finding, against a consumer whose YAML was perfectly valid.
+      // Found by running this provider against a Bun consumer written from scratch.
+      const flow = l.match(/^\s*actions:\s*\[([^\]]*)\]\s*(?:#.*)?$/);
+      if (flow) {
+        for (const raw of flow[1].split(",")) {
+          const a = raw.trim().replace(/^["']|["']$/g, "");
+          if (a) actions.push(a);
+        }
+        continue;
+      }
       if (/^\s*actions:\s*(?:#.*)?$/.test(l)) {
         for (let j = i + 1; j < lines.length; j++) {
           const am = lines[j].match(/^\s*-\s*["']?([^"'#\n]+?)["']?\s*(?:#.*)?$/);

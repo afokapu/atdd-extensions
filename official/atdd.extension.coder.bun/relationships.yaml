@@ -60,6 +60,7 @@ nodes:
   - coder.bun.logging-structured
   - coder.bun.quality-comments
   - coder.bun.quality-mi
+  - coder.bun.runtime-executes-the-declaration
   - coder.bun.runtime-server-is-bun-serve
   - coder.bun.runtime-single-lockfile
   - coder.bun.runtime-typecheck-enforced
@@ -442,3 +443,12 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'Both are Bun runtime decisions read from package.json and its neighbours: one that a single resolver owns the dependency graph, the other that the types in it are actually checked.'
+  - source_ref: coder.bun.runtime-executes-the-declaration
+    target_ref: coder.bun.interlocking-bilateral-binding
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Bilateral binding closes a TEXT-level correspondence — literals in the runtime also appear in the plan. This asks the harder question underneath it: whether the runtime ever READS the plan, or merely restates it.'

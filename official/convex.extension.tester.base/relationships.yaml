@@ -15,6 +15,7 @@ nodes:
   - tester.convex.interlocking-route-coverage
   - tester.convex.interlocking-smoke-coverage-for-station-master
   - tester.convex.interlocking-trace-binds-declared-route
+  - tester.convex.interlocking-train-sequence-is-exercised
   - tester.convex.live-smoke-no-self-skip
   - tester.convex.migration-naming
   - tester.convex.red-fails-first
@@ -167,3 +168,12 @@ edges:
     confidence: 1.0
     authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: tester.convex.interlocking-train-sequence-is-exercised
+    target_ref: tester.convex.interlocking-route-coverage
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Route coverage proves WHICH train a route selects; this proves WHAT it ran. A train whose wagon sequence is wrong is selected correctly and executes the wrong thing, so selection coverage must hold before execution coverage means anything.'
