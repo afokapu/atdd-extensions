@@ -79,13 +79,17 @@ def test_a_staged_rule_is_absent_from_the_gated_family(impl: Path, rid: str) -> 
 @pytest.mark.parametrize("impl,rid", _STAGED, ids=[f"{i.name}::{r}" for i, r in _STAGED])
 def test_a_staged_rule_is_actually_produced_by_its_staged_entry(impl: Path, rid: str) -> None:
     """Without this, `staged` and `broken` are indistinguishable."""
-    entry = impl / "scan_execution.mjs"
-    assert entry.is_file(), f"{rid} is staged but {entry.name} does not exist"
+    # A family may stage more than one rule, each with its own entry point — the
+    # tester half inspects tests, the coder half inspects the runtime. Every staged
+    # entry is run, so a rule cannot hide behind a sibling's output.
+    entries = sorted(impl.glob("scan_execution*.mjs"))
+    assert entries, f"{rid} is staged but the implementation has no scan_execution* entry point"
     produced = set()
     for tree in sorted((impl / "fixtures").rglob("*")):
         if not tree.is_dir() or not any((tree / d).is_dir() for d in ("convex", "src", "plan", "e2e")):
             continue
-        produced |= {v["rule_id"] for v in _run(entry, tree)}
+        for entry in entries:
+            produced |= {v["rule_id"] for v in _run(entry, tree)}
     assert rid in produced, (
         f"{rid} is declared staged but its entry point produces it on no fixture — "
         f"a staged rule with no proof is indistinguishable from a broken one"

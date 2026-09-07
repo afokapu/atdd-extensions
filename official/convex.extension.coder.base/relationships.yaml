@@ -64,6 +64,7 @@ nodes:
   - coder.convex.quality-file-length
   - coder.convex.quality-mi
   - coder.convex.quality-naming
+  - coder.convex.runtime-executes-the-declaration
   - coder.convex.schema-at-root
   - coder.convex.security-hardcoded-secret
   - coder.convex.security-missing-auth
@@ -684,3 +685,12 @@ edges:
     confidence: 1.0
     authored_type: relates-to
     reason: 'Extension-local sibling (sorted-adjacent); shares the role/stack surface.'
+  - source_ref: coder.convex.runtime-executes-the-declaration
+    target_ref: coder.convex.interlocking-bilateral-binding
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Bilateral binding closes a TEXT-level correspondence — literals in the runtime also appear in the plan. This asks the harder question underneath it: whether the runtime ever READS the plan, or merely restates it.'
