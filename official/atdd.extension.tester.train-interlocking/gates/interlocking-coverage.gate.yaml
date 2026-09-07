@@ -8,6 +8,34 @@ schema_version: "1.0.0"
 # node's metadata.disposition (all four land strict); this gate records the runtime
 # stage. Default is CI/strict.
 gate_id: atdd.extension.tester.train-interlocking.coverage
+
+kind: gate
+status: active
+
+trigger:
+  type: ci
+  name: ci
+  description: >-
+    Runs on CI, where the whole consumer tree is present.
+
+selection:
+  strategy: full
+  description: >-
+    FULL: route coverage is a statement about the WHOLE declared route space against
+      the WHOLE suite. A subset containing only changed tests cannot tell an uncovered
+      admissible route from one whose test simply did not change.
+
+on_violation:
+  action: block
+  description: >-
+    Every rule this gate covers carries `disposition: strict` in its convention node.
+    Blocking here matches that; softening it would put the gate and the nodes into
+    disagreement about the same obligation.
+
+exit:
+  success_code: 0
+  failure_code: 1
+
 # Primary realized convention (the headline binding); the same gate run covers all
 # four conventions the implementation emits — enumerated below + edged in
 # relationships.yaml (convention -> gate, type: gated-by).

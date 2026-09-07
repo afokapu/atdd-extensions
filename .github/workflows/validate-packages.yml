@@ -40,6 +40,18 @@ jobs:
           done
           if [ "$found" = 0 ]; then echo "::error::no official packages discovered to validate"; exit 1; fi
 
+      - name: Every gate, scope and convention node conforms to core's author schemas
+        # The gap this closes: `atdd validate package` checks manifest shape and
+        # composition, and the step below applies relationship.schema.json to edges —
+        # but nothing ever applied gate.schema.json or scope.schema.json to the files
+        # they govern. For as long as this hub existed, every gate in it was missing
+        # all four required properties and every scope used `id` where a dotted
+        # `selector_id` is required. Review did not catch it because the broken shape
+        # WAS the house style: each new package copied an existing one.
+        run: |
+          pip install jsonschema
+          python3 tools/validate_author_artifacts.py
+
       - name: Every relationship graph conforms to core's edge schema
         # `atdd validate package` enforces planner.relationship.no-orphan-nodes but
         # never applies relationship.schema.json to an extension's edges, and never

@@ -95,7 +95,8 @@ _STATION_GLOB = "python/app.py"
 #
 #   1. per-repo override — env var ATDD_INTERLOCKING_LAYOUT, JSON {selector_id: [globs]},
 #      set by core for the repo under scan;
-#   2. this extension's own scopes/interlocking-targets.scope.yaml selector `include` globs;
+#   2. this extension's own scopes/interlocking-targets.scope.yaml selector `include`
+#      globs (keyed by the last segment of each dotted `selector_id`);
 #   3. the built-in DEFAULTS below (the historical hardcoded game-app layout).
 #
 # The selector ids are the scope file's ids — core writes the override under the SAME names.
@@ -220,8 +221,27 @@ def _layout_from_env() -> dict[str, list[str]]:
         return {}
 
 
+def _surface_of(selector: dict) -> str | None:
+    """The SURFACE name a selector configures.
+
+    core's ``scope.schema.json`` requires a dotted ``selector_id``, so the ids are
+    namespaced (``coder.train.python_runtime``) and the surface is the final segment.
+    The five surface names are a contract — they are the keys of the per-repo
+    ``ATDD_INTERLOCKING_LAYOUT`` override JSON core sets — so they are read back out
+    rather than renamed.
+
+    ``id`` is still accepted. The vendored copy of this package inside a consumer may
+    be a revision older than this one, and source↔vendor sync should not depend on
+    which side lands first.
+    """
+    raw = selector.get("selector_id") or selector.get("id")
+    if not isinstance(raw, str) or not raw:
+        return None
+    return raw.rsplit(".", 1)[-1]
+
+
 def _layout_from_scope() -> dict[str, list[str]]:
-    """This package's own scope selectors: ``selectors[*].{id, include}``."""
+    """This package's own scope selectors: ``selectors[*].{selector_id, include}``."""
     try:
         doc = yaml.safe_load(_read(_SCOPE_FILE))
     except yaml.YAMLError:
@@ -232,7 +252,11 @@ def _layout_from_scope() -> dict[str, list[str]]:
     if not isinstance(selectors, list):
         return {}
     return _selector_globs(
-        {s.get("id"): s.get("include") for s in selectors if isinstance(s, dict)}
+        {
+            _surface_of(s): s.get("include")
+            for s in selectors
+            if isinstance(s, dict) and _surface_of(s)
+        }
     )
 
 
