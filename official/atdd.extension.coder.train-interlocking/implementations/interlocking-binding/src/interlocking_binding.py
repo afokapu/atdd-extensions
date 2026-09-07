@@ -698,6 +698,18 @@ def runtime_loads_declaration(runtime_files: list[tuple[Path, str]]) -> bool:
     return any(_LOADS_DECLARATION.search(text) for _path, text in runtime_files)
 
 
+def _declared_values(records: dict[Path, dict]) -> list[str]:
+    """Every declared route_id and train_id — what a transcribing runtime restates."""
+    out: list[str] = []
+    for rec in records.values():
+        for route in rec.get("routes") or []:
+            for key in ("route_id", "train_id"):
+                v = route.get(key)
+                if v:
+                    out.append(v)
+    return out
+
+
 def _resolving_modules(
     records: dict[Path, dict], runtime_files: list[tuple[Path, str]]
 ) -> list[tuple[Path, str]]:
@@ -722,6 +734,14 @@ def _runtime_ignores_declaration_violations(
 ) -> list[dict]:
     """The runtime was handed a declaration path and never opened it.
 
+    FIRES ON POSITIVE EVIDENCE. It first reported on the ABSENCE of a file read alone.
+    Building consumers in the other stacks showed that design does not generalise: a
+    runtime can legitimately obtain its route space through a generated module or a
+    query and read no file at all, and would be called plan-blind for being idiomatic.
+    The finding now requires BOTH — nothing read AND declared values restated as
+    literals — which is transcription proven rather than loading merely unproven. The
+    three stacks agree on this shape; they disagreed until this back-port.
+
     This is the gap an end-to-end experiment exposed: a consumer whose
     InterlockingRunner stored `interlocking_yaml_path` and returned a hardcoded
     InterlockingResolution, and whose TrainRunner kept a literal train_id -> wagons
@@ -733,15 +753,23 @@ def _runtime_ignores_declaration_violations(
     resolving = _resolving_modules(records, runtime_files)
     if not resolving:
         return []
+    # POSITIVE EVIDENCE, not absence — back-ported from the JS mirrors, where the
+    # original design did not survive.
+    transcribed = sorted({
+        v for _p, text in resolving for v in _declared_values(records) if _token_in(v, text)
+    })
+    if not transcribed:
+        return []
     path, text = resolving[0]
     line = _line_of(text, re.compile(r"\bclass\s+InterlockingRunner\b"), 1)[0]
     return [
         _violation(
             RULE_EXECUTES, _rel(path, root), line, 0, DIR_RUNTIME_IGNORES,
-            "the InterlockingRunner runtime never reads the interlocking declaration it is "
-            "given (no yaml/json load, open() or read_text() anywhere under the runtime "
-            "selector), so the route space is not executed — it is transcribed. Delete the "
-            "plan and this runtime keeps answering.",
+            f"the InterlockingRunner runtime never reads the interlocking declaration it is "
+            f"given (no yaml/json load, open() or read_text() anywhere under the runtime "
+            f"selector) and restates {len(transcribed)} declared value(s) as literals "
+            f"({', '.join(transcribed)}); the route space is transcribed, not executed — "
+            f"delete the plan and this runtime keeps answering.",
             _line_at(text, line),
         )
     ]
@@ -760,6 +788,13 @@ def _declaration_unreachable_violations(
     if not _resolving_modules(records, runtime_files):
         return []
     blob = "\n".join(text for _p, text in runtime_files)
+    # Only a TRANSCRIBING runtime can have an unreachable route. A runtime that reads
+    # nothing AND states nothing is not hardcoded — it resolves through an injected
+    # repository, a generated module or a query — and judging it on absent literals
+    # reported every declared route as unreachable. Same absence-vs-evidence error as
+    # its sibling had, found by the same injected-repository consumer.
+    if not any(_token_in(v, blob) for v in _declared_values(records)):
+        return []
     out: list[dict] = []
     for il_file, rec in records.items():
         rel = _rel(il_file, root)
