@@ -22,6 +22,10 @@ No core (``atdd.*``) imports; the detector is imported by path.
 """
 from __future__ import annotations
 
+import pytest
+
+import pathlib
+
 import json
 import os
 import sys
@@ -538,3 +542,48 @@ def test_emit_raw_bilateral_binding_report() -> None:
         Path(report_path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     assert isinstance(violations, list)
+
+
+# ── the scope file <-> reader coupling ────────────────────────────────────────
+
+
+def test_scope_selectors_resolve_to_the_five_contract_surfaces() -> None:
+    """The scope file and this detector must agree, or the layout silently empties.
+
+    core's scope.schema.json requires a dotted `selector_id`, so the ids are
+    namespaced and the SURFACE is the last segment. The five surface names are a
+    contract — they are the keys of the ATDD_INTERLOCKING_LAYOUT override JSON core
+    sets — so renaming the id must never rename the surface.
+    """
+    resolved = detector._layout_from_scope()
+    assert set(resolved) == {
+        "interlocking_yaml", "train_yaml", "python_runtime", "station_master", "e2e_tests",
+    }, f"scope file and reader disagree: {sorted(resolved)}"
+    assert all(globs for globs in resolved.values()), "a surface resolved to no globs"
+
+
+def test_reader_accepts_both_selector_id_and_legacy_id() -> None:
+    """Source and vendored copy may land in either order."""
+    assert detector._surface_of({"selector_id": "coder.train.python_runtime"}) == "python_runtime"
+    assert detector._surface_of({"id": "python_runtime"}) == "python_runtime"
+    assert detector._surface_of({"selector_id": ""}) is None
+    assert detector._surface_of({}) is None
+
+
+def test_the_shipped_scope_file_matches_cores_schema() -> None:
+    """The defect this fixes: the file was invalid and nothing in the hub noticed."""
+    import json
+    import yaml as _yaml
+
+    schema_path = next(
+        (p for p in [
+            pathlib.Path.home() / "Github/atdd/main/src/atdd/planner/schemas/author/scope.schema.json",
+        ] if p.is_file()),
+        None,
+    )
+    if schema_path is None:
+        pytest.skip("core checkout not available")
+    jsonschema = pytest.importorskip("jsonschema")
+    doc = _yaml.safe_load(detector._SCOPE_FILE.read_text())
+    errs = list(jsonschema.Draft7Validator(json.loads(schema_path.read_text())).iter_errors(doc))
+    assert not errs, f"scope invalid: {[e.message for e in errs][:3]}"

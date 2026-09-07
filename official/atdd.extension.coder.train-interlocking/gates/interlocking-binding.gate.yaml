@@ -7,6 +7,36 @@ schema_version: "1.0.0"
 # broken binding direction is a silent declaration/runtime/station/trace drift — a hard defect — so this
 # gate is CI/strict.
 gate_id: atdd.extension.coder.train-interlocking.binding
+
+kind: gate
+status: active
+
+trigger:
+  type: ci
+  name: ci
+  description: >-
+    Runs on CI, where the whole consumer tree is present.
+
+selection:
+  strategy: full
+  description: >-
+    FULL, and this one is a correctness constraint rather than a preference. Bilateral
+      binding closes the declared route space, the runtime, the Station Master and the
+      trace against EACH OTHER; a hidden route is invisible to any subset that omits
+      either side of the pair. A blast-radius run would make the rule quietly wrong
+      rather than merely narrower.
+
+on_violation:
+  action: block
+  description: >-
+    Every rule this gate covers carries `disposition: strict` in its convention node.
+    Blocking here matches that; softening it would put the gate and the nodes into
+    disagreement about the same obligation.
+
+exit:
+  success_code: 0
+  failure_code: 1
+
 realizes_convention: coder.train.interlocking-bilateral-binding
 implementation: implementations/interlocking-binding
 scope: scopes/interlocking-targets.scope.yaml
