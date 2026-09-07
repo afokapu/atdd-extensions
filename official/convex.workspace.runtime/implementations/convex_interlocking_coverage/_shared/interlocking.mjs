@@ -46,7 +46,21 @@ export const FORBIDDEN_PATTERNS = [
   ],
 ];
 
-export const STATION_MASTER = /\b(?:StationMaster|station_master|stationMaster)\b/;
+// REACHING THE STATION MASTER, detected STRUCTURALLY rather than by naming.
+//
+// This was the name alone, which required a consumer's smoke test to contain a symbol
+// literally called StationMaster. Nothing asks for that. The coder rule defines the
+// Station Master as `convex/app.ts` carrying a JOURNEY_MAP — structure, not nomenclature —
+// and the coder detector matches it that way, so a consumer whose entrypoint is a
+// module-level dispatch PASSED the coder rule and FAILED this one, with no documented
+// way to satisfy both. It only ever worked because the fixtures happen to export a
+// class with that name. (This provider already contradicted itself: the train
+// composition detector accepts an `app.*` FILE while this one demanded the SYMBOL.)
+//
+// Found by running the python sibling against a real consumer repo rather than against
+// its own fixtures; the same defect was mirrored into every JS realization.
+export const STATION_MASTER =
+  /\b(?:StationMaster|station_master|stationMaster)\b|\bJOURNEY_MAP\b|^\s*import\b[^\n]*\bapp\b|\bapp\.[A-Za-z_]/m;
 export const TRACE_OBJECT = /\btrace\b/;
 
 export function parseJsonEnv(name, fallback) {
