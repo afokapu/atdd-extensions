@@ -60,8 +60,8 @@ def discover() -> list[Path]:
     )
 
 
-def run(suite: Path) -> tuple[int, str, list[tuple[int, str]]]:
-    """Run one suite. Returns (exit code, summary line, [(count, reason), ...])."""
+def run(suite: Path) -> tuple[int, str, list[tuple[int, str]], str]:
+    """Run one suite. Returns (exit code, summary line, [(count, reason), ...], output)."""
     proc = subprocess.run(
         [sys.executable, "-m", "pytest", str(suite), "-q", "-rs"],
         capture_output=True, text=True, cwd=HUB,
@@ -76,7 +76,7 @@ def run(suite: Path) -> tuple[int, str, list[tuple[int, str]]]:
         (ln.strip() for ln in reversed(out.splitlines()) if COUNTS.search(ln)),
         "no summary",
     )
-    return proc.returncode, summary, skips
+    return proc.returncode, summary, skips, out
 
 
 def unrunnable(reason: str) -> bool:
@@ -103,7 +103,7 @@ def main() -> int:
 
     for suite in suites:
         pkg = suite.parent.name
-        code, summary, skips = run(suite)
+        code, summary, skips, out = run(suite)
         print(f"\n{pkg}\n  {summary}")
         for count, reason in skips:
             verdict = "COULD_NOT_CHECK" if unrunnable(reason) else "NOT_APPLICABLE"
@@ -112,6 +112,12 @@ def main() -> int:
                 blind[f"{pkg}: {reason}"] += count
         if code != 0:
             failed.append(pkg)
+            # A CI tool that reports a failure without saying which test failed
+            # sends the reader back to reproduce it by hand. Print what pytest
+            # said, so the log is the diagnosis.
+            print(f"  --- {pkg} pytest output ---")
+            for line in out.splitlines():
+                print(f"  | {line}")
 
     print(f"\n{'=' * 66}")
     print(f"{len(suites)} conformance suite(s) run")
