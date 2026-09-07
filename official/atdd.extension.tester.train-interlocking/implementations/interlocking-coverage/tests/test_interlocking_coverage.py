@@ -228,3 +228,20 @@ def test_the_staged_check_is_not_wired_into_the_gated_scan() -> None:
     """Enabling it must be a gate decision, not a side effect of this commit."""
     assert detector.RULE_SEQUENCE not in detector.ALL_RULE_IDS
     assert detector.scan_root(_FIXTURES / "clean") == []
+
+
+def test_the_staged_node_is_bound_and_honestly_marked() -> None:
+    """Same binding check as the coder sibling: emits is not realizes."""
+    import yaml
+
+    impl = yaml.safe_load((_HERE.parent / "atdd.implementation.yaml").read_text())
+    realizes = impl["realizes_convention"]
+    realizes = [realizes] if isinstance(realizes, str) else realizes
+    assert detector.RULE_SEQUENCE in realizes, "node has no validator binding"
+    assert detector.RULE_SEQUENCE in impl["emits_rule_ids"]
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_SEQUENCE}.convention.yaml").read_text()
+    )
+    assert node["status"] == "draft"
+    assert node["metadata"]["disposition"] == "advisory"

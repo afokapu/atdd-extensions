@@ -12,7 +12,12 @@ contract_version: "1.1.0"
 
 # The one obligation this detector realizes (the convention's five `bidirectional` directions plus the
 # parallel-reachability schema-drift guard all surface under this single rule_id).
-realizes_convention: coder.train.interlocking-bilateral-binding
+realizes_convention:
+  - coder.train.interlocking-bilateral-binding
+  # STAGED validator: realized by scan_execution(), which scan_root() does not call.
+  # The node ships `status: draft` for exactly that reason — binding a node the gated
+  # scan never emits would be a rule that claims to check and does not.
+  - coder.train.runtime-executes-the-declaration
 
 # One run, one strict rule_id; the broken binding DIRECTION is named in each violation's evidence
 # (stable token prefix) so the verdict layer / tests classify without parsing free text.

@@ -629,3 +629,28 @@ def test_the_staged_check_is_not_wired_into_the_gated_scan() -> None:
     assert detector.scan_root(_PASS) == []
     assert detector.RULE_EXECUTES not in detector.ALL_DIRECTIONS
     assert detector.RULE_EXECUTES == "coder.train.runtime-executes-the-declaration"
+
+
+def test_the_staged_node_is_bound_and_honestly_marked() -> None:
+    """A convention node needs a validator BINDING, not just a rule_id in evidence.
+
+    `emits_rule_ids` is co-emission; `realizes_convention` is what the core composer
+    binds. The node was authored with neither, so it was an obligation nothing
+    claimed to enforce — and the composer does not complain about that.
+    """
+    import yaml
+
+    impl = yaml.safe_load((_HERE.parent / "atdd.implementation.yaml").read_text())
+    realizes = impl["realizes_convention"]
+    realizes = [realizes] if isinstance(realizes, str) else realizes
+    assert detector.RULE_EXECUTES in realizes, "node has no validator binding"
+    assert detector.RULE_EXECUTES in impl["emits_rule_ids"]
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_EXECUTES}.convention.yaml").read_text()
+    )
+    assert node["rule_id"] == detector.RULE_EXECUTES
+    # DRAFT while the validator is staged: shipping it active would claim an
+    # enforcement that never runs, because scan_root does not call scan_execution.
+    assert node["status"] == "draft"
+    assert node["metadata"]["disposition"] == "advisory"

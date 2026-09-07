@@ -19,6 +19,9 @@ realizes_convention:
   - tester.interlocking.production-runner-used
   - tester.interlocking.smoke-coverage-for-station-master
   - tester.interlocking.trace-binds-declared-route
+  # STAGED validator: realized by scan_execution(), which scan_root() does not call.
+  # The node ships `status: draft` for exactly that reason.
+  - tester.interlocking.train-sequence-is-exercised
 
 # One run surfaces FOUR rule_ids — all strict — over the v1.1 multi-rule output
 # channel. Declared so the resolver knows one run emits more than the primary
