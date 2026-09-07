@@ -3,7 +3,7 @@
 //
 // When an InterlockingRunner exposes `resolveTrain(...)`, it MUST resolve a structured
 // `InterlockingResolution` model carrying the route metadata — not a bare `trainId` string. The
-// model MUST define interlockingId, routeId, trainId, trainPath, category, categoryDigit, guardId,
+// model MUST define interlockingId, routeId, trainId, trainPath, category, guardId, resolutionStrategy,
 // reason (Convex mirror of core coder.train.interlocking-resolution-model-exists / #1251).
 import {
   parseJsonEnv,
