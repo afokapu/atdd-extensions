@@ -32,7 +32,6 @@ content:
       - routeId
       - selectedTrainId
       - routeCategory
-      - routeCategoryDigit
       - guardId
       - resolutionStrategy
       - resolutionReason
@@ -43,7 +42,7 @@ content:
     to this realization.
   fix_hint: |
     Extend the flagged trace assertion to bind the full declared route. Assert the captured trace records
-    all of: interlockingId, routeId, selectedTrainId, routeCategory, routeCategoryDigit, guardId,
+    all of: interlockingId, routeId, selectedTrainId, routeCategory, guardId,
     resolutionStrategy, resolutionReason — the fields that tie the executed route back to its interlocking
     YAML declaration (afokapu/atdd#1248) and resolution outcome (afokapu/atdd#1251). This rule is `strict`:
     a trace test that does not bind the declared route lets execution drift from declaration undetected.
@@ -70,6 +69,6 @@ terms:
       evidence that ties an executed run to the declared route it came from.
   - term_id: required_trace_field
     text: >-
-      one of interlockingId, routeId, selectedTrainId, routeCategory, routeCategoryDigit, guardId,
+      one of interlockingId, routeId, selectedTrainId, routeCategory, guardId,
       resolutionStrategy, resolutionReason — the fields a trace-binding test must assert so the executed
       route is bound back to its interlocking YAML declaration and resolution outcome.

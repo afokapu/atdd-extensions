@@ -6,7 +6,7 @@ name: Interlocking route resolution returns structured metadata, not a bare trai
 statement: >-
   An `InterlockingRunner.resolveTrain(...)` MUST resolve a structured `InterlockingResolution` model
   carrying the route metadata — not a bare `trainId` string. The model MUST define the fields
-  `interlockingId`, `routeId`, `trainId`, `trainPath`, `category`, `categoryDigit`, `guardId`, and
+  `interlockingId`, `routeId`, `trainId`, `trainPath`, `category`, `guardId`, `resolutionStrategy`, and
   `reason`. This is the Convex-stack realization of the agnostic core obligation
   `coder.train.interlocking-resolution-model-exists` (core afokapu/atdd#1251); the JS detector that
   enforces it is the convex.workspace.runtime implementation referenced below.
@@ -25,10 +25,10 @@ content:
 
         export interface InterlockingResolution {
           interlockingId: string; routeId: string; trainId: string; trainPath: string;
-          category: string; categoryDigit: string; guardId: string; reason: string;
+          category: string; guardId: string; resolutionStrategy: string; reason: string;
         }
 
-    A bare trainId string loses the routeId, guardId, category/categoryDigit, trainPath, and the
+    A bare trainId string loses the routeId, guardId, category, resolutionStrategy, trainPath, and the
     human-readable reason needed for trace, projection equivalence, and category-vs-train-digit
     validation. WHICH runtime files are inspected and HOW the model fields are recognized is the
     per-stack detector's concern (Convex: collecting the InterlockingResolution property names).
@@ -37,7 +37,7 @@ content:
 
       return {
         interlockingId, routeId, trainId, trainPath,
-        category, categoryDigit, guardId, reason,
+        category, guardId, resolutionStrategy, reason,
       };
 
     This rule is `strict`: a resolveTrain backed only by a bare trainId is not suppressible and fails CI.
@@ -57,4 +57,4 @@ terms:
   - term_id: interlocking_resolution_model
     text: >-
       the `InterlockingResolution` structure returned by resolveTrain, carrying interlockingId, routeId,
-      trainId, trainPath, category, categoryDigit, guardId, reason.
+      trainId, trainPath, category, guardId, resolutionStrategy, reason.

@@ -17,5 +17,4 @@ def test_nominal_all_voted_resolves_standard_train():
     ).resolve_train("resolve_match", inputs={"all_players_voted": True}, state={})
     assert resolution.route_id == "nominal-all-voted"
     assert resolution.selected_train_id == "3007-match-resolution-standard"
-    assert resolution.route_category_digit == "0"
     TrainRunner(resolution.selected_train_id).execute(inputs={}, capture_trace=True)

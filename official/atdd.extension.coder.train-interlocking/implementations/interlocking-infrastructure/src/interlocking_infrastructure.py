@@ -44,7 +44,20 @@ ALL_RULE_IDS = frozenset(
     }
 )
 
-# Structured-resolution model contract (core afokapu/atdd#1251 InterlockingResolution).
+# Structured-resolution model contract, transcribed from core's own
+# ``InterlockingResolution`` (src/atdd/runtime/interlocking/runner.py) rather than from
+# #1251's original prose — the two diverged.
+#
+# ``category_digit`` is NOT here: core retired the interlocking category digit in #1421 /
+# #1440, its schema now rejects the key outright, and a typed ``train:<subject>:<slug>``
+# has no digit to carry. Requiring it made this rule reject every consumer core considers
+# valid, and accept the ones core's schema refuses.
+#
+# ``guard_id`` IS here, and stays. Only the PLAN key changed (``guard_id`` -> ``guard_ref``);
+# core's runtime keeps the field on the resolution model, populated from ``route.guard_ref``.
+#
+# ``resolution_strategy`` is here because core carries it and this rule never asked for it —
+# the rule was wrong in both directions at once.
 REQUIRED_RESOLUTION_FIELDS = frozenset(
     {
         "interlocking_id",
@@ -52,8 +65,8 @@ REQUIRED_RESOLUTION_FIELDS = frozenset(
         "train_id",
         "train_path",
         "category",
-        "category_digit",
         "guard_id",
+        "resolution_strategy",
         "reason",
     }
 )

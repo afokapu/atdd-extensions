@@ -25,7 +25,6 @@ def test_alternate_timeout_trace_binds_declared_route():
     assert trace["route_id"] == "alternate-timeout"
     assert trace["selected_train_id"] == "3207-match-resolution-timeout"
     assert trace["route_category"] == "alternate"
-    assert trace["route_category_digit"] == "2"
     assert trace["guard_id"] == "guard:timer-expires"
     assert trace["resolution_strategy"] == "fail_on_multiple_match"
     assert trace["resolution_reason"] == "timer_expired == true"

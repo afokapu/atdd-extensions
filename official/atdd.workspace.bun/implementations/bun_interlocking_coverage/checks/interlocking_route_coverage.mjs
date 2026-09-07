@@ -35,8 +35,8 @@ for (const scanRoot of roots) {
       for (const route of rec.routes) {
         if (isRouteCovered(route, e2eTexts)) continue;
         const cat =
-          route.category !== null || route.categoryDigit !== null
-            ? `category "${route.category}" (digit "${route.categoryDigit}")`
+          route.category !== null
+            ? `category "${route.category}"`
             : "uncategorised";
         violations.push(
           mk(

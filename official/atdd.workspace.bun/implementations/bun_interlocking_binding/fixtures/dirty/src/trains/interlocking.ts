@@ -5,7 +5,7 @@ export interface InterlockingResolution {
   trainId: string;
   trainPath: string;
   category: string;
-  categoryDigit: string;
+  resolutionStrategy: string;
   guardId: string;
   reason: string;
 }
@@ -20,7 +20,7 @@ export class InterlockingRunner {
       trainId: "3007-match-resolution-standard",
       trainPath: "plan/_trains/3007-match-resolution-standard.yaml",
       category: "nominal",
-      categoryDigit: "0",
+      resolutionStrategy: "first_priority",
       guardId: "guard:all-voted",
       reason: "all participants voted",
     };

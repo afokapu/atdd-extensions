@@ -26,15 +26,24 @@ import { join, sep, basename } from "node:path";
 
 export const DEFAULT_EXCLUDES = ["_generated", "node_modules", "dist", "build", ".next"];
 
-// Structured-resolution model contract (core #1251 InterlockingResolution), TS camelCase.
+// Structured-resolution model contract, TS camelCase, transcribed from core's own
+// InterlockingResolution (src/atdd/runtime/interlocking/runner.py).
+//
+// No categoryDigit: core retired the interlocking category digit (#1421 / #1440), its schema
+// rejects the key, and a typed train:<subject>:<slug> has no digit to carry. Requiring it made
+// this rule reject every consumer core considers valid.
+//
+// guardId stays — only the PLAN key changed (guard_id -> guard_ref); the runtime model keeps the
+// field, populated from route.guard_ref. resolutionStrategy is added: core carries it and this
+// rule never asked for it.
 export const REQUIRED_RESOLUTION_FIELDS = [
   "interlockingId",
   "routeId",
   "trainId",
   "trainPath",
   "category",
-  "categoryDigit",
   "guardId",
+  "resolutionStrategy",
   "reason",
 ];
 

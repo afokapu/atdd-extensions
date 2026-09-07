@@ -11,7 +11,6 @@ test("nominal-all-voted trace binds the declared route", () => {
   expect(trace.routeId).toBe("nominal-all-voted");
   expect(trace.selectedTrainId).toBe("3007-match-resolution-standard");
   expect(trace.routeCategory).toBe("alternate");
-  expect(trace.routeCategoryDigit).toBe("2");
   expect(trace.guardId).toBe("guard:timer-expires");
   expect(trace.resolutionStrategy).toBe("fail_on_multiple_match");
   expect(trace.resolutionReason).toBeTruthy();

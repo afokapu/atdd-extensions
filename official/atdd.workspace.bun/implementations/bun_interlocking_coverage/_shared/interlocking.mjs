@@ -15,14 +15,18 @@ export const DEFAULT_EXCLUDES = ["_generated", "node_modules", "dist", "build", 
 export const PROD_INTERLOCKING = "InterlockingRunner";
 export const PROD_TRAIN = "TrainRunner";
 
-// Required trace-binding fields (core #1251 trace contract), TS camelCase. routeCategory is
-// distinguished from routeCategoryDigit by a word boundary that a trailing "Digit" defeats.
+// Required trace-binding fields, TS camelCase, transcribed from core's own
+// InterlockingResolution.as_trace() (src/atdd/runtime/interlocking/runner.py).
+//
+// No routeCategoryDigit: core retired the digit (#1421 / #1440) and its own test notes the trace
+// field "no longer means anything". The /\brouteCategory\b/ boundary still earns its keep — in
+// camelCase a trailing "Digit" defeats it, so a LEGACY consumer emitting only routeCategoryDigit
+// is still reported as missing routeCategory rather than silently passing on the dead field.
 export const REQUIRED_TRACE_FIELDS = [
   ["interlockingId", /\binterlockingId\b/],
   ["routeId", /\brouteId\b/],
   ["selectedTrainId", /\bselectedTrainId\b/],
   ["routeCategory", /\brouteCategory\b/],
-  ["routeCategoryDigit", /\brouteCategoryDigit\b/],
   ["guardId", /\bguardId\b/],
   ["resolutionStrategy", /\bresolutionStrategy\b/],
   ["resolutionReason", /\bresolutionReason\b/],
@@ -266,16 +270,15 @@ export function parseInterlocking(text) {
           sourceLine: l,
           trainId: null,
           category: null,
-          categoryDigit: null,
         });
       } else if (routes.length) {
         const cur = routes[routes.length - 1];
         const tm = l.match(/^\s*train_id:\s*["']?([^"'#\n]+?)["']?\s*(?:#.*)?$/);
         if (tm) cur.trainId = tm[1].trim();
+        // `category:` only — `category_digit:` is retired (#1421 / #1440) and rejected by
+        // core's schema, so there is nothing left to read off a conforming artifact.
         const cm = l.match(/^\s*category:\s*["']?([^"'#\n]+?)["']?\s*(?:#.*)?$/);
         if (cm) cur.category = cm[1].trim();
-        const dm = l.match(/^\s*category_digit:\s*["']?([^"'#\n]+?)["']?\s*(?:#.*)?$/);
-        if (dm) cur.categoryDigit = dm[1].trim();
       }
     }
   }

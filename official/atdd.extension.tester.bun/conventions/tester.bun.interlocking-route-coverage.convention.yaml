@@ -20,7 +20,7 @@ content:
   summary: >-
     A "every declared interlocking route is exercised by an e2e test" obligation, rendered for the
     Bun application. The JS realization parses each interlocking artifact, extracts its declared routes
-    (routeId/trainId/category/categoryDigit), then scans `e2e/**/*.ts` for tests that reference the route
+    (routeId/trainId/category), then scans `e2e/**/*.ts` for tests that reference the route
     by its `routeId` or its resolved `trainId` (comments masked so a name only in a comment does not
     count). Any declared route with no covering e2e test is a RAW violation anchored at the route's
     declaration line in the source interlocking YAML.
@@ -59,7 +59,7 @@ terms:
   - term_id: admissible_route
     text: >-
       a single entry under the `routes:` list of an interlocking artifact (afokapu/atdd#1248); it carries
-      a `routeId`, the `trainId` it resolves to, a `category` + `categoryDigit`, and a `guard_ref`.
+      a `routeId`, the `trainId` it resolves to, a `category`, and a `guard_ref`.
   - term_id: silent_green_route_gap
     text: >-
       an admissible route with no covering e2e test; the interlocking branch it represents is never

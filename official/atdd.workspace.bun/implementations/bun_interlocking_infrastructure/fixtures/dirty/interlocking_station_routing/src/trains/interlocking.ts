@@ -10,7 +10,7 @@ export interface InterlockingResolution {
   trainId: string;
   trainPath: string;
   category: string;
-  categoryDigit: string;
+  resolutionStrategy: string;
   guardId: string;
   reason: string;
 }
@@ -28,7 +28,7 @@ export class InterlockingRunner {
       trainId: "3001-solo-match-complete",
       trainPath: "plan/_trains/3001-solo-match-complete.yaml",
       category: "nominal",
-      categoryDigit: "3",
+      resolutionStrategy: "first_priority",
       guardId: "all-voted",
       reason: "all participants voted",
     };

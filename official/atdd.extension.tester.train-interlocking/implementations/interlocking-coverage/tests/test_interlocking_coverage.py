@@ -58,11 +58,9 @@ entrypoint:
 routes:
   - route_id: nominal-all-voted
     category: nominal
-    category_digit: "0"
     train_id: 3007-match-resolution-standard
   - route_id: alternate-timeout
     category: alternate
-    category_digit: "2"
     train_id: 3207-match-resolution-timeout
 """
 
@@ -74,7 +72,7 @@ def test_parse_interlocking_extracts_routes_and_entrypoint() -> None:
     assert [r["route_id"] for r in rec["routes"]] == ["nominal-all-voted", "alternate-timeout"]
     assert rec["exposed"] is True
     assert rec["actions"] == ["resolve_match"]
-    assert rec["routes"][0]["category_digit"] == "0"
+    assert rec["routes"][0]["category"] == "nominal"
 
 
 def test_parse_ignores_documents_without_route_space() -> None:
@@ -94,7 +92,9 @@ def test_route_covered_by_route_id_or_train_id() -> None:
 
 
 def test_missing_trace_fields_distinguishes_category_from_digit() -> None:
-    # A source asserting only route_category_digit is still missing route_category.
+    # The digit is retired (#1421/#1440), so it is never itself reported missing —
+    # but a LEGACY source asserting only route_category_digit must still be told it
+    # is missing route_category, rather than silently passing on the dead field.
     src = 'trace["route_category_digit"]'
     missing = detector.missing_trace_fields(src)
     assert "route_category" in missing
@@ -119,7 +119,7 @@ def test_dirty_route_missing_fires_only_route_coverage() -> None:
     assert "alternate-timeout" in item["evidence"]
     assert item["file"].endswith("match-resolution.yaml")
     assert "route_id: alternate-timeout" in item["source_line"]
-    assert "digit '2'" in item["evidence"]
+    assert "category 'alternate'" in item["evidence"]
     assert set(item) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
 
 

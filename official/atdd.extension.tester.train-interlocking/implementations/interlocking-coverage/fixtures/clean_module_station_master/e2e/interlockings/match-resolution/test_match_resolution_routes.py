@@ -5,7 +5,7 @@ Exercises EVERY admissible route of the interlocking through the production
 InterlockingRunner -> TrainRunner path (core afokapu/atdd#1251): each route's
 guard-true case resolves to the expected train_id, the no-match case is covered,
 and the ambiguous-match case is covered for the fail_on_multiple_match strategy.
-The route's category_digit is asserted in the resolution metadata.
+The route's category is asserted in the resolution metadata.
 
 This is consumer-tree FIXTURE code (input the detector reads as text), not part of
 the detector's own pytest suite — conftest.py keeps pytest from collecting it.
@@ -24,7 +24,6 @@ def test_nominal_all_voted_resolves_standard_train():
     )
     assert resolution.route_id == "nominal-all-voted"
     assert resolution.selected_train_id == "3007-match-resolution-standard"
-    assert resolution.route_category_digit == "0"
     TrainRunner(resolution.selected_train_id).execute(inputs={}, capture_trace=True)
 
 
@@ -35,7 +34,6 @@ def test_alternate_timeout_resolves_timeout_train():
     )
     assert resolution.route_id == "alternate-timeout"
     assert resolution.selected_train_id == "3207-match-resolution-timeout"
-    assert resolution.route_category_digit == "2"
     TrainRunner(resolution.selected_train_id).execute(inputs={}, capture_trace=True)
 
 

@@ -21,7 +21,6 @@ route_resolution:
 routes:
   - route_id: nominal-all-voted
     category: nominal
-    category_digit: "0"
     priority: 10
     guard_ref: guard:all-voted
     train_id: 3007-match-resolution-standard
@@ -29,7 +28,6 @@ routes:
 
   - route_id: alternate-timeout
     category: alternate
-    category_digit: "2"
     priority: 20
     guard_ref: guard:timer-expires
     train_id: 3207-match-resolution-timeout

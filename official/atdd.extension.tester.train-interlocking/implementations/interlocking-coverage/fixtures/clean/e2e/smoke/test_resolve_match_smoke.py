@@ -31,7 +31,6 @@ def test_resolve_match_smoke_reaches_station_master():
     assert trace["route_id"] == "nominal-all-voted"
     assert trace["selected_train_id"] == "3007-match-resolution-standard"
     assert trace["route_category"] == "nominal"
-    assert trace["route_category_digit"] == "0"
     assert trace["guard_id"] == "guard:all-voted"
     assert trace["resolution_strategy"] == "fail_on_multiple_match"
     assert trace["resolution_reason"]
