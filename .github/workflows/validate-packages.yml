@@ -92,11 +92,16 @@ jobs:
           fi
           echo "✓ gate correctly rejected the broken package"
 
-  # Provider conformance: a REAL pytest run proving atdd.workspace.python-pytest
-  # satisfies its workspace-provider contract (discover + run → violation-output).
-  # The compose-gate above only proves manifests load/validate; this proves the
-  # provider's adapter mechanics actually work. Runner-specific and independent of
-  # the composition gate, so it runs as its own job.
+  # Provider conformance: REAL pytest runs proving each workspace provider satisfies
+  # its contract (discover + run → violation-output). The compose-gate above only
+  # proves manifests load/validate; this proves the adapter mechanics actually work.
+  #
+  # Every suite in the hub runs here, discovered rather than listed — this job used
+  # to name two of the nine, leaving 635 passing assertions (bun, convex, frontend)
+  # green locally and absent from CI. tools/run_conformance.py also refuses to pass
+  # when a suite was skipped for want of its environment: without bun and node on
+  # PATH, 262 of those tests skip silently, and a naive wiring would report success
+  # over them.
   provider-conformance:
     runs-on: ubuntu-latest
     steps:
@@ -106,16 +111,23 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install conformance deps
-        run: pip install pytest pyyaml
+        # The toolkit too: several suites assert against the INSTALLED core, and
+        # skip when it is absent — which run_conformance.py treats as a failure.
+        run: |
+          pip install pytest pyyaml
+          pip install "git+https://github.com/afokapu/atdd.git@main"
 
-      - name: Run atdd.workspace.python-pytest provider conformance
-        run: pytest official/atdd.workspace.python-pytest/conformance/ -v
-
-      - name: Run atdd.workspace.cmux-claude provider conformance
-        # REAL suite — subprocess round-trip + durable feed + two-way channel. No
-        # cmux binary / Claude API needed (the agent command is injected).
-        run: pytest official/atdd.workspace.cmux-claude/conformance/ -v
+      - name: Every conformance suite runs, and none is skipped for want of a tool
+        run: python3 tools/run_conformance.py
 
   # Real end-to-end: the python-pytest provider DISCOVERS every github extension
   # implementation manifest and RUNS its suite. Proves the provider<->implementation
