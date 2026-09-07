@@ -44,6 +44,7 @@ feature: train-interlocking-enforcement
 
 owns:
   conventions:
+    - conventions/coder.train.runtime-executes-the-declaration.convention.yaml
     # Five granular runtime-infrastructure rules (#25).
     - conventions/coder.train.interlocking-runner-exists.convention.yaml
     - conventions/coder.train.interlocking-resolution-model-exists.convention.yaml

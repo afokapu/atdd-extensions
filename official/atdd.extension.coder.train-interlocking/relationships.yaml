@@ -32,6 +32,7 @@ graph_id: atdd.extension.coder.train-interlocking.relationships
 # scope (scoped-by), convention -> gate (gated-by). implementation -> workspace
 # contract and convention -> core design reference are NARRATIVE per §6.2.
 nodes:
+  - coder.train.runtime-executes-the-declaration
   # --- #25 five granular coder runtime-infrastructure conventions ---
   - coder.train.interlocking-runner-exists
   - coder.train.interlocking-resolution-model-exists
@@ -251,3 +252,12 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'The umbrella composes the Station Master component anchor; enforcement is decomposed into the leaf rule that anchor relates to.'
+  - source_ref: coder.train.runtime-executes-the-declaration
+    target_ref: coder.train.interlocking-bilateral-binding
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Bilateral binding closes a TEXT-level correspondence — literals in the runtime also appear in the plan. This rule asks the harder question underneath it: whether the runtime ever READS the plan. A consumer satisfying binding while transcribing the declaration is exactly what the pair exists to separate.'

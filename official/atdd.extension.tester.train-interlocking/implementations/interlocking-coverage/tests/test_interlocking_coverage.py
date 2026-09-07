@@ -196,6 +196,80 @@ def test_emit_raw_interlocking_report() -> None:
     assert isinstance(violations, list)
 
 
+# ── STAGED: train-sequence-is-exercised ───────────────────────────────────────
+
+
+def test_asserts_a_sequence_requires_a_COMPARISON_not_a_mention() -> None:
+    """The first cut counted a bare truthiness check as coverage.
+
+    `assert trace["steps"]` mentions the word and proves nothing about the order —
+    the same over-broad trigger that makes a bare `\\btrace\\b` drag unrelated tests
+    into trace-binding. Caught by running the check against a real consumer.
+    """
+    assert detector.asserts_a_sequence('    assert trace["steps"] == declared') is True
+    assert detector.asserts_a_sequence('    assert result.sequence == ["a", "b"]') is True
+    assert detector.asserts_a_sequence('    assert trace["steps"]') is False
+    assert detector.asserts_a_sequence('    steps = run()') is False
+
+
+def test_trains_reachable_from_routes_follows_the_route_space() -> None:
+    records = [{"routes": [{"train_id": "3007-x"}, {"train_id": "3207-y"}, {"train_id": None}]}]
+    assert detector.trains_reachable_from_routes(records) == {"3007-x", "3207-y"}
+
+
+def test_a_declared_train_with_no_sequence_assertion_is_reported() -> None:
+    found = detector.scan_execution(_FIXTURES / "clean")
+    assert found, "no fixture asserts an executed wagon order yet"
+    assert all(v["rule_id"] == detector.RULE_SEQUENCE for v in found)
+    assert any("wagon SEQUENCE" in v["evidence"] for v in found)
+
+
+def test_node_status_agrees_with_what_the_gated_scan_emits() -> None:
+    """The invariant that survives being enabled — see the coder sibling.
+
+    Asserting the check STAYS unwired becomes the wrong test the moment someone
+    wires it. This pins the relationship instead, so it needs no edit on the day
+    the decision is made: draft must not be gated, active must be.
+    """
+    import yaml
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_SEQUENCE}.convention.yaml").read_text()
+    )
+    tree = _FIXTURES / "clean"          # trips the rule: no test asserts an executed order
+    staged = {v["rule_id"] for v in detector.scan_execution(tree)}
+    gated = {v["rule_id"] for v in detector.scan_root(tree)}
+
+    assert detector.RULE_SEQUENCE in staged, (
+        "the validator must detect the violation regardless of whether it is gated"
+    )
+    if node["status"] == "active":
+        assert detector.RULE_SEQUENCE in gated, (
+            "an ACTIVE node claims live enforcement, so the gated scan must emit it"
+        )
+    else:
+        assert detector.RULE_SEQUENCE not in gated, (
+            f"node is {node['status']!r} but the gated scan emits it"
+        )
+
+
+def test_the_staged_node_is_bound_and_honestly_marked() -> None:
+    """Same binding check as the coder sibling: emits is not realizes."""
+    import yaml
+
+    impl = yaml.safe_load((_HERE.parent / "atdd.implementation.yaml").read_text())
+    realizes = impl["realizes_convention"]
+    realizes = [realizes] if isinstance(realizes, str) else realizes
+    assert detector.RULE_SEQUENCE in realizes, "node has no validator binding"
+    assert detector.RULE_SEQUENCE in impl["emits_rule_ids"]
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_SEQUENCE}.convention.yaml").read_text()
+    )
+    assert node["metadata"]["disposition"] == "advisory"
+    # Status deliberately not pinned — see the coder sibling. The status/gate
+    # relationship is owned by the invariant test, which survives enablement.
+    assert node["status"] in {"draft", "active", "deprecated"}
 # ── the Station Master is STRUCTURE, not a name ───────────────────────────────
 
 

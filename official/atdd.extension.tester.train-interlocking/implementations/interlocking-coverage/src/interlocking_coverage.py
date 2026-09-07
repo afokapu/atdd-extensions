@@ -98,7 +98,21 @@ _FORBIDDEN_PATTERNS: list[tuple[str, re.Pattern]] = [
 
 # A bare `trace` identifier (the captured trace object) — NOT `capture_trace`
 # (the `_` before `trace` is a word char, so `\btrace\b` does not match it).
-_TRACE_OBJECT = re.compile(r"\btrace\b")
+# A test makes a BINDING CLAIM when it reads a trace field that identifies the route.
+#
+# This was `\btrace\b` alone, which pulled in any test that merely used the word. A
+# sequence test asserting `trace["steps"] == declared` makes no claim about WHICH route
+# ran, yet was required to assert all eight binding fields — and the natural fix,
+# renaming the local variable, would have papered over the detector rather than fixing
+# it. Found by running this package against a purpose-built consumer.
+#
+# Reading ONE binding field still trips the rule, which is the intent: a test that
+# asserts route_id and nothing else is exactly the partial binding this rule refuses.
+_TRACE_OBJECT = re.compile(
+    r"\btrace\b[^\n]*\b(?:interlocking_id|route_id|selected_train_id|route_category"
+    r"|route_category_digit|guard_id|resolution_strategy|resolution_reason)\b"
+    r"|\b(?:interlocking_id|route_id|selected_train_id)\b[^\n]*\btrace\b"
+)
 # REACHING THE STATION MASTER, detected STRUCTURALLY rather than by naming.
 #
 # This was `\b(?:StationMaster|station_master)\b` alone, which required a consumer's
@@ -528,3 +542,85 @@ def scan_roots(roots: list[Path]) -> list[dict]:
 def detect(roots: list[Path]) -> list[dict]:
     """Public entrypoint: RAW violations across all 4 interlocking tester rules."""
     return scan_roots([Path(r) for r in roots])
+
+
+# ---------------------------------------------------------------------------
+# STAGED — tester.interlocking.train-sequence-is-exercised
+#
+# The tester half of coder.train.runtime-executes-the-declaration. That rule makes
+# the runtime READ the plan; this one makes the suite prove it OBEYS it. Neither is
+# worth much alone: a runtime that reads the plan but is never tested against it
+# still drifts silently, and a suite that asserts a sequence against a runtime which
+# hardcodes it proves only that the hardcoding is self-consistent.
+#
+# Staged exactly as its coder sibling is: emitted by `scan_execution`, deliberately
+# NOT called from `scan_root`, because no consumer or fixture satisfies it yet and
+# wiring an advisory concern into a strict gate would escalate it silently.
+# ---------------------------------------------------------------------------
+
+RULE_SEQUENCE = "tester.interlocking.train-sequence-is-exercised"
+
+#: A line that ASSERTS AN ORDER: mentions the executed sequence AND compares it.
+#:
+#: The first cut was `\b(?:steps|sequence|wagons)\b` alone, which counted a bare
+#: `assert trace["steps"]` truthiness check as coverage — the same over-broad trigger
+#: that makes `\btrace\b` drag unrelated tests into trace-binding. Merely touching the
+#: word is not asserting the order.
+_SEQUENCE_ASSERTION = re.compile(
+    r"^\s*assert\b[^\n]*\b(?:steps|sequence|wagons)\b[^\n]*==", re.MULTILINE
+)
+
+
+def trains_reachable_from_routes(records: list[dict]) -> set[str]:
+    """Train ids a declared route can select. The rule follows the route space."""
+    return {
+        route["train_id"]
+        for rec in records
+        for route in rec.get("routes") or []
+        if route.get("train_id")
+    }
+
+
+def asserts_a_sequence(text: str) -> bool:
+    """True if this test COMPARES an executed order, not merely mentions one."""
+    return _SEQUENCE_ASSERTION.search(text) is not None
+
+
+def train_sequence_covered(train_id: str, e2e_texts: list[str]) -> bool:
+    """A test both names the train and asserts on what it ran."""
+    return any(_token_covered(train_id, text) and asserts_a_sequence(text) for text in e2e_texts)
+
+
+def scan_execution(root: Path) -> list[dict]:
+    """Declared trains whose executed wagon sequence no test asserts.
+
+    Route coverage proves an admissible route is exercised and trace binding proves
+    the run is attributable to its declared route. Both are statements about
+    SELECTION. A train whose sequence is wrong is selected correctly and runs the
+    wrong thing — demonstrated by replacing a train's whole `sequence:` on a
+    data-driven consumer and watching its suite stay green.
+    """
+    root = Path(root)
+    records = [r for r in (parse_interlocking(_read(f)) for f in find_interlocking_files(root)) if r]
+    if not records:
+        return []
+    e2e = [(f, _read(f)) for f in find_e2e_files(root)]
+    texts = [text for _f, text in e2e]
+    anchor = _rel(e2e[0][0], root) if e2e else "e2e/"
+
+    return [
+        {
+            "rule_id": RULE_SEQUENCE,
+            "file": anchor,
+            "line": 1,
+            "col": 1,
+            "evidence": (
+                f"declared train {train_id!r} is selected by a route but no test asserts the "
+                f"wagon SEQUENCE it executes; reorder or empty its definition and the suite "
+                f"stays green"
+            ),
+            "source_line": "",
+        }
+        for train_id in sorted(trains_reachable_from_routes(records))
+        if not train_sequence_covered(train_id, texts)
+    ]

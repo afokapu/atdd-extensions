@@ -29,10 +29,11 @@ graph_id: atdd.extension.tester.train-interlocking.relationships
 # scope (scoped-by), convention -> gate (gated-by). implementation -> workspace
 # contract and convention -> core design reference are NARRATIVE per §6.2.
 nodes:
-  - tester.interlocking.route-coverage
   - tester.interlocking.production-runner-used
+  - tester.interlocking.route-coverage
   - tester.interlocking.smoke-coverage-for-station-master
   - tester.interlocking.trace-binds-declared-route
+  - tester.interlocking.train-sequence-is-exercised
 
 
 edges:
@@ -111,3 +112,12 @@ edges:
     strength: minor
     confidence: 1.0
     reason: 'The smoke test captures the trace; trace-binds-declared-route governs that the captured trace asserts every field binding it back to the declared route. Co-emitted; the smoke chain''s final step is exactly the trace this rule checks.'
+  - source_ref: tester.interlocking.train-sequence-is-exercised
+    target_ref: tester.interlocking.route-coverage
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Route coverage proves WHICH train was selected; this proves WHAT it ran. A train whose wagon sequence is wrong is selected correctly and executes the wrong thing, so selection coverage must hold before execution coverage means anything.'

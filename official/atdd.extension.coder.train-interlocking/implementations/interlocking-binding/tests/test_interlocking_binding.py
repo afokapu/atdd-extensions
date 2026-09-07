@@ -587,3 +587,122 @@ def test_the_shipped_scope_file_matches_cores_schema() -> None:
     doc = _yaml.safe_load(detector._SCOPE_FILE.read_text())
     errs = list(jsonschema.Draft7Validator(json.loads(schema_path.read_text())).iter_errors(doc))
     assert not errs, f"scope invalid: {[e.message for e in errs][:3]}"
+
+
+# ── executes-the-declaration: designed, tested, not yet gated ─────────────────
+
+
+def test_the_clean_fixture_now_executes_the_declaration() -> None:
+    """It used to transcribe it. Rewriting it proves the obligation is achievable.
+
+    Every field of the resolution was a literal that matched the YAML by coincidence
+    of authorship. It satisfied bilateral binding, because that rule closes a
+    TEXT-level correspondence.
+    """
+    assert detector.scan_execution(_PASS) == []
+    runtime = (_PASS / "python" / "trains" / "runtime.py").read_text()
+    assert "yaml.safe_load" in runtime and "read_text" in runtime
+    assert "def route_by_id" in runtime, "resolution must trace to the loaded route space"
+
+
+def test_a_plan_blind_runtime_is_caught() -> None:
+    """The consumer shape that passed all ten rules while ignoring the plan."""
+    import tempfile, shutil, pathlib as _pl
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tree = _pl.Path(tmp) / "consumer"
+        shutil.copytree(_PASS, tree)
+        rt = tree / "python" / "trains" / "runtime.py"
+        text = rt.read_text().replace("import yaml", "").replace(
+            "yaml.safe_load(Path(self._path).read_text(encoding=\"utf-8\")) or {}",
+            "{'interlocking_id': 'interlocking:match-resolution', 'routes': []}",
+        )
+        rt.write_text(text)
+        found = detector.scan_execution(tree)
+        assert found, "a runtime that never reads the declaration must be reported"
+        assert all(v["rule_id"] == detector.RULE_EXECUTES for v in found)
+        assert any("never reads the interlocking declaration" in v["evidence"] for v in found)
+
+
+def _plan_blind_tree(tmp: str):
+    """A copy of the clean fixture with every runtime read stripped out."""
+    import shutil, pathlib as _pl
+
+    tree = _pl.Path(tmp) / "consumer"
+    shutil.copytree(_PASS, tree)
+    rt = tree / "python" / "trains" / "runtime.py"
+    rt.write_text(
+        rt.read_text()
+        .replace("import yaml", "")
+        .replace(
+            'yaml.safe_load(Path(self._path).read_text(encoding="utf-8")) or {}',
+            "{'interlocking_id': 'interlocking:match-resolution', 'routes': []}",
+        )
+    )
+    return tree
+
+
+def test_node_status_agrees_with_what_the_gated_scan_emits() -> None:
+    """The invariant that survives being enabled.
+
+    The guard this replaces asserted the check STAYS unwired — which becomes the
+    wrong test the moment someone wires it, failing them for doing the right thing.
+    A test that must be deleted to make progress is a test that will be deleted
+    without thought.
+
+    This pins the relationship instead: a `draft` node must not be emitted by the
+    gated scan, an `active` node must be. Wire the check without flipping the
+    status and it fails; flip the status without wiring and it fails. It needs no
+    edit on the day the decision is finally made.
+    """
+    import tempfile
+    import yaml
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_EXECUTES}.convention.yaml").read_text()
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        tree = _plan_blind_tree(tmp)
+        staged = {v["rule_id"] for v in detector.scan_execution(tree)}
+        gated = {v["rule_id"] for v in detector.scan_root(tree)}
+
+    assert detector.RULE_EXECUTES in staged, (
+        "the validator must detect the violation regardless of whether it is gated"
+    )
+    if node["status"] == "active":
+        assert detector.RULE_EXECUTES in gated, (
+            "an ACTIVE node claims live enforcement, so the gated scan must emit it"
+        )
+    else:
+        assert detector.RULE_EXECUTES not in gated, (
+            f"node is {node['status']!r} but the gated scan emits it — a draft node "
+            f"must not be enforced, or it should be marked active"
+        )
+
+
+def test_the_staged_node_is_bound_and_honestly_marked() -> None:
+    """A convention node needs a validator BINDING, not just a rule_id in evidence.
+
+    `emits_rule_ids` is co-emission; `realizes_convention` is what the core composer
+    binds. The node was authored with neither, so it was an obligation nothing
+    claimed to enforce — and the composer does not complain about that.
+    """
+    import yaml
+
+    impl = yaml.safe_load((_HERE.parent / "atdd.implementation.yaml").read_text())
+    realizes = impl["realizes_convention"]
+    realizes = [realizes] if isinstance(realizes, str) else realizes
+    assert detector.RULE_EXECUTES in realizes, "node has no validator binding"
+    assert detector.RULE_EXECUTES in impl["emits_rule_ids"]
+
+    node = yaml.safe_load(
+        (_HERE.parents[2] / "conventions" / f"{detector.RULE_EXECUTES}.convention.yaml").read_text()
+    )
+    assert node["rule_id"] == detector.RULE_EXECUTES
+    assert node["metadata"]["disposition"] == "advisory"
+    # STATUS IS NOT PINNED HERE, deliberately. Asserting `== "draft"` would have to be
+    # edited on the day the check is enabled — the same trap as asserting the check
+    # stays unwired. The status/gate RELATIONSHIP is owned by
+    # test_node_status_agrees_with_what_the_gated_scan_emits, which is correct in
+    # both states; this test only asserts the node is legally marked at all.
+    assert node["status"] in {"draft", "active", "deprecated"}
