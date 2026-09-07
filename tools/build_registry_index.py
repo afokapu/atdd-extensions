@@ -189,6 +189,24 @@ def main() -> int:
     doc = build()
     rendered = _HEADER + yaml.safe_dump(doc, sort_keys=False, width=100)
 
+    # A registry entry whose source path does not exist is a BROKEN registry: the
+    # index is what core reads to resolve `atdd substrate add <ref>`, so a dangling
+    # entry sends a consumer at a package that is not there. This happened once, when
+    # a persona split removed a package and deferred the registry update — the index
+    # went on advertising ./official/atdd.extension.train-interlocking-enforcement
+    # after the directory was gone, and nothing noticed because only index-vs-entries
+    # drift was checked, never entry-vs-disk.
+    dangling = [
+        (e.get("id"), e.get("source"))
+        for e in doc.get("entries", [])
+        if e.get("source") and not (HUB / str(e["source"])).exists()
+    ]
+    if dangling:
+        for eid, src in dangling:
+            print(f"registry entry {eid!r} points at {src!r}, which does not exist")
+        print(f"\n{len(dangling)} dangling registry entr(ies); the index core reads is broken")
+        return 1
+
     if args.check:
         current = GENERATED.read_text(encoding="utf-8") if GENERATED.exists() else ""
         if current != rendered:

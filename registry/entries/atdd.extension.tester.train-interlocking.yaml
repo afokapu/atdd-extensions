@@ -1,0 +1,36 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.tester.train-interlocking
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.tester.train-interlocking
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# The coverage implementation runs inside the python-pytest provider; it reads the
+# declared route space (plan/_trains/_interlockings/**) and the consumer's e2e tests.
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+
+categories:
+  - tester
+  - train-interlocking
+  - test-validator
+  - official
+
+description: >-
+  Official ATDD tester-role extension for train interlocking — the TESTER half of the
+  persona split (afokapu/atdd#1531). Four convention nodes, each naming a distinct way
+  a green suite can be a lie: an admissible route that no e2e test exercises (a
+  silent-green gap), a test asserting against a mocked runner instead of the production
+  InterlockingRunner -> TrainRunner path (a descriptive green), an exposed Station
+  Master action with no smoke test, and a trace assertion that omits the fields binding
+  the run back to its declared route. Pair it with atdd.extension.coder.train-interlocking.

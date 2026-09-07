@@ -12,7 +12,8 @@ entries:
   - entries/atdd.extension.github.yaml
   - entries/atdd.extension.coder.base.yaml
   - entries/atdd.extension.tester.base.yaml
-  - entries/atdd.extension.train-interlocking-enforcement.yaml
+  - entries/atdd.extension.coder.train-interlocking.yaml
+  - entries/atdd.extension.tester.train-interlocking.yaml
   - entries/atdd.extension.coder.bun.yaml
   - entries/atdd.extension.coder.htmx.yaml
   - entries/atdd.extension.tester.bun.yaml
