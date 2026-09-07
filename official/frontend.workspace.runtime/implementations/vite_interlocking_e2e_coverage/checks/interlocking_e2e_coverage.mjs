@@ -62,12 +62,27 @@ function lineOfIndex(text, idx) {
   return n;
 }
 
-// An interlocking registry file: plan/_interlocking.yaml, or a *.yaml under an `_interlocking/` dir.
+// An interlocking registry file, in EITHER of the two locations this hub uses.
+//
+//   frontend : plan/_interlocking.yaml, or a *.yaml under an `_interlocking/` dir
+//   backend  : plan/_trains/_interlockings/**/*.yaml   (python, convex, bun)
+//
+// The route space is stack-NEUTRAL planner data, and these two paths are the same
+// declaration. A consumer with both a backend and a frontend — the shape this hub
+// exists to serve — otherwise maintains it twice, or one stack silently sees
+// nothing: with the file in the backend location these rules were VACUOUSLY silent,
+// which is how a purpose-built Vite consumer passed them while declaring routes no
+// spec covered.
+//
+// Reading both is the non-breaking half of the fix. WHICH PATH IS CANONICAL is a
+// decision for whoever owns the plan schema, not something a detector should settle
+// by ignoring the other one.
 function isInterlockingRegistryFile(path) {
   const segs = path.split(sep);
   const b = basename(path);
   if (b === "_interlocking.yaml") return true;
   if (b.endsWith(".yaml") && segs.includes("_interlocking")) return true;
+  if (b.endsWith(".yaml") && segs.includes("_interlockings")) return true;
   return false;
 }
 function collectRegistry(file, routes, stationMasters) {
