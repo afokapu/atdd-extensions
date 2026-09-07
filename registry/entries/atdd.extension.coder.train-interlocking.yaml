@@ -1,0 +1,40 @@
+schema_version: "1.0.0"
+
+artifact_id: atdd.extension.coder.train-interlocking
+kind: extension
+status: official
+publisher: atdd
+
+source:
+  repository: ./official/atdd.extension.coder.train-interlocking
+  type: local
+
+version: "0.1.0"
+
+compatible_atdd_core:
+  minimum: "0.1.0"
+
+# Both coder implementations run inside the python-pytest provider: the
+# infrastructure check parses consumer runtime code (InterlockingRunner / Station
+# Master) with `ast`, the bilateral-binding check walks the declaration <-> runtime
+# <-> station <-> trace closure.
+requires_workspaces:
+  - id: atdd.workspace.python-pytest
+    contract: "^1.0.0"
+
+categories:
+  - coder
+  - train-interlocking
+  - source-validator
+  - official
+
+description: >-
+  Official ATDD coder-role extension for train interlocking — the CODER half of the
+  persona split (afokapu/atdd#1531). Six convention nodes enforcing that a consumer
+  declaring guarded routes ships a real route-control layer: an InterlockingRunner
+  exists with a resolve_train entry point, resolves a structured InterlockingResolution
+  rather than a bare train_id, delegates execution to TrainRunner instead of running
+  wagons itself, never touches the Cargo data plane, is reached from the Station Master
+  entrypoint, and closes bilaterally against the declared route space in five
+  directions — including the hidden-route direction, where a runtime resolves a
+  route_id no YAML declares. Pair it with atdd.extension.tester.train-interlocking.
