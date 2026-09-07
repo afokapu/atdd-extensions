@@ -16,7 +16,7 @@ class InterlockingResolution:
     train_id: str
     train_path: str
     category: str
-    category_digit: str
+    resolution_strategy: str
     guard_id: str
     reason: str
 
@@ -33,8 +33,8 @@ class InterlockingRunner:
             train_id="3001-solo-match-complete",
             train_path="plan/_trains/3001-solo-match-complete.yaml",
             category="nominal",
-            category_digit="3",
-            guard_id="all-voted",
+            resolution_strategy="first_priority",
+            guard_id="guard:all-voted",
             reason="all participants voted",
         )
 

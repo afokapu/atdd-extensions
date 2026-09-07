@@ -21,7 +21,7 @@ content:
   summary: >-
     A "every declared interlocking route is exercised by an e2e test" obligation. The python realization
     parses each interlocking artifact under the `interlocking_yaml` scope selector, extracts its declared
-    routes (each carrying `route_id`, `train_id`, `category`, `category_digit`, `guard_ref` per
+    routes (each carrying `route_id`, `train_id`, `category`, `guard_ref` per
     afokapu/atdd#1248), then scans the `e2e_tests` selector (`e2e/**/*.py`) for tests that reference the
     route by its `route_id` or its resolved `train_id`. Any declared route with no covering e2e test is
     emitted as a RAW violation anchored at the route's declaration line in the source interlocking YAML.
@@ -36,7 +36,7 @@ content:
     `train_id` it resolves to, so the test plainly exercises that admissible route. The richer per-route
     coverage shape the contract-level e2e tests should carry — guard-true case resolves the expected
     route_id/train_id, the no-match case, the ambiguous-match case when the resolution strategy can produce
-    ambiguity, and the route's `category_digit` asserted in the resolution metadata — is documented in the
+    ambiguity, and the route's `category` asserted in the resolution metadata — is documented in the
     detector's fixtures and is the obligation the consuming repo satisfies; the detector's enforced minimum
     is the existence of a covering e2e test for every declared route. WHICH per-stack discovery applies
     (here: python `e2e/**/*.py` scanned for the route/train tokens) is delegated to this python-pytest
@@ -79,7 +79,7 @@ terms:
 - term_id: admissible_route
   text: >-
     a single entry under the `routes:` list of an interlocking artifact (afokapu/atdd#1248); it carries a
-    `route_id`, the `train_id` it resolves to, a `category` + `category_digit`, and a `guard_ref`. Every
+    `route_id`, the `train_id` it resolves to, a `category`, and a `guard_ref`. Every
     admissible route is a branch the InterlockingRunner can select and must therefore be exercised by an
     e2e test.
 - term_id: route_coverage

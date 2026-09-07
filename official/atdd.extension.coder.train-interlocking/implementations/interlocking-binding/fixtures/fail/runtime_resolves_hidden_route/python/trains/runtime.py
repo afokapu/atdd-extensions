@@ -14,7 +14,6 @@ class InterlockingResolution:
     selected_train_id: str
     train_path: str
     route_category: str
-    route_category_digit: str
     guard_id: str
     resolution_strategy: str
     resolution_reason: str
@@ -33,7 +32,7 @@ class InterlockingRunner:
             selected_train_id="3007-match-resolution-standard",
             train_path="plan/_trains/3007-match-resolution-standard.yaml",
             route_category="nominal",
-            route_category_digit="0",
+            route_resolution_strategy="first_priority",
             guard_id="guard:all-voted",
             resolution_strategy="fail_on_multiple_match",
             resolution_reason="all_players_voted == true",
@@ -56,7 +55,6 @@ class _Result:
             "route_id": "nominal-all-voted",
             "selected_train_id": train_id,
             "route_category": "nominal",
-            "route_category_digit": "0",
             "guard_id": "guard:all-voted",
             "resolution_strategy": "fail_on_multiple_match",
             "resolution_reason": "all_players_voted == true",

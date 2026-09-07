@@ -59,14 +59,21 @@ _E2E_GLOB = "e2e/**/*.py"
 _PROD_INTERLOCKING = "InterlockingRunner"
 _PROD_TRAIN = "TrainRunner"
 
-# Required trace-binding fields (core #1251 trace contract). Each entry is
-# (label, compiled-regex) — distinguishing route_category from route_category_digit.
+# Required trace-binding fields, transcribed from core's own
+# ``InterlockingResolution.as_trace()`` (src/atdd/runtime/interlocking/runner.py).
+#
+# ``route_category_digit`` is NOT here: core retired the category digit (#1421 / #1440) and
+# its own test pins the trace to the ``category`` FIELD, noting the digit field "no longer
+# means anything". Requiring it made this rule reject traces core itself emits.
+#
+# The ``(?!_)`` on route_category is kept and now does migration work: it stops a legacy
+# consumer that emits only ``route_category_digit`` from silently satisfying
+# ``route_category``. Such a consumer is missing the field and must still fail.
 _REQUIRED_TRACE_FIELDS: list[tuple[str, re.Pattern]] = [
     ("interlocking_id", re.compile(r"\binterlocking_id\b")),
     ("route_id", re.compile(r"\broute_id\b")),
     ("selected_train_id", re.compile(r"\bselected_train_id\b")),
     ("route_category", re.compile(r"\broute_category\b(?!_)")),
-    ("route_category_digit", re.compile(r"\broute_category_digit\b")),
     ("guard_id", re.compile(r"\bguard_id\b")),
     ("resolution_strategy", re.compile(r"\bresolution_strategy\b")),
     ("resolution_reason", re.compile(r"\bresolution_reason\b")),
@@ -110,7 +117,7 @@ _FORBIDDEN_PATTERNS: list[tuple[str, re.Pattern]] = [
 # asserts route_id and nothing else is exactly the partial binding this rule refuses.
 _TRACE_OBJECT = re.compile(
     r"\btrace\b[^\n]*\b(?:interlocking_id|route_id|selected_train_id|route_category"
-    r"|route_category_digit|guard_id|resolution_strategy|resolution_reason)\b"
+    r"|guard_id|resolution_strategy|resolution_reason)\b"
     r"|\b(?:interlocking_id|route_id|selected_train_id)\b[^\n]*\btrace\b"
 )
 # REACHING THE STATION MASTER, detected STRUCTURALLY rather than by naming.
@@ -191,11 +198,6 @@ def parse_interlocking(text: str) -> dict | None:
                     str(entry["train_id"]) if entry.get("train_id") is not None else None
                 ),
                 "category": entry.get("category"),
-                "category_digit": (
-                    str(entry["category_digit"])
-                    if entry.get("category_digit") is not None
-                    else None
-                ),
                 "guard_ref": entry.get("guard_ref"),
                 "line": lineno,
                 "source_line": source_line,
@@ -315,16 +317,10 @@ def _route_coverage_violations(
         for route in rec["routes"]:
             if is_route_covered(route, e2e_texts):
                 continue
-            digit, category, train = (
-                route.get("category_digit"),
-                route.get("category"),
-                route.get("train_id"),
-            )
-            cat_desc = (
-                f"category {category!r} (digit {digit!r})"
-                if category is not None or digit is not None
-                else "uncategorised"
-            )
+            category, train = route.get("category"), route.get("train_id")
+            # The digit that used to appear here is retired (#1421 / #1440); with the key
+            # gone from every artifact it could only ever render "(digit None)".
+            cat_desc = f"category {category!r}" if category is not None else "uncategorised"
             out.append(
                 {
                     "rule_id": RULE_ROUTE_COVERAGE,
@@ -534,10 +530,9 @@ def _trace_violations(
                 "col": 0,
                 "evidence": (
                     f"interlocking trace test {rel!r} does not bind the declared route: "
-                    f"missing required trace field(s) {', '.join(missing)} (core #1251 "
-                    f"trace must record interlocking_id/route_id/selected_train_id/"
-                    f"route_category/route_category_digit/guard_id/resolution_strategy/"
-                    f"resolution_reason)"
+                    f"missing required trace field(s) {', '.join(missing)} "
+                    f"(core's InterlockingResolution.as_trace records "
+                    f"{'/'.join(label for label, _ in _REQUIRED_TRACE_FIELDS)})"
                 ),
                 "source_line": src,
             }

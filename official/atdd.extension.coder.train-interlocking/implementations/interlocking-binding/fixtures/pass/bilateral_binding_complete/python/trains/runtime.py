@@ -24,7 +24,6 @@ class InterlockingResolution:
     selected_train_id: str
     train_path: str
     route_category: str
-    route_category_digit: str
     guard_id: str
     resolution_strategy: str
     resolution_reason: str
@@ -68,7 +67,6 @@ class InterlockingRunner:
             selected_train_id=route.train_id,
             train_path=route.train_path,
             route_category=route.category,
-            route_category_digit=route.category_digit,
             guard_id=route.guard_id,
             resolution_strategy="fail_on_multiple_match",
             resolution_reason=f"guard {route.guard_id!r} held",
@@ -90,8 +88,7 @@ class _Route:
         self.train_id = data.get("train_id")
         self.train_path = data.get("train_path")
         self.category = data.get("category")
-        self.category_digit = data.get("category_digit")
-        self.guard_id = data.get("guard_id")
+        self.guard_id = data.get("guard_ref")
 
 
 class TrainRunner:
@@ -110,7 +107,6 @@ class _Result:
             "route_id": "nominal-all-voted",
             "selected_train_id": train_id,
             "route_category": "nominal",
-            "route_category_digit": "0",
             "guard_id": "guard:all-voted",
             "resolution_strategy": "fail_on_multiple_match",
             "resolution_reason": "all_players_voted == true",

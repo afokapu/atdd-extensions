@@ -30,7 +30,6 @@ def test_nominal_route_trace():
     assert trace["route_id"] == "nominal-all-voted"
     assert trace["selected_train_id"] == "3007-match-resolution-standard"
     assert trace["route_category"] == "nominal"
-    assert trace["route_category_digit"] == "0"
     assert trace["resolution_strategy"] == "fail_on_multiple_match"
 
 

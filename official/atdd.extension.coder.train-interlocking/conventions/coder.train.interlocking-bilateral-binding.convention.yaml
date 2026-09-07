@@ -73,7 +73,7 @@ content:
           -> entrypoint.actions[]                       (core #1248 entrypoint field — CONSUMED here)
           -> Station Master JOURNEY_MAP action          (reachability)
           -> InterlockingRunner.resolve_train(...)      (runtime, core #1251)
-          -> InterlockingResolution(route_id, train_id, category_digit, ...)
+          -> InterlockingResolution(route_id, train_id, category, guard_id, resolution_strategy, ...)
           -> TrainRunner.execute(selected_train_id)     (delegation)
           -> TrainResult.trace(interlocking_id, route_id, selected_train_id, ...)
           -> validator resolves the trace back to the YAML route

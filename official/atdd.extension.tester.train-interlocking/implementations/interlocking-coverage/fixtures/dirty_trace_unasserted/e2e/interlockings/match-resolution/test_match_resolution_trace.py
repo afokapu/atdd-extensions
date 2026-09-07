@@ -24,7 +24,6 @@ def test_nominal_route_trace():
         "route_id": result.trace["route_id"],
         "selected_train_id": result.trace["selected_train_id"],
         "route_category": result.trace["route_category"],
-        "route_category_digit": result.trace["route_category_digit"],
         "guard_id": result.trace["guard_id"],
         "resolution_strategy": result.trace["resolution_strategy"],
         "resolution_reason": result.trace["resolution_reason"],
