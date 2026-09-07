@@ -99,7 +99,27 @@ _FORBIDDEN_PATTERNS: list[tuple[str, re.Pattern]] = [
 # A bare `trace` identifier (the captured trace object) — NOT `capture_trace`
 # (the `_` before `trace` is a word char, so `\btrace\b` does not match it).
 _TRACE_OBJECT = re.compile(r"\btrace\b")
-_STATION_MASTER = re.compile(r"\b(?:StationMaster|station_master)\b")
+# REACHING THE STATION MASTER, detected STRUCTURALLY rather than by naming.
+#
+# This was `\b(?:StationMaster|station_master)\b` alone, which required a consumer's
+# smoke test to contain a symbol literally named StationMaster. Nothing asks for that
+# name. `coder.train.station-master-interlocking-routing` defines the Station Master as
+# `python/app.py` carrying a `JOURNEY_MAP` — structure, not nomenclature — and the
+# coder detector matches it that way. A consumer whose entrypoint is a module-level
+# `dispatch()` in app.py therefore PASSED the coder rule and FAILED this one, with no
+# documented way to satisfy both. The old pattern matched only because this package's
+# own fixture happens to export a class called StationMaster.
+#
+# Any of these is evidence a test reaches the Station Master: the StationMaster name,
+# an import of / reference to the `app` entrypoint module, or JOURNEY_MAP — the
+# structure the coder rule says defines it.
+_STATION_MASTER = re.compile(
+    r"\b(?:StationMaster|station_master|stationMaster)\b"
+    r"|\bJOURNEY_MAP\b"
+    r"|^\s*(?:import|from)\s+app\b"
+    r"|\bapp\.[A-Za-z_]",
+    re.MULTILINE,
+)
 
 
 # ---------------------------------------------------------------------------
