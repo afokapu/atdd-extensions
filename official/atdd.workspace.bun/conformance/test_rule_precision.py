@@ -70,7 +70,7 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     "coder.bun.quality-mi":                  ("big.ts", ("maintainability index",), None),
     "coder.bun.quality-comments":            ("orphan.ts", ("0.0%",), None),
     "coder.bun.dead-code-reachability":      ("orphan.ts", ("unreachable", "orphan.ts"), None),
-    "coder.bun.duplication-intra-layer":     ("a.ts", ("domain", "b.ts"), None),
+    "coder.bun.duplication-intra-layer":     ("b.ts", ("domain", "a.ts"), None),
     # ── coder.bun · security / logging / errors ─────────────────────────────
     "coder.bun.security-hardcoded-secret":   ("secrets.ts", ("aws_access_key",), None),
     "coder.bun.security-sql-injection":      ("db.ts", ("template literal", "query sink"), None),

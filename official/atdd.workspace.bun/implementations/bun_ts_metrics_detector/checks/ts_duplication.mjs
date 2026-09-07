@@ -36,6 +36,13 @@ for (const root of readRoots()) {
 
   for (const [layer, files] of byLayer) {
     if (files.length < 2) continue;
+    // walk() yields whatever order the filesystem hands back, and the pair is
+    // reported as "the duplicate at `other`, whose original is `first`" — so an
+    // unsorted walk decides which of the two files gets named. It reported a.ts
+    // on macOS and b.ts on ubuntu for the very same fixture. Sorting fixes the
+    // roles: the earliest path is the original, the rest are the duplicates.
+    // The three python detectors already sort their walks; this port dropped it.
+    files.sort();
     const hashMap = new Map();
     for (const f of files) {
       const text = readText(f);
