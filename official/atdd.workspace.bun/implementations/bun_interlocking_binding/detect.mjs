@@ -88,8 +88,29 @@ function maskComments(text) {
 
 // ── consumer-tree + scope discovery ──────────────────────────────────────────
 
+// The caller's excludes, merged with the defaults. core passes ATDD_SCAN_EXCLUDES
+// (it carries `.atdd/workspaces`, among others) and cli/scan.py and adapter/run.py
+// both merge it in; this family read only its own DEFAULT_EXCLUDES and discarded it.
+// Matching follows lib/scan.mjs: a whole path segment OR a substring, so a
+// multi-segment glob like `.atdd/workspaces` can match at all — segment-only
+// comparison could never match one.
+const SCAN_EXCLUDES = (() => {
+  let extra = [];
+  try {
+    const raw = process.env.ATDD_SCAN_EXCLUDES;
+    if (raw) {
+      const v = JSON.parse(raw);
+      if (Array.isArray(v)) extra = v.filter((x) => typeof x === "string");
+    }
+  } catch {
+    /* malformed env must not silence the scan */
+  }
+  return [...new Set([...DEFAULT_EXCLUDES, ...extra])];
+})();
+
 function isExcluded(path) {
-  return path.split(sep).some((s) => DEFAULT_EXCLUDES.includes(s));
+  const segments = path.split(sep);
+  return SCAN_EXCLUDES.some((ex) => segments.includes(ex) || path.includes(ex));
 }
 
 function hasChildDir(dir, name) {
@@ -178,12 +199,24 @@ function e2eFiles(croot) {
   return [...walkFiles(join(croot, "e2e"), isTs)].sort();
 }
 
+// The Station Master is the module that DECLARES a JOURNEY_MAP, not a file with a
+// particular name. This was `join(croot, "server.ts")`, which made the rule and
+// coder.bun.dead-code-reachability mutually unsatisfiable: ts_metrics only treats
+// index/wagon/composition/main/app as structural roots, so a consumer whose Station
+// Master is server.ts had its whole feature tree reported dead, and renaming it to
+// app.ts made the Station Master invisible here. No filename satisfied both. Named
+// files are still checked first, so the common layout costs no extra walking.
 function appFile(croot) {
-  const p = join(croot, "server.ts");
-  try {
-    if (statSync(p).isFile()) return p;
-  } catch {
-    /* absent */
+  for (const name of ["server.ts", "app.ts", "main.ts", "index.ts"]) {
+    const p = join(croot, name);
+    try {
+      if (statSync(p).isFile() && /\bJOURNEY_MAP\b/.test(readText(p))) return p;
+    } catch {
+      /* absent */
+    }
+  }
+  for (const f of walkFiles(croot, isTs)) {
+    if (/\bJOURNEY_MAP\b/.test(readText(f))) return f;
   }
   return null;
 }

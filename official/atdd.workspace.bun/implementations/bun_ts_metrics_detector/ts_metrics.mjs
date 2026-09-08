@@ -262,7 +262,10 @@ export function fragments(source, minLines, hasher) {
 export { moduleImports } from "../../lib/imports.mjs";
 
 export const ROOT_FILENAMES = new Set(["index.ts", "index.tsx", "wagon.ts", "composition.ts"]);
-export const ENTRY_FILENAMES = new Set(["main.ts", "main.tsx", "app.ts", "app.tsx"]);
+// `server.ts` is the canonical Bun entrypoint (Bun.serve) and the Station Master in
+// 17 of the interlocking family's own fixtures. Omitting it reported a whole feature
+// tree as dead code for consumers built the way that family prescribes.
+export const ENTRY_FILENAMES = new Set(["main.ts", "main.tsx", "app.ts", "app.tsx", "server.ts"]);
 export const STRUCTURAL = new Set(["index.ts", "index.tsx"]);
 
 export function resolveImport(specifier, sourceFile, allFiles, root) {
