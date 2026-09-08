@@ -22,6 +22,7 @@ schema_version: "1.0.0"
 graph_id: atdd.extension.coder.bun.relationships
 
 nodes:
+  - coder.bun.wagon-honours-its-contract
   - coder.bun.boundaries-http-client
   - coder.bun.commons-application-no-integration
   - coder.bun.commons-cross-feature-imports-in
@@ -70,6 +71,15 @@ nodes:
   - coder.bun.station-master-interlocking-routing
 
 edges:
+  - source_ref: coder.bun.wagon-honours-its-contract
+    target_ref: coder.bun.interlocking-does-not-carry-cargo
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The two halves of the artifact data plane. One keeps Cargo inside TrainRunner execution, the other requires the wagon at the end of that execution to move the artifacts its plan document declares. Neither implies the other, and a stack satisfying only one still lets the declared contract and the carried data disagree.'
   - source_ref: coder.bun.green-urn-pattern
     target_ref: coder.bun.green-urn-marker
     type: requires
