@@ -6,7 +6,7 @@ kind: rule
 # `scan_root()` deliberately does not call. Shipping it `active` would claim an
 # enforcement that never runs — a rule that says it checks and does not. It becomes
 # `active` in the same change that wires the check into the gate.
-status: draft
+status: active
 name: The runtime executes the declared route space rather than transcribing it
 statement: >-
   A consumer that declares guarded interlocking routes MUST have a runtime that READS the

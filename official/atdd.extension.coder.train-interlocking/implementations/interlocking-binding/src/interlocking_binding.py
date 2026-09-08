@@ -688,14 +688,50 @@ def _token_in(token: str, text: str) -> bool:
     return re.search(rf"(?<![\w-]){re.escape(token)}(?![\w-])", text) is not None
 
 
-def runtime_loads_declaration(runtime_files: list[tuple[Path, str]]) -> bool:
-    """True if ANY runtime module reads a file.
+def _imported_module_names(text: str) -> set[str]:
+    """Modules this one imports AND actually references — not merely names."""
+    used: set[str] = set()
+    body = re.sub(r"(?m)^\s*(?:from|import)\s.*$", "", text)
+    for mod, names in re.findall(
+        r"(?m)^\s*from\s+[.\w]*?(\w+)\s+import\s+([^\n(]+)", text
+    ):
+        bound = [n.strip().split(" as ")[-1].strip() for n in names.split(",")]
+        if any(re.search(rf"\b{re.escape(b)}\b", body) for b in bound if b):
+            used.add(mod)
+    for mod in re.findall(r"(?m)^\s*import\s+[.\w]*?(\w+)", text):
+        if re.search(rf"\b{re.escape(mod)}\b", body):
+            used.add(mod)
+    return used
 
-    Checked across the whole runtime surface rather than per-module, because a
-    correct implementation may delegate loading to a sibling loader. Conservative
-    on purpose: the finding fires only when NOTHING in the runtime reads anything.
+
+def runtime_loads_declaration(
+    runtime_files: list[tuple[Path, str]],
+    scope: list[tuple[Path, str]] | None = None,
+) -> bool:
+    """True if the RESOLVER — or a loader it actually uses — reads a file.
+
+    This tested the whole runtime surface, justified as conservatism about a
+    resolver that delegates to a sibling loader. Measured on a consumer, that made
+    the rule near-unfirable: a TrainRunner reading its train file exempted an
+    InterlockingRunner that hardcoded every answer, which is the realistic shape of
+    a real app and precisely the transcription this rule exists to catch.
+
+    The delegation case is still honoured, but by following it rather than by
+    assuming it: a module counts as the resolver's loader when the resolver imports
+    it AND references what it imported. An unused import no longer exempts anyone.
     """
-    return any(_LOADS_DECLARATION.search(text) for _path, text in runtime_files)
+    if scope is None:
+        scope = runtime_files
+    for path, text in scope:
+        if _LOADS_DECLARATION.search(text):
+            return True
+        used = _imported_module_names(text)
+        for other_path, other_text in runtime_files:
+            if other_path == path:
+                continue
+            if other_path.stem in used and _LOADS_DECLARATION.search(other_text):
+                return True
+    return False
 
 
 def _declared_values(records: dict[Path, dict]) -> list[str]:
@@ -721,12 +757,15 @@ def _resolving_modules(
     rather than restating it, which is what let the two checks disagree about when
     they applied.
     """
-    if not records or runtime_loads_declaration(runtime_files):
+    if not records:
         return []
-    return [
+    resolving = [
         (path, text) for path, text in runtime_files
         if "InterlockingResolution" in text or "resolve_train" in text
     ]
+    if not resolving or runtime_loads_declaration(runtime_files, scope=resolving):
+        return []
+    return resolving
 
 
 def _runtime_ignores_declaration_violations(
@@ -1154,6 +1193,12 @@ def _scan_anchored(root: Path, layout: dict[str, list[str]]) -> list[dict]:
     violations += _declaration_to_station_violations(records, journey, root)
     violations += _parallel_field_violations(records, root)
     violations += _trace_to_declaration_violations(records, e2e_files, root)
+    # coder.train.runtime-executes-the-declaration — GATED. Every direction above closes a
+    # TEXT-level correspondence; this is the only one that asks whether the runtime ever
+    # READS the plan. It was staged while unproven; it is proven now, and a rule nobody
+    # runs is a rule nobody checks — this one was broken for as long as it sat in draft.
+    violations += _runtime_ignores_declaration_violations(records, runtime_files, root)
+    violations += _declaration_unreachable_violations(records, runtime_files, root)
 
     # Fail-closed teeth: a declared route space whose resolved runtime AND Station Master surfaces
     # BOTH match nothing is UNSCANNED, not clean — the runtime/station-facing directions never ran.
@@ -1165,7 +1210,7 @@ def _scan_anchored(root: Path, layout: dict[str, list[str]]) -> list[dict]:
 
 
 def scan_execution(root: Path) -> list[dict]:
-    """The executes-the-declaration check — DESIGNED, TESTED, NOT YET GATED.
+    """The executes-the-declaration check — NOW GATED, and still callable on its own.
 
     Deliberately not called from ``scan_root``: it emits its own advisory rule_id
     (``coder.train.runtime-executes-the-declaration``) and no consumer satisfies it
