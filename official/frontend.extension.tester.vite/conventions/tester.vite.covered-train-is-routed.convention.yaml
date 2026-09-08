@@ -1,0 +1,66 @@
+schema_version: 1.1.0
+rule_id: tester.vite.covered-train-is-routed
+kind: rule
+status: active
+name: A spec that claims to cover a train exercises one the router renders (Vite)
+statement: >-
+  An E2E/journey spec declaring `// Train: train:{id}` MUST name a train some router surface
+  actually renders. Its sibling `tester.vite.train-e2e-coverage` closes the other direction — a
+  declared train with no spec. Neither asked whether a COVERED train is routed, so a spec could be
+  green while exercising nothing: `page.goto` reaches a router that returns null for that path and
+  the assertion never runs against a rendered train.
+implementation:
+  type: validator
+  ref: vite_train_e2e_coverage
+content:
+  summary: >-
+    Resolves each spec's declared train against the trains the router renders. The JS realization
+    collects statically resolvable `trainId` bindings across router modules — a literal attribute, or
+    an identifier bound to a same-file string constant, exactly as the sibling route detector
+    resolves them — and flags a spec whose `// Train:` header names none of them. Member of the
+    `vite_train_e2e_coverage` FAMILY detector (checks/covered_train_is_routed.mjs).
+  normative_text: |
+    KEYED ON THE SPEC'S CLAIM, NOT ON THE PLAN, and deliberately so. Not every declared train is the
+    frontend's to render — a backend train legitimately has no route here — and `entrypoint` carries
+    no side/surface discriminator to tell them apart (afokapu/atdd#1818, ask 2, open at core). Keying
+    this off `plan/_trains.yaml` would report every backend train as an unrouted frontend route. A
+    spec's `// Train:` header is a claim made BY the frontend ABOUT the frontend, so it scopes the
+    obligation without the discriminator. When that discriminator lands this rule is unaffected; a
+    plan-keyed variant becomes possible as an addition, not a replacement.
+
+    DYNAMIC BINDINGS ARE RESPECTED. `coder.vite.route-trainid-expression-not-static` holds that a
+    `trainId={expr}` the scanner cannot resolve is advisory and never a hard failure. A router
+    carrying any unresolvable binding may well render the covered train, so this check reports
+    nothing for that consumer rather than contradicting that decision.
+
+    NOT_APPLICABLE when no router surface resolves at all: a repository with no rendered trains has
+    no routing to disagree with, and reporting there would fire on every plan-only checkout.
+  fix_hint: |
+    Either route the train the spec claims to cover:
+
+      if (route === "/match/abandoned") return <TrainView trainId={ABANDONED_TRAIN} />;
+
+    or correct the spec's `// Train:` header to the train it really exercises. A spec covering a
+    route the application does not implement is the common cause — the plan and the tests moved and
+    the router did not. This rule is `strict`: a green spec that exercises no rendered train is not
+    suppressible and fails CI.
+  exceptions:
+    - A spec carrying no `// Train:` header is NOT reported here; that is
+      `tester.vite.e2e-names-valid-train`'s obligation, and reporting both would double-count one
+      defect.
+    - A router with any statically unresolvable `trainId` expression suppresses the rule for that
+      consumer, preserving the advisory-only decision recorded in
+      `coder.vite.route-trainid-expression-not-static`.
+metadata:
+  aliases:
+    - VITE-COVERED-TRAIN-ROUTED-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.2.0
+  core_design_refs:
+    - afokapu/atdd#1246
+terms:
+  - term_id: routed_train
+    text: >-
+      a train some router surface renders through a statically resolvable `trainId` binding — a
+      literal attribute, or an identifier bound to a same-file string constant.

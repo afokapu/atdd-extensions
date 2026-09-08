@@ -10,6 +10,7 @@ schema_version: "1.0.0"
 graph_id: frontend.extension.tester.vite.relationships
 
 nodes:
+  - tester.vite.covered-train-is-routed
   - tester.vite.a11y-harness
   - tester.vite.e2e-names-valid-train
   - tester.vite.journey-layer-assembly
@@ -23,6 +24,15 @@ nodes:
   - tester.vite.interlocking-route-e2e-coverage
   - tester.vite.interlocking-station-master-smoke
 edges:
+  - source_ref: tester.vite.covered-train-is-routed
+    target_ref: tester.vite.train-e2e-coverage
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'The two directions of train/spec correspondence. One reports a declared train no spec covers; this one reports a spec whose covered train no router renders. Satisfying either alone still permits a green suite that exercises nothing, which is the gap a declared, tested, unrouted route walked straight through.'
   - source_ref: tester.vite.a11y-harness
     target_ref: tester.vite.e2e-names-valid-train
     type: runs_alongside

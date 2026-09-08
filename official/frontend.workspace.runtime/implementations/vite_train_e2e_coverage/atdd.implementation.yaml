@@ -8,5 +8,6 @@ realizes_convention: tester.vite.train-e2e-coverage
 emits_rule_ids:
 - tester.vite.train-e2e-coverage
 - tester.vite.e2e-names-valid-train
+- tester.vite.covered-train-is-routed
 entrypoint: detect.mjs
 report: detect.mjs

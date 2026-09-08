@@ -1,4 +1,5 @@
 {
   "train-e2e-coverage": "tester.vite.train-e2e-coverage",
-  "e2e-names-valid-train": "tester.vite.e2e-names-valid-train"
+  "e2e-names-valid-train": "tester.vite.e2e-names-valid-train",
+  "covered-train-is-routed": "tester.vite.covered-train-is-routed"
 }
