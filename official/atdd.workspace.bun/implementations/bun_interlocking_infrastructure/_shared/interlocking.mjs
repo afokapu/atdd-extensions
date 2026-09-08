@@ -66,9 +66,29 @@ export function readText(p) {
   }
 }
 
+// The caller's excludes, merged with the defaults. core passes ATDD_SCAN_EXCLUDES
+// (it carries `.atdd/workspaces`, among others) and cli/scan.py and adapter/run.py
+// both merge it in; this family read only its own DEFAULT_EXCLUDES and discarded it.
+// Matching follows lib/scan.mjs: a whole path segment OR a substring, so a
+// multi-segment glob like `.atdd/workspaces` can match at all — segment-only
+// comparison could never match one.
+const SCAN_EXCLUDES = (() => {
+  let extra = [];
+  try {
+    const raw = process.env.ATDD_SCAN_EXCLUDES;
+    if (raw) {
+      const v = JSON.parse(raw);
+      if (Array.isArray(v)) extra = v.filter((x) => typeof x === "string");
+    }
+  } catch {
+    /* malformed env must not silence the scan */
+  }
+  return [...new Set([...DEFAULT_EXCLUDES, ...extra])];
+})();
+
 function isExcluded(path) {
-  const segs = path.split(sep);
-  return DEFAULT_EXCLUDES.some((ex) => segs.includes(ex));
+  const segments = path.split(sep);
+  return SCAN_EXCLUDES.some((ex) => segments.includes(ex) || path.includes(ex));
 }
 
 function hasChildDir(dir, name) {
