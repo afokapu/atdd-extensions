@@ -11,7 +11,7 @@ schema_version: "1.0.0"
 # one frontend.workspace.runtime. Two axes, kept orthogonal: PERSONA (source vs
 # suite) and STACK (runtime vs library).
 extension_id: atdd.extension.tester.bun
-version: "0.1.0"
+version: "0.2.0"
 kind: extension
 role: tester
 flow_wagon: validate-test-surface
