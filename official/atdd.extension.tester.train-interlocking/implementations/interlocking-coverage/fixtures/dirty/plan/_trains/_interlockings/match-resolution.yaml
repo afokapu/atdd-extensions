@@ -11,6 +11,7 @@ status: checked
 # exposed:false isolates this fixture to the route-coverage rule: an internal
 # interlocking has no Station Master action, so the smoke rule is out of scope.
 entrypoint:
+  surfaces: [backend]
   exposed: false
   actions: []
   reason: internal-transition-only

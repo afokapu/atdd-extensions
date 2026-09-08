@@ -110,6 +110,7 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     "coder.bun.interlocking-delegates-to-trainrunner": ("interlocking.ts", ("direct-wagon-execution", "runTrain"), None),
     "coder.bun.runtime-executes-the-declaration":      ("interlocking.ts", ("never reads", "transcribed"), None),
     "coder.bun.wagon-honours-its-contract":            ("_orders.yaml", ("orders:confirmed-order", "declares it produces"), None),
+    "coder.htmx.verb-endpoint-is-routed":              ("OrderRow.ts", ("/orders/void-all", "Station Master"), None),
     "coder.bun.interlocking-does-not-carry-cargo":     ("interlocking.ts", ("cargo-mutation", "artifact_urn"), None),
     # The systemic one. Pins the DIRECTION the detector classified plus the route id
     # it extracted from the runtime and failed to find in the declared route space —

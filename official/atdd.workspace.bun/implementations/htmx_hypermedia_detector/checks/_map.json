@@ -4,5 +4,6 @@
   "htmx_fragment_escapes_interpolation": "coder.htmx.fragment-escapes-interpolation",
   "htmx_verb_mutation_signals_progress": "coder.htmx.verb-mutation-signals-progress",
   "htmx_swap_no_inline_handler": "coder.htmx.swap-no-inline-handler",
-  "htmx_swap_oob_carries_id": "coder.htmx.swap-oob-carries-id"
+  "htmx_swap_oob_carries_id": "coder.htmx.swap-oob-carries-id",
+  "htmx_verb_endpoint_is_routed": "coder.htmx.verb-endpoint-is-routed"
 }

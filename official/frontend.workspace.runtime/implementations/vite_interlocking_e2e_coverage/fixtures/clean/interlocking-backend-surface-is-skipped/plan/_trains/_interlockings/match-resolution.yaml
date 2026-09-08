@@ -1,0 +1,48 @@
+# CLEAN fixture — a BACKEND route space the frontend must SKIP.
+#
+# It sits at the canonical path, beside the frontend's own documents, and declares
+# `entrypoint.surfaces: [backend]`. Core's contract is that a consumer MUST skip a
+# document whose surfaces omit its own side, so these routes are none of the frontend's
+# business and no e2e spec is owed for them.
+#
+# This replaces the old `-backend-path` fixture. That one existed to prove the detector
+# read BOTH paths, which was the non-breaking half while no discriminator existed. The
+# discriminator exists now, so the question is no longer WHERE a document sits but WHAT
+# it declares — and a frontend that reported on these routes would be reporting on the
+# backend's.
+schema_version: 1.0.0
+interlocking_id: interlocking:match-settlement
+title: Match Settlement
+theme: match-settlement
+status: checked
+entrypoint:
+  exposed: true
+  actions: [settle_match]
+  reason: null
+  surfaces: [backend]
+route_resolution:
+  strategy: first_priority
+lifelines:
+  - ref: user:player
+  - ref: wagon:match-settlement
+messages:
+  - id: msg:match-settlement-request
+    kind: boundary
+    from: user:player
+    to: wagon:match-settlement
+    intent: The player requests match settlement
+    payload:
+      contract: match-settlement:request-v1
+routes:
+  - route_id: settle-nominal
+    category: nominal
+    priority: 1
+    guard_ref: guard:settle-nominal
+    train_id: 3901-settle-nominal
+    train_path: plan/_trains/3901-settle-nominal.yaml
+    projection:
+      expected_sequence_digest: "ce5ada604330283c634afd1accbb6ace0ed2114808adee470dd68ba8b1a5360d"
+
+source:
+  path: official/frontend.workspace.runtime/implementations/vite_interlocking_e2e_coverage/fixtures/clean/interlocking-backend-surface-is-skipped/plan/_trains/_interlockings/match-resolution.yaml
+  content_digest: "4067c15ad4961bae9e5aaf4e83016d75b70d5f0adaca329d3d86427b036c0451"

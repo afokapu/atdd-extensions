@@ -22,6 +22,7 @@ schema_version: "1.0.0"
 graph_id: atdd.extension.coder.htmx.relationships
 
 nodes:
+  - coder.htmx.verb-endpoint-is-routed
   - coder.htmx.verb-destructive-confirms
   - coder.htmx.verb-endpoint-same-origin
   - coder.htmx.fragment-escapes-interpolation
@@ -30,6 +31,15 @@ nodes:
   - coder.htmx.swap-oob-carries-id
 
 edges:
+  - source_ref: coder.htmx.verb-endpoint-is-routed
+    target_ref: coder.htmx.verb-mutation-signals-progress
+    type: runs_alongside
+    foundation: start_to_start
+    constraint: discretionary
+    control: internal
+    strength: important
+    confidence: 1.0
+    reason: 'Two obligations on the same state-changing affordance. One requires it to tell the operator something is happening; this one requires it to reach a route the Station Master admits. A mutation can satisfy either alone and still be a button that signals progress while posting into nothing.'
   - source_ref: coder.htmx.verb-destructive-confirms
     target_ref: coder.htmx.verb-mutation-signals-progress
     type: runs_alongside
