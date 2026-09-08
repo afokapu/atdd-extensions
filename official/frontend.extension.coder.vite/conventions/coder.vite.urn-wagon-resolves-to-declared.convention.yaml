@@ -1,0 +1,67 @@
+schema_version: 1.1.0
+rule_id: coder.vite.urn-wagon-resolves-to-declared
+kind: rule
+status: active
+name: A component URN's wagon segment names a wagon the plan declares (Vite)
+statement: >-
+  A Vite/React implementation file's GREEN URN carries a wagon segment, and that segment MUST name a
+  wagon `plan/_wagons.yaml` declares. Its sibling `coder.vite.green-urn-wagon-feature` checks the
+  segment is a well-formed kebab-case identifier — a shape test any invented word passes — so a
+  traceability header could point at a wagon that does not exist and nothing would notice.
+implementation:
+  type: validator
+  ref: vite_green_traceability_detector
+content:
+  summary: >-
+    Resolves each component URN's wagon segment against the wagon registry nearest the file. The JS
+    realization walks up from the module to the first `plan/_wagons.yaml`, reads its `- wagon: <slug>`
+    entries, and flags a URN naming none of them. Member of the `vite_green_traceability_detector`
+    FAMILY detector (checks/green_urn_wagon_declared.mjs).
+  normative_text: |
+    Measured before being written: a component declaring
+    `URN: component:not-a-declared-wagon:not-a-declared-feature:App:frontend:presentation` produced
+    ZERO violations across every Vite detector. The same defect this hub found on the Bun side — a
+    well-formed NAME accepted where a resolvable CLAIM is required — and the same fix: resolve the
+    reference rather than pattern-match it.
+
+    WAGON ONLY, DELIBERATELY. The feature segment has no declaration source to resolve against. The
+    frontend corpus carries no plan-side feature registry, and `src/features/` is a code convention,
+    so resolving a header's claim against the code that makes the claim would be circular. When a
+    feature registry exists this check extends to the feature segment; until then, reporting on it
+    would be guesswork dressed as enforcement.
+
+    The registry is found by walking up to the nearest `plan/_wagons.yaml` — the same ancestor walk
+    the route detector uses — so both rules agree which plan governs a given module. The entry shape
+    is `- wagon: <slug>`, which is what core's own plan uses; an earlier consumer of mine invented
+    `- wagon_id:` and made the route rule look broken when it was correct.
+
+    NOT_APPLICABLE when no registry exists above the file: nothing is declared, so nothing can fail
+    to resolve, and firing there would report on every plan-less checkout.
+  fix_hint: |
+    Point the URN at a declared wagon, or declare the wagon:
+
+      # plan/_wagons.yaml
+      wagons:
+        - wagon: resolve-match
+
+      // URN: component:resolve-match:resolution:App:frontend:presentation
+
+    A renamed wagon is the common cause — the plan moved and the headers did not. This rule is
+    `strict`: a component attributed to a wagon that does not exist is not suppressible and fails CI.
+  exceptions:
+    - A file with no URN header, or a URN that is not a 6-segment `component:` URN, is NOT reported
+      here; those are `coder.vite.green-urn-marker` and `coder.vite.green-urn-pattern`'s obligations,
+      and reporting them again would double-count one defect.
+metadata:
+  aliases:
+    - VITE-URN-WAGON-DECLARED-001
+  severity: 4
+  disposition: strict
+  introduced_in: 0.2.0
+  core_design_refs:
+    - afokapu/atdd#1246
+terms:
+  - term_id: declared_wagon
+    text: >-
+      a wagon stated as a `- wagon: <slug>` entry in the `plan/_wagons.yaml` nearest the module, which
+      a component URN's wagon segment must name.

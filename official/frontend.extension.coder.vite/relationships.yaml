@@ -10,6 +10,7 @@ schema_version: "1.0.0"
 graph_id: frontend.extension.coder.vite.relationships
 
 nodes:
+  - coder.vite.urn-wagon-resolves-to-declared
   - coder.vite.boundaries-fe-imports
   - coder.vite.boundaries-fe-layers
   - coder.vite.boundaries-http-client
@@ -53,6 +54,15 @@ nodes:
   - coder.vite.security-xss
 
 edges:
+  - source_ref: coder.vite.urn-wagon-resolves-to-declared
+    target_ref: coder.vite.green-urn-wagon-feature
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'Shape before resolution. The sibling requires the wagon segment to be a well-formed kebab identifier; there is nothing to resolve until it is one. Together they close the gap where an invented but well-formed wagon name passed every rule and attributed a component to something that does not exist.'
   - source_ref: coder.vite.boundaries-fe-imports
     target_ref: coder.vite.boundaries-fe-layers
     type: runs_alongside

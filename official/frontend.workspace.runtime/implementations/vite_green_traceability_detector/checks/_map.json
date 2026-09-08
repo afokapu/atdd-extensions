@@ -8,5 +8,6 @@
   "green_header_runtime": "coder.vite.green-header-runtime",
   "green_header_purpose": "coder.vite.green-header-purpose",
   "green_header_tested_by": "coder.vite.green-header-tested-by",
-  "green_header_order": "coder.vite.green-header-order"
+  "green_header_order": "coder.vite.green-header-order",
+  "green_urn_wagon_declared": "coder.vite.urn-wagon-resolves-to-declared"
 }
