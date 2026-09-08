@@ -1,0 +1,62 @@
+# FRONTEND route space, at the canonical path.
+#
+# `entrypoint.surfaces: [frontend]` is what makes this the frontend's to read: core
+# requires the field and a consumer MUST skip a document whose surfaces omit its own
+# side (afokapu/atdd#1818). That is what let plan/_interlocking.yaml be retired — the
+# path no longer carries the meaning, the declaration does.
+#
+# The Station Master is declared as an entrypoint ACTION rather than a root
+# `station_master:` key. Core's schema is additionalProperties:false and models
+# reachability as entrypoint.actions, which is what a Station Master routes.
+schema_version: 1.0.0
+interlocking_id: interlocking:match-resolution
+title: Match Resolution
+theme: match-resolution
+status: checked
+entrypoint:
+  exposed: true
+  actions: [resolve_match]
+  reason: null
+  surfaces: [frontend]
+route_resolution:
+  strategy: first_priority
+lifelines:
+  - ref: user:player
+  - ref: wagon:match-resolution
+messages:
+  - id: msg:match-resolution-request
+    kind: boundary
+    from: user:player
+    to: wagon:match-resolution
+    intent: The player requests match resolution
+    payload:
+      contract: match-resolution:request-v1
+routes:
+  - route_id: host-match
+    category: nominal
+    priority: 1
+    guard_ref: guard:host-match
+    train_id: 3001-host-match
+    train_path: plan/_trains/3001-host-match.yaml
+    projection:
+      expected_sequence_digest: "cd1924349c317cb0075c0279117c16d577ca472f39a7087bd22b8c9d8002723e"
+  - route_id: play-match
+    category: alternate
+    priority: 2
+    guard_ref: guard:play-match
+    train_id: 3002-play-match
+    train_path: plan/_trains/3002-play-match.yaml
+    projection:
+      expected_sequence_digest: "788af7c0e462d2a37f19804967b3e6b2d37507b636a73bc03dd1cb262d59123d"
+  - route_id: end-match
+    category: alternate
+    priority: 3
+    guard_ref: guard:end-match
+    train_id: 3003-end-match
+    train_path: plan/_trains/3003-end-match.yaml
+    projection:
+      expected_sequence_digest: "e46799a982034409d47bdbf809ba58129e5604fc335e05f5caa17d3657d1f702"
+
+source:
+  path: official/frontend.workspace.runtime/implementations/vite_interlocking_e2e_coverage/fixtures/dirty/interlocking-route-e2e-coverage/plan/_trains/_interlockings/match-resolution.yaml
+  content_digest: "99e72500903e26646c50949ddf05425e5c28a7276db89bbb368960c933886006"

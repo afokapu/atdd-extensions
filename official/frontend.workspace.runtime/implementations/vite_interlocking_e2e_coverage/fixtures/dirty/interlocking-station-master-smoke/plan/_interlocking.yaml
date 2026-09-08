@@ -1,4 +1,0 @@
-# frontend interlocking registry
-routes:
-  - route_id: host-match
-station_master: match-hall

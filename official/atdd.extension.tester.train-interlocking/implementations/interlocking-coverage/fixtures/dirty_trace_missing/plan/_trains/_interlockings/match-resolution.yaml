@@ -8,6 +8,7 @@ theme: match
 status: checked
 
 entrypoint:
+  surfaces: [backend]
   exposed: false
   actions: []
   reason: internal-transition-only

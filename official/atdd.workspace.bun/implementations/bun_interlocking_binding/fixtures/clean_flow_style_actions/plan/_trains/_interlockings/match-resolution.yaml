@@ -13,6 +13,7 @@ title: Match resolution route interlocking
 status: checked
 
 entrypoint:
+  surfaces: [backend]
   exposed: true
   actions: [resolve_match]
   reason: null

@@ -32,7 +32,10 @@ const SMOKE_RE = /\.smoke\.spec\.[cm]?[jt]sx?$/;
 const ROUTE_ID_RE = /^[a-z][a-z0-9-]*$/;
 const FILENAME_PREFIX_RE = /^([a-z][a-z0-9-]*?)\./;
 const ROUTE_HDR_RE = /^\s*\/\/\s*Interlocking:\s*route:([a-z][a-z0-9-]*)\s*$/m;
-const SM_HDR_RE = /^\s*\/\/\s*StationMaster:\s*([a-z][a-z0-9-]*)\s*$/m;
+// Accepts snake_case as well as kebab. The station master id now comes from core's
+// `entrypoint.actions`, whose grammar is ^[a-z][a-z0-9_]*$ — moving the declaration
+// into core's field changed the id's shape, so the reader follows it.
+const SM_HDR_RE = /^\s*\/\/\s*StationMaster:\s*([a-z][a-z0-9_-]*)\s*$/m;
 
 function parseJsonEnv(name, fallback) {
   const raw = process.env[name];
@@ -78,26 +81,48 @@ function lineOfIndex(text, idx) {
 // decision for whoever owns the plan schema, not something a detector should settle
 // by ignoring the other one.
 function isInterlockingRegistryFile(path) {
+  // THE CANONICAL PATH, and only it. This read plan/_interlocking.yaml as well, because
+  // with no way to tell a backend route space from a frontend one, narrowing would have
+  // silently dropped whichever half it guessed wrong about. core afokapu/atdd#1818 settled
+  // that: entrypoint.surfaces is required and declares which surfaces READ a document, so
+  // the path no longer carries the meaning and the frontend path is retired.
   const segs = path.split(sep);
-  const b = basename(path);
-  if (b === "_interlocking.yaml") return true;
-  if (b.endsWith(".yaml") && segs.includes("_interlocking")) return true;
-  if (b.endsWith(".yaml") && segs.includes("_interlockings")) return true;
-  return false;
+  return path.endsWith(".yaml") && segs.includes("_interlockings");
+}
+
+// Which surfaces declare they read this document. Absent means the document predates the
+// required field; treated as NOT ours rather than assumed ours, because guessing is the
+// inference the field exists to end.
+function readsFrontend(text) {
+  const m = /^\s*surfaces:\s*\[([^\]]*)\]/m.exec(text);
+  if (!m) return false;
+  return m[1].split(",").map((x) => x.trim().replace(/^["']|["']$/g, "")).includes("frontend");
 }
 function collectRegistry(file, routes, stationMasters) {
   let text;
   try { text = readFileSync(file, "utf8"); } catch { return; }
+  // A document the frontend does not read is none of its business — reporting on a
+  // backend route space would demand frontend specs for routes the browser never sees.
+  if (!readsFrontend(text)) return;
   const rre = /route_id:\s*["']?([a-z][a-z0-9-]*)["']?/g;
   let m;
   while ((m = rre.exec(text)) !== null) {
     const rid = m[1];
     if (!routes.has(rid)) routes.set(rid, { file, line: lineOfIndex(text, m.index) });
   }
-  const sre = /station_master:\s*["']?([a-z][a-z0-9-]*)["']?/g;
-  while ((m = sre.exec(text)) !== null) {
-    const sm = m[1];
-    if (!stationMasters.has(sm)) stationMasters.set(sm, { file, line: lineOfIndex(text, m.index) });
+  // The Station Master is declared as an entrypoint ACTION. It used to be a root
+  // `station_master:` key, which core's schema (additionalProperties:false) has no room
+  // for; entrypoint.actions is core's declared reachability surface and is what a Station
+  // Master routes, so the concept moved rather than being dropped.
+  const ep = /^entrypoint:\s*$([\s\S]*?)(?=^\S|\Z)/m.exec(text);
+  const acts = ep && /^\s*actions:\s*\[([^\]]*)\]/m.exec(ep[1]);
+  if (acts) {
+    for (const raw of acts[1].split(",")) {
+      const sm = raw.trim().replace(/^["']|["']$/g, "");
+      if (sm && !stationMasters.has(sm)) {
+        stationMasters.set(sm, { file, line: lineOfIndex(text, ep.index) });
+      }
+    }
   }
 }
 

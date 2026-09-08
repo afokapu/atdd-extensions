@@ -1,6 +1,6 @@
 schema_version: "1.0.0"
 extension_id: frontend.extension.tester.vite
-version: "0.1.0"
+version: "0.2.0"
 kind: extension
 role: tester
 flow_wagon: validate-test-surface

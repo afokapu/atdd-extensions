@@ -31,7 +31,7 @@ schema_version: "1.0.0"
 #                       validator proves is exercised by real e2e tests)
 #   afokapu/atdd-extensions#23 — extension enforcement parent
 extension_id: atdd.extension.tester.train-interlocking
-version: "0.2.0"
+version: "0.3.0"
 kind: extension
 
 # This package's headline deliverable is proving the consumer-repo TEST surface

@@ -1,0 +1,46 @@
+# FRONTEND route space, at the canonical path.
+#
+# `entrypoint.surfaces: [frontend]` is what makes this the frontend's to read: core
+# requires the field and a consumer MUST skip a document whose surfaces omit its own
+# side (afokapu/atdd#1818). That is what let plan/_interlocking.yaml be retired — the
+# path no longer carries the meaning, the declaration does.
+#
+# The Station Master is declared as an entrypoint ACTION rather than a root
+# `station_master:` key. Core's schema is additionalProperties:false and models
+# reachability as entrypoint.actions, which is what a Station Master routes.
+schema_version: 1.0.0
+interlocking_id: interlocking:match-resolution
+title: Match Resolution
+theme: match-resolution
+status: checked
+entrypoint:
+  exposed: true
+  actions: [match_hall]
+  reason: null
+  surfaces: [frontend]
+route_resolution:
+  strategy: first_priority
+lifelines:
+  - ref: user:player
+  - ref: wagon:match-resolution
+messages:
+  - id: msg:match-resolution-request
+    kind: boundary
+    from: user:player
+    to: wagon:match-resolution
+    intent: The player requests match resolution
+    payload:
+      contract: match-resolution:request-v1
+routes:
+  - route_id: host-match
+    category: nominal
+    priority: 1
+    guard_ref: guard:host-match
+    train_id: 3001-host-match
+    train_path: plan/_trains/3001-host-match.yaml
+    projection:
+      expected_sequence_digest: "cd1924349c317cb0075c0279117c16d577ca472f39a7087bd22b8c9d8002723e"
+
+source:
+  path: official/frontend.workspace.runtime/implementations/vite_interlocking_e2e_coverage/fixtures/clean/interlocking-station-master-smoke/plan/_trains/_interlockings/match-resolution.yaml
+  content_digest: "d06932f113882bf373021d6c440378e0bd0e0bf35a4074b0a4f20e86f414dcae"
