@@ -23,8 +23,7 @@ schema_version: "1.0.0"
 # all realized by detectors targeting atdd.workspace.python-pytest.)
 workspace_id: atdd.workspace.bun
 kind: workspace
-version: "0.1.0"
-
+version: "0.2.0"
 # Discovery + run CONTRACT this provider implements — the SAME contract as
 # atdd.workspace.python-pytest v1.1.0 and frontend.workspace.runtime v1.1.0
 # (scan-mount env channel + structured JSON violation report). Implementations

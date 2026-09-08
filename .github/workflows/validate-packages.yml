@@ -61,6 +61,14 @@ jobs:
         # and one graph referenced a node after it had moved packages.
         run: python3 tools/validate_graphs.py
 
+      - name: Every interlocking document matches core's schema
+        # And the three fixtures that exist BECAUSE they are invalid stay invalid.
+        # All 50 artifacts disagreed with train-interlocking.schema.json while every
+        # suite stayed green — the hub was shipping exemplars of a shape core rejects.
+        # The reverse half guards the drift rules: conforming a parallel-reachability
+        # fixture would silently disarm the rule it is the test case for.
+        run: python3 tools/validate_interlocking_artifacts.py
+
       - name: The registry index still matches its authored entries
         # registry/index.yaml is the core-consumable projection of registry.yaml +
         # entries/. Regenerate it after editing any entry, or `atdd substrate add
