@@ -763,9 +763,31 @@ def _resolving_modules(
         (path, text) for path, text in runtime_files
         if "InterlockingResolution" in text or "resolve_train" in text
     ]
-    if not resolving or runtime_loads_declaration(runtime_files, scope=resolving):
+    if runtime_loads_declaration(runtime_files, scope=resolving):
         return []
     return resolving
+
+
+def _mask_comments(text: str) -> str:
+    """Blank out ``#`` comments, preserving string literals.
+
+    A declared id inside a string is the evidence; the same id inside a comment is
+    prose. A sibling rule in this hub was silenced by exactly that confusion.
+    """
+    out = []
+    for line in text.splitlines(True):
+        i, in_s, q = -1, False, ""
+        for n, ch in enumerate(line):
+            if in_s:
+                if ch == q and line[n - 1: n] != "\\":
+                    in_s = False
+            elif ch in "\"'":
+                in_s, q = True, ch
+            elif ch == "#":
+                i = n
+                break
+        out.append(line if i < 0 else line[:i] + "\n")
+    return "".join(out)
 
 
 def _runtime_ignores_declaration_violations(
@@ -789,26 +811,64 @@ def _runtime_ignores_declaration_violations(
     it. "The train YAML is the source of truth" was true of the TEXT and false of
     the RUNTIME.
     """
-    resolving = _resolving_modules(records, runtime_files)
-    if not resolving:
+    # This rule judges TRANSCRIPTION, so it must see resolvers that DO load — the
+    # shared helper suppresses those, and a second rule below depends on that
+    # suppression, so the scope is computed here rather than by widening the helper.
+    resolving = [
+        (path, text) for path, text in runtime_files
+        if "InterlockingResolution" in text or "resolve_train" in text
+    ]
+    if not records or not resolving:
         return []
     # POSITIVE EVIDENCE, not absence — back-ported from the JS mirrors, where the
     # original design did not survive.
+    # TWO WAYS TO IGNORE A DECLARATION, and a mutant sweep found both.
+    #
+    #   TRANSCRIBES — the resolver restates declared route/train ids as literals. This
+    #   fires even when the resolver reads something, because PARTIAL ADOPTION reads the
+    #   plan for `interlocking_id` and hardcodes the route space; requiring "reads
+    #   nothing" let that through, and deleting every route left it dispatching.
+    #
+    #   READS NOTHING — the resolver resolves without loading anything at all. A runtime
+    #   rewritten to return an empty route space transcribes no id, so transcription
+    #   alone misses it.
+    #
+    # Either is enough. Neither alone was: they are opposite halves, and each was the
+    # other's blind spot.
+    #
+    # Comments masked: a route id MENTIONED in prose is documentation, not dispatch.
     transcribed = sorted({
-        v for _p, text in resolving for v in _declared_values(records) if _token_in(v, text)
+        v for _p, text in resolving for v in _declared_values(records)
+        if _token_in(v, _mask_comments(text))
     })
-    if not transcribed:
-        return []
+    reads_nothing = not runtime_loads_declaration(runtime_files, scope=resolving)
+    if not transcribed and not reads_nothing:
+        return []   # derives its route space from what it loaded
     path, text = resolving[0]
     line = _line_of(text, re.compile(r"\bclass\s+InterlockingRunner\b"), 1)[0]
     return [
         _violation(
             RULE_EXECUTES, _rel(path, root), line, 0, DIR_RUNTIME_IGNORES,
-            f"the InterlockingRunner runtime never reads the interlocking declaration it is "
-            f"given (no yaml/json load, open() or read_text() anywhere under the runtime "
-            f"selector) and restates {len(transcribed)} declared value(s) as literals "
-            f"({', '.join(transcribed)}); the route space is transcribed, not executed — "
-            f"delete the plan and this runtime keeps answering.",
+            # Name the condition that ACTUALLY fired. The message asserted both halves
+            # regardless, so a resolver that read the plan and transcribed its routes was
+            # reported as never reading it — a false statement in the evidence a reader
+            # would check first.
+            (
+                f"the InterlockingRunner runtime never reads the interlocking declaration "
+                f"it is given (no yaml/json load, open() or read_text() under the runtime "
+                f"selector)"
+                if reads_nothing
+                else f"the InterlockingRunner runtime reads its declaration but restates "
+                     f"the route space instead of deriving it"
+            )
+            + (
+                f" and restates {len(transcribed)} declared value(s) as literals "
+                f"({', '.join(transcribed)})"
+                if transcribed
+                else ""
+            )
+            + "; the route space is transcribed, not executed — delete the plan and this "
+              "runtime keeps answering.",
             _line_at(text, line),
         )
     ]

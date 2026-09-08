@@ -35,19 +35,62 @@ class InterlockingRunner:
         """
         return yaml.safe_load(Path(self._path).read_text(encoding="utf-8")) or {}
 
+    def route_by_id(self, route_id):
+        """The blessed route-space accessor.
+
+        `runtime_to_declaration` traces a resolution kwarg back through a
+        `route_by_id`-style accessor to the LOADED route space, which is how a
+        data-driven runtime proves its resolution is not a hidden route. Selecting
+        a route by filtering the list inline is equivalent at runtime but opaque to
+        a provenance scan, and is reported undecidable.
+        """
+        for route in self._declaration().get("routes") or []:
+            if route.get("route_id") == route_id:
+                return _Route(self._declaration().get("interlocking_id"), route)
+        raise KeyError(route_id)
+
     def resolve_train(self, action, inputs, state=None):
-        # Resolves ONLY the declared nominal route; no hidden route/train literal.
+        admissible = [
+            r.get("route_id")
+            for r in (self._declaration().get("routes") or [])
+            if self._guard_holds(r, inputs, state or {})
+        ]
+        if len(admissible) != 1:
+            raise RuntimeError(
+                f"fail_on_multiple_match: {len(admissible)} admissible routes for {action!r}"
+            )
+        route = self.route_by_id(admissible[0])
         return InterlockingResolution(
-            interlocking_id=self._declaration().get("interlocking_id"),
-            route_id="nominal-all-voted",
-            selected_train_id="3007-match-resolution-standard",
-            train_path="plan/_trains/3007-match-resolution-standard.yaml",
-            route_category="nominal",
-            route_resolution_strategy="first_priority",
-            guard_id="guard:all-voted",
+            interlocking_id=route.interlocking_id,
+            route_id=route.route_id,
+            selected_train_id=route.train_id,
+            train_path=route.train_path,
+            route_category=route.category,
+            guard_id=route.guard_id,
             resolution_strategy="fail_on_multiple_match",
-            resolution_reason="all_players_voted == true",
+            resolution_reason=f"guard {route.guard_id!r} held",
         )
+
+    @staticmethod
+    def _guard_holds(route, inputs, state):
+        if route.get("category") == "nominal":
+            return bool(inputs.get("all_players_voted"))
+        return bool(state.get(str(route.get("guard_id"))))
+
+
+
+class _Route:
+    """One declared route, read from the loaded route space."""
+
+    def __init__(self, interlocking_id, data):
+        self.interlocking_id = interlocking_id
+        self.route_id = data.get("route_id")
+        self.train_id = data.get("train_id")
+        self.train_path = data.get("train_path")
+        self.category = data.get("category")
+        self.guard_id = data.get("guard_ref")
+
+
 
 
 class TrainRunner:
@@ -59,14 +102,23 @@ class TrainRunner:
 
 
 class _Result:
-    def __init__(self, train_id):
+    """The trace REFLECTS the resolution it came from.
+
+    Its fields were literals, which is a defect in its own right — the trace would
+    publish the same route whatever was resolved — and it made every fixture in this
+    tree transcribe the declared route space, so none of them proved only its own
+    defect once executes-the-declaration started judging transcription.
+    """
+
+    def __init__(self, train_id, resolution=None):
         self.selected_train_id = train_id
+        r = resolution
         self.trace = {
-            "interlocking_id": "interlocking:match-resolution",
-            "route_id": "nominal-all-voted",
+            "interlocking_id": getattr(r, "interlocking_id", None),
+            "route_id": getattr(r, "route_id", None),
             "selected_train_id": train_id,
-            "route_category": "nominal",
-            "guard_id": "guard:all-voted",
-            "resolution_strategy": "fail_on_multiple_match",
-            "resolution_reason": "all_players_voted == true",
+            "route_category": getattr(r, "route_category", None),
+            "guard_id": getattr(r, "guard_id", None),
+            "resolution_strategy": getattr(r, "resolution_strategy", None),
+            "resolution_reason": getattr(r, "resolution_reason", None),
         }

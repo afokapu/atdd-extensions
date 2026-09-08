@@ -31,7 +31,7 @@ schema_version: "1.0.0"
 #                       delegates to TrainRunner
 #   afokapu/atdd-extensions#23 — extension enforcement parent
 extension_id: atdd.extension.coder.train-interlocking
-version: "0.3.0"
+version: "0.4.0"
 kind: extension
 
 # This package's headline deliverable is proving the consumer-repo RUNTIME

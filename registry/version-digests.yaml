@@ -14,8 +14,8 @@ atdd.extension.coder.htmx:
   digest: a227abc502c2200e5eaad612ee5a551ef436cf53547734cfdfe78c4a9785c920
   version: 0.2.0
 atdd.extension.coder.train-interlocking:
-  digest: 58638c43e28af4b0ae33a71e8d72bfe1ccb04f1436d272c8789f443d7386bd45
-  version: 0.3.0
+  digest: 7362f3a8f3fed014f1ae5e763c9a7e67f671bca9427b93dff6831169473fbb4a
+  version: 0.4.0
 atdd.extension.github:
   digest: fbf02e88f8c769766018f1eed9509713ed2c48294bc0d0d56f2d76454b291ee3
   version: 0.1.0
@@ -38,8 +38,8 @@ atdd.extension.tester.train-interlocking:
   digest: 14957d67d169e19574805f56473267af6b7e7e771acd5fbfbde3de096144fac0
   version: 0.3.0
 atdd.workspace.bun:
-  digest: 36a1de6b1beaa20779dafa6551cec6a97ac78b4632f854ab6b7ad85666ecf6a7
-  version: 0.3.0
+  digest: 264cb781d3ef97b8213d395573e6b5e1bebc64bacc012dc73d5fa0d5c8a4deaf
+  version: 0.4.0
 atdd.workspace.cmux-claude:
   digest: 51f0f2afa3ca1edb02ab9ff67b727d6e40f7194352e51e6b0a65f65f6f352a74
   version: 0.1.0
@@ -65,8 +65,8 @@ convex.extension.tester.base:
   digest: d544c5bc7c0059d3b1f281de805a281475f95220ec5fc6e3ef3b08654733fa12
   version: 0.3.0
 convex.workspace.runtime:
-  digest: da0f61738528d92e7130cc2d18f84a7083777127be33f132f86a5695bbeaef84
-  version: 0.3.0
+  digest: 35ee7d268f5560dba6fd2302826230da936c67b373d41e3aa7234e6b79ebd3a1
+  version: 0.4.0
 frontend.extension.coder.astro:
   digest: 1bde30ef080f03d2526d0333c344b97246f1a2ccb19c55066fbf4ce7585a2186
   version: 0.1.0

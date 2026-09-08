@@ -100,6 +100,14 @@ export function loadsWithImports(mod, allFiles) {
   return false;
 }
 
+// Blank out comments, preserving string literals — a declared id inside a string is
+// the evidence; the same id inside a comment is prose.
+export function maskComments(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:\\])\/\/[^\n]*/g, (m, p1) => p1 + " ".repeat(m.length - p1.length));
+}
+
 export function scanExecution(scanRoot) {
   const violations = [];
   for (const croot of findConsumerRoots(scanRoot)) {
@@ -110,20 +118,38 @@ export function scanExecution(scanRoot) {
       .map((f) => ({ file: f, text: readText(f) }));
     const resolving = rtFiles.filter((x) => RESOLVES.test(x.text));
     if (!resolving.length) continue;
-    // Scope the exemption to the RESOLVER and what it imports — not to the whole
-    // directory. `rtFiles.some(...)` meant one unrelated reader anywhere under
-    // src/trains exempted the consumer, so a TrainRunner that reads the plan
-    // covered for an InterlockingRunner that hardcodes every answer. That is the
-    // realistic shape of a real app, which made this rule near-unfirable.
-    if (resolving.some((x) => loadsWithImports(x, rtFiles))) continue;
+    // TRANSCRIPTION IS THE EVIDENCE, and a read no longer excuses it.
+    //
+    // This required BOTH — reads nothing AND restates literals — which let PARTIAL
+    // ADOPTION through: a resolver reading the plan for `interlocking_id` while
+    // hardcoding the entire route space passed, and deleting every route from the
+    // plan left it dispatching. That is what a half-finished migration looks like,
+    // so it is the shape most likely to be real.
+    //
+    // A data-driven resolver DERIVES route and train ids; it has no reason to name
+    // one as a literal. Measured before loosening the guard: zero declared literals
+    // in two working consumers and in this package's own clean fixture, two in the
+    // partial-adoption mutant. So restating a declared id is transcription evidence
+    // whether or not some read also happens.
+    //
+    // Comments are masked: a route id MENTIONED in prose is documentation, not
+    // dispatch, and the earlier wagon-contract rule was silenced by exactly that.
     const transcribed = [...new Set(
-      resolving.flatMap((x) => declared.filter((v) => new RegExp(`(?<![\\w-])${esc(v)}(?![\\w-])`).test(x.text))),
+      resolving.flatMap((x) => declared.filter((v) =>
+        new RegExp(`(?<![\\w-])${esc(v)}(?![\\w-])`).test(maskComments(x.text)))),
     )].sort();
-    if (!transcribed.length) continue;   // reads nothing AND states nothing: not transcription
+    // TWO WAYS TO IGNORE A DECLARATION, and a mutant sweep found both. Transcription
+    // catches PARTIAL ADOPTION (reads the plan for one field, hardcodes the route
+    // space). Reading nothing catches a resolver rewritten to derive from an EMPTY
+    // route space, which transcribes no id at all. Each was the other's blind spot.
+    const readsNothing = !resolving.some((x) => loadsWithImports(x, rtFiles));
+    if (!transcribed.length && !readsNothing) continue;   // derives from what it loaded
     const rel = resolving[0].file.startsWith(croot + sep) ? resolving[0].file.slice(croot.length + 1) : resolving[0].file;
     violations.push({
       rule_id: RULE_EXECUTES, file: rel, line: 1, col: 0,
-      evidence: `the InterlockingRunner runtime never reads the interlocking declaration and ` +
+      evidence: (readsNothing
+          ? `the InterlockingRunner runtime never reads the interlocking declaration and `
+          : `the InterlockingRunner runtime reads its declaration but restates the route space, and `) +
         `restates ${transcribed.length} declared value(s) as literals (${transcribed.join(", ")}); ` +
         `the route space is transcribed, not executed — delete the plan and this runtime keeps answering`,
       source_line: "",
