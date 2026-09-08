@@ -23,6 +23,7 @@ graph_id: atdd.extension.tester.bun.relationships
 
 nodes:
   - tester.bun.acceptance-binding-declared
+  - tester.bun.acceptance-resolves-to-declared
   - tester.bun.acceptance-covers-tag-well-formed
   - tester.bun.interlocking-production-runner-used
   - tester.bun.interlocking-route-coverage
@@ -44,6 +45,15 @@ nodes:
   - tester.bun.test-phase-declared
 
 edges:
+  - source_ref: tester.bun.acceptance-resolves-to-declared
+    target_ref: tester.bun.acceptance-binding-declared
+    type: requires
+    foundation: finish_to_start
+    constraint: mandatory
+    control: internal
+    strength: critical
+    confidence: 1.0
+    reason: 'One requires the binding to EXIST, the other requires it to be TRUE. There is nothing to resolve until a header is present, so presence is settled first; together they close the gap where a test named an acceptance that was never declared and every rule stayed silent.'
   - source_ref: tester.bun.acceptance-binding-declared
     target_ref: tester.bun.test-carries-urn-identity
     type: requires

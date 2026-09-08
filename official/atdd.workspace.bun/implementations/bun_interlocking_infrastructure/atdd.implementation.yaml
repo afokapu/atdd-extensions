@@ -17,6 +17,7 @@ emits_rule_ids:
 - coder.bun.station-master-interlocking-routing
 - coder.bun.interlocking-delegates-to-trainrunner
 - coder.bun.interlocking-does-not-carry-cargo
+- coder.bun.wagon-honours-its-contract
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention:

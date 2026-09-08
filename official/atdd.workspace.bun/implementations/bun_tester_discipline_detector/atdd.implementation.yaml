@@ -25,6 +25,7 @@ emits_rule_ids:
 - tester.bun.telemetry-emit
 - tester.bun.test-carries-urn-identity
 - tester.bun.test-isolation-no-live-state
+- tester.bun.acceptance-resolves-to-declared
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention:
