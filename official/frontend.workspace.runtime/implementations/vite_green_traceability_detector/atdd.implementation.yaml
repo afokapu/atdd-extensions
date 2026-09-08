@@ -15,6 +15,7 @@ emits_rule_ids:
 - coder.vite.green-header-purpose
 - coder.vite.green-header-tested-by
 - coder.vite.green-header-order
+- coder.vite.urn-wagon-resolves-to-declared
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention: coder.vite.green-urn-marker
