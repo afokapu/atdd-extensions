@@ -218,8 +218,12 @@ def test_trains_reachable_from_routes_follows_the_route_space() -> None:
 
 
 def test_a_declared_train_with_no_sequence_assertion_is_reported() -> None:
-    found = detector.scan_execution(_FIXTURES / "clean")
-    assert found, "no fixture asserts an executed wagon order yet"
+    # The DIRTY fixture declares a wagon sequence for each train and asserts only
+    # which train is selected. It used to point at `clean`, which stopped making
+    # sense when the rule was gated: clean must now pass its own family, and a
+    # train with no declared sequence is NOT_APPLICABLE rather than a violation.
+    found = detector.scan_execution(_FIXTURES / "dirty_sequence_unasserted")
+    assert found, "the dirty fixture declares sequences that no test asserts"
     assert all(v["rule_id"] == detector.RULE_SEQUENCE for v in found)
     assert any("wagon SEQUENCE" in v["evidence"] for v in found)
 
@@ -236,7 +240,10 @@ def test_node_status_agrees_with_what_the_gated_scan_emits() -> None:
     node = yaml.safe_load(
         (_HERE.parents[2] / "conventions" / f"{detector.RULE_SEQUENCE}.convention.yaml").read_text()
     )
-    tree = _FIXTURES / "clean"          # trips the rule: no test asserts an executed order
+    # A tree that TRIPS the rule: sequences declared, only selection asserted.
+    # This was `clean`, which no longer trips it — clean must pass its own family
+    # now that the rule is gated, and it declares no sequence to exercise.
+    tree = _FIXTURES / "dirty_sequence_unasserted"
     staged = {v["rule_id"] for v in detector.scan_execution(tree)}
     gated = {v["rule_id"] for v in detector.scan_root(tree)}
 

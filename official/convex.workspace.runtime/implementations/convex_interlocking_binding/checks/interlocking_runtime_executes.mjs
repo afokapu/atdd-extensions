@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// STAGED — coder.convex.runtime-executes-the-declaration
+// coder.convex.runtime-executes-the-declaration (GATED — was staged)
 //
 // The coder half of the executes-the-declaration pair: the runtime must EXECUTE the
 // declared route space, not transcribe it. Every other rule in this family closes a
@@ -75,6 +75,31 @@ export function declaredValues(text) {
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+// Does this module — or a loader it actually USES — read a declaration?
+//
+// Following imports blindly is too generous: a resolver that imports TrainRunner
+// (which reads TRAIN files, not the interlocking declaration) would be exempted by
+// its neighbour's reads, which is the whole defect one level up. So a delegated
+// read only counts when the imported binding is REFERENCED in the module body —
+// an honest resolver calling `loadDeclaration(...)` is exempt, a hardcoded one
+// that merely imports a reader is not.
+export function loadsWithImports(mod, allFiles) {
+  if (LOADS_DECLARATION.test(mod.text)) return true;
+  const body = mod.text.replace(/^\s*import\s[^;]*;?$/gm, "");
+  for (const m of mod.text.matchAll(/import\s+(\{[^}]*\}|[\w*\s]+?)\s+from\s+["'](\.[^"']+)["']/g)) {
+    const names = m[1].replace(/[{}*]/g, " ").split(/[\s,]+/)
+      .map((n) => n.trim()).filter((n) => n && n !== "as" && n !== "type");
+    if (!names.some((n) => new RegExp(`\\b${n}\\b`).test(body))) continue;  // imported, never used
+    const tail = m[2].replace(/^.*\//, "").replace(/\.(ts|tsx|mjs|js)$/, "");
+    const hit = allFiles.find(
+      (f) => f !== mod && /\.(ts|tsx|mjs|js)$/.test(f.file) &&
+        f.file.replace(/^.*[\\/]/, "").replace(/\.(ts|tsx|mjs|js)$/, "") === tail,
+    );
+    if (hit && LOADS_DECLARATION.test(hit.text)) return true;
+  }
+  return false;
+}
+
 export function scanExecution(scanRoot) {
   const violations = [];
   for (const croot of findConsumerRoots(scanRoot)) {
@@ -85,7 +110,9 @@ export function scanExecution(scanRoot) {
       .map((f) => ({ file: f, text: readText(f) }));
     const resolving = rtFiles.filter((x) => RESOLVES.test(x.text));
     if (!resolving.length) continue;
-    if (rtFiles.some((x) => LOADS_DECLARATION.test(x.text))) continue;
+    // Scope the exemption to the RESOLVER and the loaders it USES — a directory-wide
+    // test let a TrainRunner's reads cover for a hardcoded InterlockingRunner.
+    if (resolving.some((x) => loadsWithImports(x, rtFiles))) continue;
     const transcribed = [...new Set(
       resolving.flatMap((x) => declared.filter((v) => new RegExp(`(?<![\\w-])${esc(v)}(?![\\w-])`).test(x.text))),
     )].sort();
@@ -102,7 +129,7 @@ export function scanExecution(scanRoot) {
   return violations;
 }
 
-if (import.meta.main ?? process.argv[1]?.endsWith("scan_execution_coder.mjs")) {
+if (import.meta.main ?? process.argv[1]?.endsWith("interlocking_runtime_executes.mjs")) {
   let roots = [];
   try { roots = JSON.parse(process.env.ATDD_SCAN_ROOTS || "[]"); } catch {}
   const out = roots.flatMap((r) => scanExecution(r));

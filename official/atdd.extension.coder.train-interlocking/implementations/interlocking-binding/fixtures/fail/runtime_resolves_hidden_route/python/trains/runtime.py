@@ -5,6 +5,9 @@ selected_train_id are EXACTLY the route declared in the interlocking YAML — so
 holds (the runtime resolves no hidden route). Core afokapu/atdd#1251.
 """
 from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
 
 
 @dataclass(frozen=True)
@@ -23,11 +26,20 @@ class InterlockingRunner:
     def __init__(self, interlocking_yaml_path):
         self._path = interlocking_yaml_path
 
+    def _declaration(self):
+        """READ the declaration this runner was handed.
+
+        Without it the resolver transcribed the route space and
+        coder.train.runtime-executes-the-declaration fired here too, so the fixture
+        exhibited two defects instead of the one it exists to demonstrate.
+        """
+        return yaml.safe_load(Path(self._path).read_text(encoding="utf-8")) or {}
+
     def resolve_train(self, action, inputs, state=None):
         # BINDING BREAK (runtime_to_declaration): resolves a route_id declared in NO interlocking
         # YAML — a hidden route the loaded route space never admits.
         return InterlockingResolution(
-            interlocking_id="interlocking:match-resolution",
+            interlocking_id=self._declaration().get("interlocking_id"),
             route_id="ghost-route-not-declared",
             selected_train_id="3007-match-resolution-standard",
             train_path="plan/_trains/3007-match-resolution-standard.yaml",

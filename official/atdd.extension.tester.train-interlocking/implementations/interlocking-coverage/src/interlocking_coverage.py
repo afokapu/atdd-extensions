@@ -569,6 +569,10 @@ def scan_root(root: Path) -> list[dict]:
     violations += _production_runner_violations(e2e_files, tokens, root)
     violations += _smoke_violations(records_by_file, e2e_files, root)
     violations += _trace_violations(e2e_files, tokens, root)
+    # tester.interlocking.train-sequence-is-exercised — GATED. Route coverage and
+    # trace binding are both statements about SELECTION; only this one asks whether
+    # the sequence a selected train executes is ever asserted.
+    violations += scan_execution(root)
     return violations
 
 
@@ -631,6 +635,28 @@ def train_sequence_covered(train_id: str, e2e_texts: list[str]) -> bool:
     return any(_token_covered(train_id, text) and asserts_a_sequence(text) for text in e2e_texts)
 
 
+def declares_a_sequence(root: Path, train_id: str) -> bool:
+    """Does the plan actually DECLARE a wagon sequence for this train?
+
+    The rule asks whether a declared sequence is exercised. Where the plan declares
+    none — the train artifact is absent, or carries no ``sequence:`` — there is
+    nothing a test could assert, so this is NOT_APPLICABLE rather than a failure.
+    Firing there reported "no test asserts the wagon SEQUENCE" about a sequence that
+    does not exist; a route pointing at a missing train is the binding family's
+    concern, not this one.
+    """
+    plan = Path(root) / "plan"
+    if not plan.is_dir():
+        return False
+    for f in sorted(plan.rglob("*.y*ml")):
+        if "_interlockings" in f.parts:
+            continue
+        text = _read(f)
+        if train_id in text and re.search(r"^\s*sequence:\s*(\[|$)", text, re.M):
+            return True
+    return False
+
+
 def scan_execution(root: Path) -> list[dict]:
     """Declared trains whose executed wagon sequence no test asserts.
 
@@ -662,5 +688,6 @@ def scan_execution(root: Path) -> list[dict]:
             "source_line": "",
         }
         for train_id in sorted(trains_reachable_from_routes(records))
-        if not train_sequence_covered(train_id, texts)
+        if declares_a_sequence(root, train_id)
+        and not train_sequence_covered(train_id, texts)
     ]

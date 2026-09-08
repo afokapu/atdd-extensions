@@ -22,21 +22,7 @@ emits_rule_ids:
 - tester.bun.interlocking-production-runner-used
 - tester.bun.interlocking-smoke-coverage-for-station-master
 - tester.bun.interlocking-trace-binds-declared-route
+- tester.bun.interlocking-train-sequence-is-exercised
 entrypoint: detect.mjs
 report: detect.mjs
 
-# STAGED rule ids — declared, but NOT emitted by the gated family runner.
-#
-# `emits_rule_ids` is the contract for what `detect.mjs` surfaces, and conformance
-# holds it to that: every entry needs a precision expectation and must fire on a
-# dirty fixture through the family. A staged rule cannot meet those, because
-# detect.mjs never collects it — it lives at the implementation root as
-# `scan_execution.mjs`, deliberately outside checks/.
-#
-# Declaring it HERE rather than nowhere is the point. An emitted rule id that no
-# manifest admits is a defect this hub has already fixed twice; "staged" must not
-# become a way to hide one. conformance/test_staged_rules.py asserts each entry has
-# a convention node, is genuinely absent from the gated output, and IS produced by
-# the staged entry point on a tree that violates it.
-staged_rule_ids:
-  - tester.bun.interlocking-train-sequence-is-exercised

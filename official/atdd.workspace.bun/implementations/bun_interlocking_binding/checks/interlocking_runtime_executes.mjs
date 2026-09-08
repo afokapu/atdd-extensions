@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// STAGED — coder.bun.runtime-executes-the-declaration
+// coder.bun.runtime-executes-the-declaration (GATED — was staged)
 //
 // The coder half of the executes-the-declaration pair: the runtime must EXECUTE the
 // declared route space, not transcribe it. Every other rule in this family closes a
@@ -132,7 +132,7 @@ export function scanExecution(scanRoot) {
   return violations;
 }
 
-if (import.meta.main ?? process.argv[1]?.endsWith("scan_execution_coder.mjs")) {
+if (import.meta.main ?? process.argv[1]?.endsWith("interlocking_runtime_executes.mjs")) {
   let roots = [];
   try { roots = JSON.parse(process.env.ATDD_SCAN_ROOTS || "[]"); } catch {}
   const out = roots.flatMap((r) => scanExecution(r));

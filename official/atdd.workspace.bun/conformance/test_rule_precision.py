@@ -108,6 +108,7 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     "coder.bun.interlocking-resolution-model-exists":  ("interlocking.ts", ("bare-train-id-resolution", "interlockingId"), None),
     "coder.bun.station-master-interlocking-routing":   ("server.ts", ("no-trainrunner-delegation", "TrainRunner"), None),
     "coder.bun.interlocking-delegates-to-trainrunner": ("interlocking.ts", ("direct-wagon-execution", "runTrain"), None),
+    "coder.bun.runtime-executes-the-declaration":      ("interlocking.ts", ("never reads", "transcribed"), None),
     "coder.bun.interlocking-does-not-carry-cargo":     ("interlocking.ts", ("cargo-mutation", "artifact_urn"), None),
     # The systemic one. Pins the DIRECTION the detector classified plus the route id
     # it extracted from the runtime and failed to find in the declared route space —
@@ -121,6 +122,7 @@ EXPECT: dict[str, tuple[str, tuple[str, ...], int | None]] = {
     "tester.bun.interlocking-production-runner-used":            ("routes.test.ts", ("MockInterlockingRunner", "mock.module"), None),
     "tester.bun.interlocking-smoke-coverage-for-station-master": ("match-resolution.yaml", ("resolve_match",), None),
     "tester.bun.interlocking-trace-binds-declared-route":        ("trace.test.ts", ("guardId",), None),
+    "tester.bun.interlocking-train-sequence-is-exercised":       ("routes.test.ts", ("3007-match-resolution-standard", "SEQUENCE"), None),
     # ── coder.htmx ──────────────────────────────────────────────────────────
     "coder.htmx.verb-endpoint-same-origin":     ("panel.html", ("hx-get", "same-origin"), None),
     "coder.htmx.verb-destructive-confirms":     ("delete.html", ("hx-delete", "hx-confirm"), None),

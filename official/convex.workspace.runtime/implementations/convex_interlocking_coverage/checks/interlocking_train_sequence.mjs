@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// STAGED — tester.convex.interlocking-train-sequence-is-exercised
+// tester.convex.interlocking-train-sequence-is-exercised (GATED — was staged)
 //
 // The tester half of the executes-the-declaration pair. Route coverage proves WHICH
 // train a route selects and trace binding proves the run is attributable to its
@@ -17,8 +17,9 @@
 import {
   parseJsonEnv, readText, findConsumerRoots, interlockingFiles, e2eFiles,
   parseInterlocking, tokenCovered, rel, mk,
-} from "./_shared/interlocking.mjs";
-import { writeFileSync } from "node:fs";
+} from "../_shared/interlocking.mjs";
+import { writeFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 export const RULE_SEQUENCE = "tester.convex.interlocking-train-sequence-is-exercised";
 
@@ -48,6 +49,35 @@ export function trainSequenceCovered(trainId, texts) {
   return texts.some((t) => tokenCovered(trainId, t) && assertsASequence(t));
 }
 
+// Does the plan actually DECLARE a wagon sequence for this train?
+//
+// The rule asks whether a declared sequence is exercised. Where the plan declares no
+// sequence — the train artifact is absent, or carries no `sequence:` — there is
+// nothing a test could assert, so this is NOT_APPLICABLE, not a failure. Firing there
+// reported "no test asserts the wagon SEQUENCE" about a sequence that does not exist,
+// and a route pointing at a missing train is the binding family's concern
+// (declared_route_not_runtime_resolvable), not this one.
+export function declaresASequence(croot, trainId) {
+  const found = [];
+  (function rec(dir) {
+    let entries;
+    try { entries = readdirSync(dir).sort(); } catch { return; }
+    for (const name of entries) {
+      const full = join(dir, name);
+      let st;
+      try { st = statSync(full); } catch { continue; }
+      if (st.isDirectory()) { if (name !== "_interlockings") rec(full); continue; }
+      if (/\.ya?ml$/.test(name)) found.push(full);
+    }
+  })(join(croot, "plan"));
+  for (const f of found) {
+    const text = readText(f);
+    if (!text.includes(trainId)) continue;
+    if (/^\s*sequence:\s*$/m.test(text) || /^\s*sequence:\s*\[/m.test(text)) return true;
+  }
+  return false;
+}
+
 export function scanExecution(scanRoot) {
   const violations = [];
   for (const croot of findConsumerRoots(scanRoot)) {
@@ -57,6 +87,7 @@ export function scanExecution(scanRoot) {
     const texts = files.map((x) => x.text);
     const anchor = files.length ? rel(files[0].file, croot) : "e2e/";
     for (const trainId of [...trainsReachableFromRoutes(records)].sort()) {
+      if (!declaresASequence(croot, trainId)) continue;   // nothing declared to exercise
       if (trainSequenceCovered(trainId, texts)) continue;
       violations.push(
         mk(RULE_SEQUENCE, anchor, 1, 0,
@@ -70,7 +101,7 @@ export function scanExecution(scanRoot) {
 }
 
 // Runnable on its own so the obligation is exercisable code, not a paragraph.
-if (import.meta.main ?? process.argv[1]?.endsWith("scan_execution.mjs")) {
+if (import.meta.main ?? process.argv[1]?.endsWith("interlocking_train_sequence.mjs")) {
   const roots = parseJsonEnv("ATDD_SCAN_ROOTS", []);
   const out = roots.flatMap((r) => scanExecution(r));
   const rp = process.env.ATDD_VIOLATIONS_REPORT;

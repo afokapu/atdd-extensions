@@ -22,6 +22,7 @@
 // stack-neutral planner data (snake_case, core #1248); the runtime + JOURNEY_MAP + trace are Convex/TS.
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from "node:fs";
+import { scanExecution } from "./checks/interlocking_runtime_executes.mjs";
 import { join, sep, resolve } from "node:path";
 
 const RULE = "coder.convex.interlocking-bilateral-binding";
@@ -536,6 +537,8 @@ function main() {
   const violations = [];
   for (const scanRoot of roots) {
     for (const croot of findConsumerRoots(scanRoot)) violations.push(...scanConsumerRoot(croot));
+    // coder.convex.runtime-executes-the-declaration — no longer staged.
+    violations.push(...scanExecution(scanRoot));
   }
   writeFileSync(reportPath, JSON.stringify({ violations }, null, 2), "utf8");
   process.stderr.write(`convex-interlocking-binding: ${violations.length} violation(s)\n`);

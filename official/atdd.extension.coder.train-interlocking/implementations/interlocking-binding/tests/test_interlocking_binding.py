@@ -55,7 +55,9 @@ def _directions(violations: list[dict]) -> set[str]:
 def _assert_v11_shape(violations: list[dict]) -> None:
     for v in violations:
         assert set(v) >= {"rule_id", "file", "line", "col", "evidence", "source_line"}
-        assert v["rule_id"] == detector.RULE_BILATERAL
+        # The gated family emits two rule ids since
+        # coder.train.runtime-executes-the-declaration stopped being staged.
+        assert v["rule_id"] in {detector.RULE_BILATERAL, detector.RULE_EXECUTES}
         assert isinstance(v["line"], int) and isinstance(v["col"], int)
 
 
