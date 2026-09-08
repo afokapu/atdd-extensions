@@ -11,6 +11,7 @@ emits_rule_ids:
 - coder.htmx.verb-mutation-signals-progress
 - coder.htmx.swap-no-inline-handler
 - coder.htmx.swap-oob-carries-id
+- coder.htmx.verb-endpoint-is-routed
 entrypoint: detect.mjs
 report: detect.mjs
 realizes_convention:
