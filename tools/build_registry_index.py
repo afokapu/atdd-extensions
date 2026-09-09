@@ -66,6 +66,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import sys
 from pathlib import Path
 
@@ -118,9 +119,23 @@ _BEHAVIOUR_GLOBS = (
 )
 _NOT_BEHAVIOUR = ("fixtures", "tests", "conformance")
 
+# VERSIONED, because the recipe above IS the contract. Adding one glob changes every
+# published digest at once, and a consumer comparing digests would report "same label,
+# different enforcement" for all 16 packages, none of which changed. The version is
+# published alongside the digest so a consumer can tell a recipe change from a package
+# change: same algo + different digest means the package moved; different algo means
+# recompare from scratch rather than alarm. Bump this whenever the globs change.
+BEHAVIOUR_DIGEST_ALGO = "sha256-behaviour-v1"
+
 
 def behaviour_digest(pkg_dir: Path) -> str | None:
-    """sha256 over the files that define this package's enforcement, path-ordered."""
+    """sha256 over the files that define this package's enforcement, path-ordered.
+
+    Returns None when the package directory is absent or matches no behaviour file. A
+    consumer MUST read that as COULD_NOT_CHECK — the digest could not be computed — and
+    never as "unchanged": absence of evidence is the one reading that turns this into a
+    green light over an unknown. The field is simply omitted from the entry in that case.
+    """
     if not pkg_dir.is_dir():
         return None
     files = set()
@@ -182,9 +197,22 @@ def build(absolute: bool = False) -> dict:
             # Hub-relative by default (portable, committed). Absolute on request,
             # to sidestep core's consumer-root join — see the module docstring.
             entry["source"] = str(HUB / rel) if absolute else rel
-            digest = behaviour_digest(HUB / rel)
-            if digest:
-                entry["behaviour_digest"] = digest
+            # NOT EMITTED YET, deliberately. core's registry-index.schema.json is
+            # additionalProperties:false and does not list this field, so publishing it
+            # made every entry invalid and any consumer running the released toolkit got
+            # SubstrateSchemaError from `atdd search` and registry-resolved `add`. An
+            # additive field has to land in the CONSUMER's schema before the producer
+            # emits it; this was done in the wrong order.
+            #
+            # Re-enable by setting ATDD_EMIT_BEHAVIOUR_DIGEST=1 once core's schema accepts
+            # it (afokapu/atdd#1878). tools/validate_registry_index.py holds the index to
+            # the installed core's schema, so the day it is allowed the check goes green
+            # and the flag can be removed.
+            if os.environ.get("ATDD_EMIT_BEHAVIOUR_DIGEST") == "1":
+                digest = behaviour_digest(HUB / rel)
+                if digest:
+                    entry["behaviour_digest"] = digest
+                    entry["behaviour_digest_algo"] = BEHAVIOUR_DIGEST_ALGO
         if e.get("description"):
             entry["summary"] = " ".join(str(e["description"]).split())
         if e.get("categories"):
