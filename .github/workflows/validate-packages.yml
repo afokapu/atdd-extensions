@@ -98,6 +98,15 @@ jobs:
         # <ref>` resolves against a stale catalog.
         run: python3 tools/build_registry_index.py --check
 
+      - name: The registry index satisfies the schema CONSUMERS validate it against
+        # The index is this hub's public interface and was the one artifact whose schema
+        # nobody enforced. A `behaviour_digest` field added for drift detection made all
+        # 16 entries invalid under core's additionalProperties:false schema, so every
+        # consumer on the released toolkit got SubstrateSchemaError from `atdd search`
+        # and registry-resolved `add`. An additive field lands in the CONSUMER's schema
+        # first; the producer emits it second.
+        run: python3 tools/validate_registry_index.py
+
       - name: Negative canary — the gate rejects an invalid realization
         # Proves the gate has teeth (criteria 3-6). The full negative contract — bad
         # manifest shape, unresolved core node, realized design_candidate, authored
