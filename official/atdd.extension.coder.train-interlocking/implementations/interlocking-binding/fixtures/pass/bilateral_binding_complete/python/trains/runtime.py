@@ -100,14 +100,23 @@ class TrainRunner:
 
 
 class _Result:
-    def __init__(self, train_id):
+    """The trace REFLECTS the resolution it came from.
+
+    Its fields were literals, which is a defect in its own right — the trace would
+    publish the same route whatever was resolved — and it made every fixture in this
+    tree transcribe the declared route space, so none of them proved only its own
+    defect once executes-the-declaration started judging transcription.
+    """
+
+    def __init__(self, train_id, resolution=None):
         self.selected_train_id = train_id
+        r = resolution
         self.trace = {
-            "interlocking_id": "interlocking:match-resolution",
-            "route_id": "nominal-all-voted",
+            "interlocking_id": getattr(r, "interlocking_id", None),
+            "route_id": getattr(r, "route_id", None),
             "selected_train_id": train_id,
-            "route_category": "nominal",
-            "guard_id": "guard:all-voted",
-            "resolution_strategy": "fail_on_multiple_match",
-            "resolution_reason": "all_players_voted == true",
+            "route_category": getattr(r, "route_category", None),
+            "guard_id": getattr(r, "guard_id", None),
+            "resolution_strategy": getattr(r, "resolution_strategy", None),
+            "resolution_reason": getattr(r, "resolution_reason", None),
         }

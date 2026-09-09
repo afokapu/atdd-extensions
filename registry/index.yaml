@@ -108,9 +108,9 @@ entries:
     contract: ^1.0.0
 - id: atdd.extension.coder.train-interlocking
   kind: extension
-  latest_version: 0.3.0
+  latest_version: 0.4.0
   versions:
-  - 0.3.0
+  - 0.4.0
   aliases:
   - coder.train-interlocking
   publisher: atdd
@@ -283,9 +283,9 @@ entries:
     contract: ^1.0.0
 - id: atdd.workspace.bun
   kind: workspace
-  latest_version: 0.3.0
+  latest_version: 0.4.0
   versions:
-  - 0.3.0
+  - 0.4.0
   aliases:
   - bun
   publisher: atdd

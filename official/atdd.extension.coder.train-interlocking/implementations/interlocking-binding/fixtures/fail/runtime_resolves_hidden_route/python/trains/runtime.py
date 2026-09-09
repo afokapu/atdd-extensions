@@ -36,13 +36,18 @@ class InterlockingRunner:
         return yaml.safe_load(Path(self._path).read_text(encoding="utf-8")) or {}
 
     def resolve_train(self, action, inputs, state=None):
-        # BINDING BREAK (runtime_to_declaration): resolves a route_id declared in NO interlocking
-        # YAML — a hidden route the loaded route space never admits.
+        # BINDING BREAK (runtime_to_declaration): resolves a route_id declared in NO
+        # interlocking YAML — a hidden route the loaded route space never admits.
+        #
+        # Its train is hidden too. The train id used to be a DECLARED one, which made this
+        # fixture transcribe the declared route space as well, so it exhibited two defects
+        # once executes-the-declaration started judging transcription. A hidden route has
+        # no declared train, so naming one was wrong on its own terms.
         return InterlockingResolution(
             interlocking_id=self._declaration().get("interlocking_id"),
             route_id="ghost-route-not-declared",
-            selected_train_id="3007-match-resolution-standard",
-            train_path="plan/_trains/3007-match-resolution-standard.yaml",
+            selected_train_id="9999-ghost-train-not-declared",
+            train_path="plan/_trains/9999-ghost-train-not-declared.yaml",
             route_category="nominal",
             route_resolution_strategy="first_priority",
             guard_id="guard:all-voted",
@@ -60,14 +65,22 @@ class TrainRunner:
 
 
 class _Result:
-    def __init__(self, train_id):
+    """The trace REFLECTS the resolution it came from.
+
+    Its fields were literals, which is a defect in its own right — the trace would
+    publish the same route whatever was resolved — and it made this fixture transcribe
+    the declared route space on top of its own defect.
+    """
+
+    def __init__(self, train_id, resolution=None):
         self.selected_train_id = train_id
+        r = resolution
         self.trace = {
-            "interlocking_id": "interlocking:match-resolution",
-            "route_id": "nominal-all-voted",
+            "interlocking_id": getattr(r, "interlocking_id", None),
+            "route_id": getattr(r, "route_id", None),
             "selected_train_id": train_id,
-            "route_category": "nominal",
-            "guard_id": "guard:all-voted",
-            "resolution_strategy": "fail_on_multiple_match",
-            "resolution_reason": "all_players_voted == true",
+            "route_category": getattr(r, "route_category", None),
+            "guard_id": getattr(r, "guard_id", None),
+            "resolution_strategy": getattr(r, "resolution_strategy", None),
+            "resolution_reason": getattr(r, "resolution_reason", None),
         }
