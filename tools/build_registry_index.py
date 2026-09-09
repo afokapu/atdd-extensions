@@ -65,6 +65,7 @@ USAGE
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sys
 from pathlib import Path
 
@@ -105,6 +106,45 @@ def _load_authored() -> list[dict]:
     return entries
 
 
+# Files that decide what a package ENFORCES — the same set tools/check_version_bumps.py
+# judges. Published as a digest so a consumer can detect a package whose behaviour
+# changed under an unchanged version label, which this hub shipped twice before the
+# guard existed. Fixtures and tests are excluded: a better fixture does not change what
+# a consumer must satisfy.
+_BEHAVIOUR_GLOBS = (
+    "atdd.extension.yaml", "atdd.workspace.yaml", "conventions/*.yaml",
+    "relationships.yaml", "implementations/*/atdd.implementation.yaml",
+    "implementations/*/**/*.py", "implementations/*/**/*.mjs", "implementations/*/**/*.js",
+)
+_NOT_BEHAVIOUR = ("fixtures", "tests", "conformance")
+
+
+def behaviour_digest(pkg_dir: Path) -> str | None:
+    """sha256 over the files that define this package's enforcement, path-ordered."""
+    if not pkg_dir.is_dir():
+        return None
+    files = set()
+    for pattern in _BEHAVIOUR_GLOBS:
+        for f in pkg_dir.glob(pattern):
+            if not f.is_file():
+                continue
+            parts = f.relative_to(pkg_dir).parts
+            if any(p in _NOT_BEHAVIOUR for p in parts):
+                continue
+            if f.name.startswith("test_") or ".test." in f.name or ".spec." in f.name:
+                continue
+            files.add(f)
+    if not files:
+        return None
+    h = hashlib.sha256()
+    for f in sorted(files):
+        h.update(str(f.relative_to(pkg_dir)).encode())
+        h.update(b"\0")
+        h.update(f.read_bytes())
+        h.update(b"\0")
+    return "sha256:" + h.hexdigest()
+
+
 def build(absolute: bool = False) -> dict:
     authored = _load_authored()
 
@@ -142,6 +182,9 @@ def build(absolute: bool = False) -> dict:
             # Hub-relative by default (portable, committed). Absolute on request,
             # to sidestep core's consumer-root join — see the module docstring.
             entry["source"] = str(HUB / rel) if absolute else rel
+            digest = behaviour_digest(HUB / rel)
+            if digest:
+                entry["behaviour_digest"] = digest
         if e.get("description"):
             entry["summary"] = " ".join(str(e["description"]).split())
         if e.get("categories"):

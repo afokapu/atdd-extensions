@@ -1353,3 +1353,4 @@ if __name__ == "__main__":  # pragma: no cover - manual invocation aid
 
     targets = sys.argv[1:] or ["."]
     print(json.dumps(scan_roots([Path(t) for t in targets]), indent=2))
+# a behaviour change shipped under an unchanged version

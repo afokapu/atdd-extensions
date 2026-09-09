@@ -16,6 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # check_version_bumps.py asks the DIFF whether a package's enforced behaviour
+          # changed without a version bump, so it needs history to compare against the
+          # base. The default shallow clone cannot answer that, and the check fails
+          # loudly rather than passing when it cannot look.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -71,12 +77,20 @@ jobs:
 
       - name: A package whose enforced behaviour changed carries a version bump
         # Twice a rule contract changed under an unchanged version label, and both times
-        # core caught it rather than this repo — once with eight packages, once with 94
-        # lines of detector logic shipped under a label published the day before. A
-        # downstream lock records a VERSION, so a version that does not move cannot
-        # express the change. Fixtures and tests are excluded: a better fixture does not
-        # change what a consumer must satisfy.
-        run: python3 tools/check_version_bumps.py
+        # core caught it rather than this repo. A downstream lock records a VERSION, so a
+        # version that does not move cannot express the change.
+        #
+        # Asked of the DIFF, not of a checked-in ledger. The first design compared against
+        # registry/version-digests.yaml, regenerated with --update — which anyone could run
+        # to make red go away, laundering the change through. There is no state file to
+        # re-record here. Fixtures and tests stay excluded: a better fixture does not change
+        # what a consumer must satisfy.
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="origin/main"
+          fi
+          python3 tools/check_version_bumps.py --base "$BASE"
 
       - name: The registry index still matches its authored entries
         # registry/index.yaml is the core-consumable projection of registry.yaml +
