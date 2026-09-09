@@ -25,3 +25,4 @@ class InterlockingRunner:
             route_id="ghost-route-not-declared",
             selected_train_id="3007-match-resolution-standard",
         )
+# fixture tweak

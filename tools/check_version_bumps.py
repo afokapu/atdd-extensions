@@ -1,144 +1,133 @@
 #!/usr/bin/env python3
 """A package whose enforced behaviour changed must carry a new version.
 
-Twice now a rule contract changed under an unchanged version label, and both times
-core caught it rather than this repo. The first time, eight packages changed what they
-enforce and stayed 0.1.0 while core was told to re-pin. The second, 0.2.0 was shipped
-and then fifteen more files landed across the same two packages under that same label
-within a day — including 94 lines of detector logic. A downstream lock records a
-VERSION; if the version does not move, the lock cannot express the difference, which is
-the whole failure #1818 is about.
+Twice a rule contract changed under an unchanged version label, and both times core
+caught it rather than this repo. A downstream lock records a VERSION; if the version
+does not move, the lock cannot express the difference.
 
-Neither promise nor review caught it. This does, by construction: the digest below
-covers exactly the files that decide what a package enforces — its manifest, its
-convention nodes, and its detector sources. Change any of them and the digest moves; if
-the version did not move too, this fails.
+DERIVED FROM GIT, NOT FROM A CHECKED-IN LEDGER. The first version of this compared a
+digest against `registry/version-digests.yaml`, regenerated with `--update`. That is
+guard-by-discipline: anyone could run `--update` to make red go away and launder the
+change through, which was demonstrated in one command. Its own docstring predicted the
+risk and shipped anyway.
 
-Fixtures and tests are deliberately EXCLUDED. A better fixture does not change what a
-consumer must satisfy, and coupling them here would make the guard cry wolf on every
-test improvement until people learned to run --update without reading it.
+There is nothing to launder here. The question is asked of the DIFF: between the base
+and HEAD, did any file that decides what this package enforces change, and did its
+version change with them? A state file cannot be quietly re-recorded because there is
+no state file.
 
-    python3 tools/check_version_bumps.py            # fail if behaviour moved and version did not
-    python3 tools/check_version_bumps.py --update   # re-record after an intentional bump
+Fixtures, tests and conformance are deliberately excluded. A better fixture does not
+change what a consumer must satisfy, and coupling them would make the check cry wolf
+on every test improvement until people learned to ignore it.
+
+    python3 tools/check_version_bumps.py                  # against origin/main
+    python3 tools/check_version_bumps.py --base <ref>     # against any base
 """
 from __future__ import annotations
 
 import argparse
-import hashlib
-import pathlib
+import subprocess
 import sys
+from pathlib import Path
 
 import yaml
 
-HUB = pathlib.Path(__file__).resolve().parent.parent
-LEDGER = HUB / "registry" / "version-digests.yaml"
+HUB = Path(__file__).resolve().parent.parent
 
-# What decides enforced behaviour: the manifest, the obligations, the detector code.
-BEHAVIOUR_GLOBS = (
-    "atdd.extension.yaml",
-    "atdd.workspace.yaml",
-    "conventions/*.yaml",
-    "relationships.yaml",
-    "implementations/*/atdd.implementation.yaml",
-    "implementations/*/**/*.py",
-    "implementations/*/**/*.mjs",
-    "implementations/*/**/*.js",
-)
+# Path fragments that decide enforced behaviour. A change under any of these is a
+# change to what a consumer must satisfy.
+BEHAVIOUR = ("atdd.extension.yaml", "atdd.workspace.yaml", "conventions/",
+             "relationships.yaml", "atdd.implementation.yaml", "/src/", "/checks/",
+             "/lib/", "/_shared/")
+# ...unless it is one of these, which describe the rule rather than define it.
+NOT_BEHAVIOUR = ("/fixtures/", "/tests/", "/conformance/")
 
 
-def behaviour_files(pkg: pathlib.Path) -> list[pathlib.Path]:
-    out: set[pathlib.Path] = set()
-    for pattern in BEHAVIOUR_GLOBS:
-        for f in pkg.glob(pattern):
-            if not f.is_file():
-                continue
-            parts = f.relative_to(pkg).parts
-            if "fixtures" in parts or "tests" in parts or "conformance" in parts:
-                continue
-            if f.name.startswith("test_") or ".test." in f.name or ".spec." in f.name:
-                continue
-            out.add(f)
-    return sorted(out)
+def git(*args: str) -> str:
+    return subprocess.run(["git", *args], cwd=HUB, capture_output=True,
+                          text=True).stdout.strip()
 
 
-def digest(pkg: pathlib.Path) -> str:
-    h = hashlib.sha256()
-    for f in behaviour_files(pkg):
-        h.update(str(f.relative_to(pkg)).encode())
-        h.update(b"\0")
-        h.update(f.read_bytes())
-        h.update(b"\0")
-    return h.hexdigest()
+def is_behaviour(path: str) -> bool:
+    if any(part in path for part in NOT_BEHAVIOUR):
+        return False
+    if Path(path).name.startswith("test_") or ".test." in path or ".spec." in path:
+        return False
+    return any(part in path for part in BEHAVIOUR)
 
 
-def version_of(pkg: pathlib.Path) -> str | None:
+def version_at(ref: str, pkg: str) -> str | None:
     for name in ("atdd.extension.yaml", "atdd.workspace.yaml"):
-        m = pkg / name
-        if m.is_file():
-            doc = yaml.safe_load(m.read_text()) or {}
-            v = doc.get("version")
-            return str(v) if v is not None else None
+        blob = git("show", f"{ref}:official/{pkg}/{name}")
+        if blob:
+            try:
+                return str((yaml.safe_load(blob) or {}).get("version"))
+            except yaml.YAMLError:
+                return None
     return None
 
 
-def survey() -> dict[str, dict[str, str]]:
-    out: dict[str, dict[str, str]] = {}
-    for pkg in sorted(HUB.glob("official/*")):
-        if not pkg.is_dir():
-            continue
-        v = version_of(pkg)
-        if v is None:
-            continue
-        out[pkg.name] = {"version": v, "digest": digest(pkg)}
-    return out
+def version_now(pkg: str) -> str | None:
+    for name in ("atdd.extension.yaml", "atdd.workspace.yaml"):
+        p = HUB / "official" / pkg / name
+        if p.is_file():
+            return str((yaml.safe_load(p.read_text()) or {}).get("version"))
+    return None
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--update", action="store_true",
-                    help="re-record the ledger after an intentional bump")
+    ap.add_argument("--base", default="origin/main",
+                    help="base ref to compare against (default: origin/main)")
     args = ap.parse_args()
 
-    current = survey()
+    base = git("merge-base", args.base, "HEAD") or git("rev-parse", args.base)
+    if not base:
+        # A shallow clone cannot answer the question. Say so rather than pass: a check
+        # that reports success when it could not look is the failure it exists to catch.
+        print(f"cannot resolve base ref {args.base!r} — fetch history "
+              f"(actions/checkout with fetch-depth: 0) so this can compare against it",
+              file=sys.stderr)
+        return 1
 
-    if args.update:
-        LEDGER.parent.mkdir(parents=True, exist_ok=True)
-        LEDGER.write_text(
-            "# GENERATED by tools/check_version_bumps.py --update — DO NOT EDIT BY HAND.\n"
-            "#\n"
-            "# One entry per package: the version it last published, and a digest over the\n"
-            "# files that decide what it enforces. If the digest moves and the version does\n"
-            "# not, the check fails — a downstream lock records a version, so a version that\n"
-            "# does not move cannot express the change.\n"
-            + yaml.safe_dump(current, sort_keys=True)
-        )
-        print(f"recorded {len(current)} package(s) in {LEDGER.relative_to(HUB)}")
+    changed = [p for p in git("diff", "--name-only", f"{base}...HEAD").splitlines()
+               if p.startswith("official/")]
+    if not changed:
+        print(f"no package files changed since {base[:8]}")
         return 0
 
-    if not LEDGER.is_file():
-        print(f"{LEDGER.relative_to(HUB)} is missing; run --update to record a baseline",
-              file=sys.stderr)
-        return 1
+    touched: dict[str, list[str]] = {}
+    for path in changed:
+        parts = path.split("/")
+        if len(parts) < 2 or not is_behaviour(path):
+            continue
+        touched.setdefault(parts[1], []).append(path)
 
-    previous = yaml.safe_load(LEDGER.read_text()) or {}
-    stale: list[str] = []
-    for name, now in current.items():
-        was = previous.get(name)
-        if was is None:
-            continue                                   # new package: nothing to compare
-        if now["digest"] != was["digest"] and now["version"] == was["version"]:
-            stale.append(f"{name}: still {now['version']}, but what it enforces changed")
+    stale: list[tuple[str, list[str]]] = []
+    for pkg, paths in sorted(touched.items()):
+        was, now = version_at(base, pkg), version_now(pkg)
+        if was is None or now is None:
+            continue                       # new package: nothing to compare against
+        if was == now:
+            stale.append((pkg, paths))
 
     if stale:
-        print(f"{len(stale)} package(s) changed behaviour without a version bump:\n",
-              file=sys.stderr)
-        for line in stale:
-            print(f"  - {line}", file=sys.stderr)
-        print("\nA downstream lock records a VERSION. Bump each package, then re-record:\n"
-              "  python3 tools/check_version_bumps.py --update", file=sys.stderr)
+        print(f"{len(stale)} package(s) changed enforced behaviour without a version "
+              f"bump (base {base[:8]}):\n", file=sys.stderr)
+        for pkg, paths in stale:
+            print(f"  {pkg}  still {version_now(pkg)}", file=sys.stderr)
+            for p in paths[:4]:
+                print(f"      {p}", file=sys.stderr)
+            if len(paths) > 4:
+                print(f"      … and {len(paths) - 4} more", file=sys.stderr)
+        print("\nA downstream lock records a VERSION, so a version that does not move "
+              "cannot express the change. Bump each package's manifest and its "
+              "registry/entries/*.yaml, then regenerate the index.", file=sys.stderr)
         return 1
 
-    print(f"{len(current)} package(s): every behaviour change carries a version bump")
+    n = len(touched)
+    print(f"{n} package(s) changed enforced behaviour; every one carries a version bump"
+          if n else "no enforced behaviour changed since " + base[:8])
     return 0
 
 

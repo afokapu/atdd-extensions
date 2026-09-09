@@ -17,6 +17,7 @@ entries:
   - component-header-validator
   publisher: acme
   source: examples/component-header-validator
+  behaviour_digest: sha256:ccaecdf24483a4b99381e8b160cf913a449bcf98d74f455eac3c0d5b713da311
   summary: "Example use-case extension \u2014 requires source files to declare a component header."
   tags:
   - backend
@@ -35,6 +36,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.base
+  behaviour_digest: sha256:d831a1a90f5243413d95540ab979df7357a4985ee009dbbb0d24f479e44a2512
   summary: "Official ATDD coder-role extension \u2014 owns the stack-bound coder convention nodes (per-language\
     \ suffixes, JSX/React detectors, Flutter design-system, TS/Python metrics, FastAPI route auth) that\
     \ realize the core coder principles. Skeleton in this slice."
@@ -62,6 +64,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.bun
+  behaviour_digest: sha256:5735628ce02f87baf2d7f307f79580f902123e6a701d547e6372b8cb0d8b34eb
   summary: "Official ATDD coder-role extension for the Bun / TypeScript runtime \u2014 45 convention nodes\
     \ across six families: GREEN/URN traceability (extended to .html templates), TypeScript metrics ported\
     \ natively from python-pytest, security / logging / error-response hygiene, clean architecture (layering,\
@@ -92,6 +95,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.htmx
+  behaviour_digest: sha256:a227abc502c2200e5eaad612ee5a551ef436cf53547734cfdfe78c4a9785c920
   summary: "Official ATDD coder-role extension for htmx hypermedia markup \u2014 6 convention nodes covering\
     \ out- of-band swap ids, destructive-verb confirmations, in-flight progress signals, inline event\
     \ handlers, same-origin endpoints and fragment escaping. Layered ON TOP of atdd.extension.coder.bun,\
@@ -116,6 +120,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.coder.train-interlocking
+  behaviour_digest: sha256:cb1cb3eca3725a42aa91a250725472b4fcb0e65f99f668e11782cef95942d5ad
   summary: "Official ATDD coder-role extension for train interlocking \u2014 the CODER half of the persona\
     \ split (afokapu/atdd#1531). Six convention nodes enforcing that a consumer declaring guarded routes\
     \ ships a real route-control layer: an InterlockingRunner exists with a resolve_train entry point,\
@@ -142,6 +147,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.github
+  behaviour_digest: sha256:fbf02e88f8c769766018f1eed9509713ed2c48294bc0d0d56f2d76454b291ee3
   summary: "Official ATDD GitHub platform extension \u2014 maps GitHub issues, labels, Projects v2, and\
     \ PR rules onto the ATDD lifecycle."
   tags:
@@ -163,6 +169,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.planner.docs
+  behaviour_digest: sha256:94b622a08eae05b81481b26f78d5134fea3c6d4a2999a941ce3e3413293d7a7a
   summary: "Official ATDD standard documentation extension \u2014 the opinionated documentation model\
     \ shipped as POLICY rather than a core dependency, so a consumer without it gets the lifecycle obligation\
     \ and no opinion about AsciiDoc, ADRs or taxonomy. 9 convention nodes covering the canonical tree,\
@@ -190,6 +197,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.base
+  behaviour_digest: sha256:24e60dbabf3489b60d34d4bf08a5af22e450d605d5f261d9c7f42970234a7403
   summary: "Official ATDD tester-role extension \u2014 owns the stack-bound tester convention nodes (test\
     \ filename mechanics, Supabase/Postgres migration naming, runtime-path routing, preact-DOM presentation\
     \ smoke, contract persistence + api_structure bindings). Skeleton in this slice."
@@ -215,6 +223,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.bun
+  behaviour_digest: sha256:c00059af2197950e21ee350b3f4c1f5dbb647f71b3c483534c5eac400554a525
   summary: "Official ATDD tester-role extension for a bun test suite \u2014 19 convention nodes covering\
     \ test identity and acceptance binding (URN header, Acceptance/Train binding, phase, per-case @covers\
     \ tags) and phase discipline (RED fail-markers and behavioural assertions, SMOKE observability and\
@@ -242,6 +251,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.htmx
+  behaviour_digest: sha256:e44db6fa8fa57955687db5fb17d78a260a5b31e283dfbac588c351ed480549d8
   summary: "Official ATDD tester-role extension for htmx endpoint tests \u2014 the tester half of the\
     \ pair whose coder half is atdd.extension.coder.htmx. Three convention nodes: every hx- endpoint declared\
     \ in markup is exercised by a test (mirroring tester.convex.interlocking-route-coverage, with the\
@@ -267,6 +277,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.extension.tester.train-interlocking
+  behaviour_digest: sha256:14957d67d169e19574805f56473267af6b7e7e771acd5fbfbde3de096144fac0
   summary: "Official ATDD tester-role extension for train interlocking \u2014 the TESTER half of the persona\
     \ split (afokapu/atdd#1531). Four convention nodes, each naming a distinct way a green suite can be\
     \ a lie: an admissible route that no e2e test exercises (a silent-green gap), a test asserting against\
@@ -291,6 +302,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.workspace.bun
+  behaviour_digest: sha256:264cb781d3ef97b8213d395573e6b5e1bebc64bacc012dc73d5fa0d5c8a4deaf
   summary: "Official ATDD full-stack Bun workspace provider \u2014 a REAL (non-stub) v1.1 runtime that\
     \ runs zero-dependency detectors under `bun`, which needs no build step, no node_modules and no transpile\
     \ config. Ships six detector families \u2014 bun_green_traceability_detector (10 rules), bun_ts_metrics_detector\
@@ -316,6 +328,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.workspace.dart-flutter
+  behaviour_digest: sha256:a993b1e3a7ff7cffc4ba598327d49847715fc5b928859bfe25857025c44fea70
   summary: "Official ATDD Dart/Flutter design-system workspace provider (reusable runtime). Skeleton in\
     \ this slice \u2014 adapter is a NotImplementedError stub."
   tags:
@@ -334,6 +347,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.workspace.fastapi
+  behaviour_digest: sha256:45106f5ba862dcf96d447beb9bb2f4efbac866765721dbfab02e7f87ec5667eb
   summary: "Official ATDD FastAPI/HTTP-REST workspace provider (reusable runtime). Skeleton in this slice\
     \ \u2014 adapter is a NotImplementedError stub."
   tags:
@@ -353,6 +367,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.workspace.python-pytest
+  behaviour_digest: sha256:a3db949dfdfba1156bdd5fa05f533c2c5b58e65c3593d6177022bb980175ce36
   summary: Official ATDD Python/pytest workspace provider (reusable runtime).
   tags:
   - python
@@ -370,6 +385,7 @@ entries:
   publisher: atdd
   trust: official
   source: official/atdd.workspace.supabase
+  behaviour_digest: sha256:a2ca827707435f2f67f1b79c48c4f45c725174f8bda09cb004ed1245de226938
   summary: "Official ATDD Supabase/Deno/Postgres workspace provider (reusable runtime). Skeleton in this\
     \ slice \u2014 adapter is a NotImplementedError stub."
   tags:
