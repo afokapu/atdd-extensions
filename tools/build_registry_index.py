@@ -107,6 +107,22 @@ def _load_authored() -> list[dict]:
     return entries
 
 
+# NOT COMPARABLE TO core's substrate.lock digest, and never will be.
+#
+# `atdd substrate add` hashes EVERY file under the package directory (minus .pyc/.pyo/
+# .pytest_cache) because that digest feeds `enforce --verify-substrate` tamper detection,
+# where fixtures are exactly where someone would hide a change. This one covers a subset,
+# because a fixture improvement is not a behaviour change and must not demand a version
+# bump. 84 files versus 19 for the coder interlocking package: they cannot be equal in
+# any state.
+#
+# They answer different questions — IS THE TREE INTACT versus DID ENFORCED BEHAVIOUR
+# CHANGE — so aligning them breaks whichever one gives ground. A consumer comparing this
+# against its substrate.lock digest would report drift on every package, always.
+#
+# The comparison that works: record THIS digest at install time as its own field, and
+# compare it against the published one on the next check. Same question on both sides.
+#
 # Files that decide what a package ENFORCES — the same set tools/check_version_bumps.py
 # judges. Published as a digest so a consumer can detect a package whose behaviour
 # changed under an unchanged version label, which this hub shipped twice before the
