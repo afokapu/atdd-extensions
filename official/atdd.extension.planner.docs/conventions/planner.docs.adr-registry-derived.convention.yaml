@@ -8,11 +8,26 @@ statement: >-
   from their `:decides:` edges. An ADR present in the tree and absent from the registry — or listed
   in the registry and absent from the tree — is a violation. The registry is a projection, never a
   typed list (spec 2 §5.2, §6).
+
+  WHAT COUNTS AS A LISTING. Where the registry declares a machine-maintained region —
+  `// BEGIN GENERATED: adr-register` … `// END GENERATED: adr-register`, the markers a generator
+  writes around its own output — only that region is read. A corpus whose generator marks its
+  output has already said where its list begins and ends, and taking it at its word beats any
+  heuristic. Where no region is declared, the file is read minus its `----` listing blocks: an ADR
+  skeleton shown in fences illustrates the shape and lists nothing. A prose mention outside a
+  declared region is NOT excused — a sentence naming an id and a list entry naming one cannot be
+  told apart without guessing at a corpus's formatting, and a corpus that wants prose ignored says
+  so with the markers.
 terms:
 - term_id: adr
   text: >-
     a document at `docs/architecture/decisions/adr-YYYYMMDD-NNN-<slug>.adoc` declaring `:adr-id:`,
     `:status:`, `:date:` and `:decides:`.
+- term_id: generated_region
+  text: >-
+    a machine-maintained span delimited by `// BEGIN GENERATED: <name>` and
+    `// END GENERATED: <name>`, which a generator rewrites in place; where the registry declares
+    one named `adr-register`, that span is the listing the projection is compared against.
 - term_id: derived_registry
   text: >-
     `index.adoc` in the decisions directory, whose entries are computed from the set of ADR files and
