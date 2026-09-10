@@ -247,6 +247,74 @@ def test_a_stale_registry_entry_is_reported_as_well_as_a_missing_one() -> None:
     assert "ADR-20260906-404" in findings[0]["evidence"]
 
 
+def test_an_adr_id_shown_in_a_template_is_not_a_registry_entry() -> None:
+    """A skeleton inside `----` fences illustrates the shape; it lists nothing.
+
+    Measured on a real corpus of 70 ADRs: the decisions index showed an ADR skeleton in
+    a `[source,asciidoc]` block, and its id was reported as listed-but-missing on a
+    registry that was in fact perfectly derived — the first finding a team would meet on
+    install, and a wrong one.
+
+    A PROSE mention is a different matter and is NOT excused here: with no declared
+    region, a sentence naming an id and a list entry naming one are indistinguishable
+    without guessing at a corpus's formatting, and guessing is how a rule ends up fitted
+    to one repository. The corpus that wants prose ignored says so with the markers the
+    next test covers.
+    """
+    documents = corpus.read_corpus(_FIXTURES / "clean")
+    registry = next(d for d in documents if d.path == adr.REGISTRY_PATH)
+    illustrated = corpus.Document(
+        path=registry.path,
+        text=(
+            registry.text
+            + "\n== Writing a new one\n\n[source,asciidoc]\n----\n"
+            + "= ADR-20991231-999: A shape, not a decision\n"
+            + ":adr-id: ADR-20991231-999\n----\n"
+        ),
+        attributes=registry.attributes,
+        attribute_lines=registry.attribute_lines,
+    )
+    others = [d for d in documents if d.path != adr.REGISTRY_PATH]
+    assert adr.registry_violations([*others, illustrated]) == []
+
+
+def test_a_declared_generated_region_is_what_the_registry_lists() -> None:
+    """A corpus whose generator marks its own output has already said where the list is.
+
+    Taking that at its word beats any heuristic: an entry OUTSIDE the region is prose,
+    and an entry inside it is the projection. Both readings are exercised here.
+    """
+    documents = corpus.read_corpus(_FIXTURES / "clean")
+    registry = next(d for d in documents if d.path == adr.REGISTRY_PATH)
+    marked = corpus.Document(
+        path=registry.path,
+        text=(
+            "// BEGIN GENERATED: adr-register, do not edit\n"
+            + registry.text
+            + "\n// END GENERATED: adr-register\n"
+            + "\nProse below the region mentions ADR-20991231-999 and must not count.\n"
+        ),
+        attributes=registry.attributes,
+        attribute_lines=registry.attribute_lines,
+    )
+    others = [d for d in documents if d.path != adr.REGISTRY_PATH]
+    assert adr.registry_violations([*others, marked]) == []
+
+    # …and drift INSIDE the region is still caught.
+    drifted = corpus.Document(
+        path=registry.path,
+        text=marked.text.replace(
+            "// END GENERATED: adr-register",
+            "* ADR-20991231-998 — deleted long ago\n// END GENERATED: adr-register",
+        ),
+        attributes=registry.attributes,
+        attribute_lines=registry.attribute_lines,
+    )
+    findings = adr.registry_violations([*others, drifted])
+    assert len(findings) == 1
+    assert "ADR-20991231-998" in findings[0]["evidence"]
+
+
 # ── 1f. the declaration rules ─────────────────────────────────────────────────
 
 

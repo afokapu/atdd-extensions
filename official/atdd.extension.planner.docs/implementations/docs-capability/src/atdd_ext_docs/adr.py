@@ -24,6 +24,46 @@ ADR_FILENAME_RE = re.compile(r"^adr-(\d{8})-(\d{3})-[a-z0-9][a-z0-9-]*\.adoc$")
 ADR_ID_RE = re.compile(r"\bADR-\d{8}-\d{3}\b")
 
 
+#: A machine-maintained region, delimited by the markers a generator writes around its
+#: own output: `// BEGIN GENERATED: <name>` … `// END GENERATED: <name>`.
+GENERATED_REGION_RE = re.compile(
+    r"^//\s*BEGIN GENERATED:\s*(?P<name>[a-z0-9-]*).*?^//\s*END GENERATED:\s*(?P=name)\b",
+    re.MULTILINE | re.DOTALL,
+)
+
+#: A delimited AsciiDoc listing block. What is inside one is shown, not stated.
+LISTING_BLOCK_RE = re.compile(r"^----\s*$.*?^----\s*$", re.MULTILINE | re.DOTALL)
+
+
+def registry_entry_text(text: str) -> str:
+    """The part of the registry that actually LISTS decisions.
+
+    Read the whole file and a template becomes an entry. Measured on a real corpus:
+    `ADR-20260816-001` appears three times in a decisions index — a prose diagram
+    explaining the identifier, a filename in a sentence, and an ADR skeleton inside a
+    `[source,asciidoc]` block — and none of them is a listing. The rule reported the
+    skeleton as an ADR that had been renamed away, on a registry that was in fact
+    perfectly derived.
+
+    Two readings, most specific first:
+
+    1. If the file DECLARES its generated region, read only that. A corpus whose
+       generator writes `// BEGIN GENERATED: adr-register` has already said where its
+       machine-maintained list begins and ends, and taking it at its word is both more
+       accurate and less clever than any heuristic.
+    2. Otherwise, read the file minus its listing blocks. A skeleton shown in `----`
+       fences is an illustration of the shape, never a claim that the decision exists.
+
+    Falling back rather than requiring markers keeps this working for a corpus that has
+    no generator, which is the shape the rule was originally written against.
+    """
+    regions = [m.group(0) for m in GENERATED_REGION_RE.finditer(text)]
+    named = [r for r in regions if "adr-register" in r.split("\n", 1)[0]]
+    if named:
+        return "\n".join(named)
+    return LISTING_BLOCK_RE.sub("", text)
+
+
 @dataclass(frozen=True)
 class AdrRecord:
     adr_id: str
@@ -121,7 +161,7 @@ def _registry_drift_violations(documents: list[Document]) -> list[dict]:
             }
         ]
 
-    listed = set(ADR_ID_RE.findall(registry.text))
+    listed = set(ADR_ID_RE.findall(registry_entry_text(registry.text)))
     # The registry's own :adr-id: is not an entry about itself — but ONLY discard it
     # when no real ADR claims that id. Discarding unconditionally meant a registry
     # whose adr-id collided with a genuine ADR erased that ADR from `listed`, which
